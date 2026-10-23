@@ -433,8 +433,24 @@ model Selection {
   market         Market               @relation(fields: [marketId], references: [id], onDelete: Cascade)
   history        OddsHistory[]
   legSelections  TicketLegSelection[]
+  boost          OddsBoost?
 
   @@unique([marketId, outcome])
+}
+
+/// Operator price boost on a selection ("Boosted odds" row, F1.1). Overrides the provider price while active.
+model OddsBoost {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  selectionId String    @unique @db.Uuid
+  odds        Decimal   @db.Decimal(8, 3)
+  active      Boolean   @default(true)
+  expiresAt   DateTime?
+  createdBy   String?   @db.Uuid
+  createdAt   DateTime  @default(now())
+
+  selection Selection @relation(fields: [selectionId], references: [id], onDelete: Cascade)
+
+  @@index([active])
 }
 
 model OddsHistory {

@@ -11,7 +11,7 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "test:e2e": "pnpm --filter @goalbet/e2e test",
+    "test:e2e": "pnpm --filter @goalbet/e2e e2e",
     "db:generate": "pnpm --filter @goalbet/db generate",
     "db:migrate": "pnpm --filter @goalbet/db migrate:deploy",
     "db:migrate:dev": "pnpm --filter @goalbet/db migrate:dev",

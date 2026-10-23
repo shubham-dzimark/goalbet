@@ -2,6 +2,8 @@ import swc from 'unplugin-swc';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  // per-package cache: parallel turbo tasks on Windows collide on a shared one
+  cacheDir: 'node_modules/.vitest',
   plugins: [
     // NestJS DI needs emitDecoratorMetadata, which esbuild does not support.
     swc.vite({ module: { type: 'es6' }, jsc: { target: 'es2022', transform: { decoratorMetadata: true, legacyDecorator: true } } }),

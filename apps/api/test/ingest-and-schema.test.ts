@@ -51,6 +51,28 @@ describe('F4.1 / F4.3 provider ingest into the database', () => {
   });
 });
 
+describe('F2.8 match ends', () => {
+  it('provider full time → event FINISHED, markets suspended, gone from the live catalogue', async () => {
+    await ingest.syncCompetitions();
+    const now = Date.now();
+    await ingest.syncFixtures(new Date(now - 4 * 3600_000), new Date(now + 3600_000));
+    await ingest.syncLive();
+    const { ODDS_PROVIDER } = await import('../src/modules/api-integration/odds-provider.js');
+    const mock = ctx.app.get(ODDS_PROVIDER) as import('../src/modules/api-integration/mock/mock.provider.js').MockProvider;
+    const inPlay = (await mock.getLiveStates()).filter((s) => s.status === 'LIVE').map((s) => s.ref);
+    const ev = await ctx.prisma.event.findFirstOrThrow({ where: { providerRef: { in: inPlay } } });
+
+    await mock.setOverride(ev.providerRef, { finishAt: Date.now() - 1 });
+    const transitions = await ingest.syncLive();
+    expect(transitions).toContainEqual({ eventId: ev.id, from: 'LIVE', to: 'FINISHED' });
+    const after = await ctx.prisma.event.findUniqueOrThrow({ where: { id: ev.id }, include: { markets: true } });
+    expect(after.status).toBe('FINISHED');
+    expect(after.markets.every((m) => m.status !== 'OPEN')).toBe(true);
+    const live = await ctx.http().get('/catalog/live').expect(200);
+    expect(live.body.map((e: { id: string }) => e.id)).not.toContain(ev.id);
+  });
+});
+
 describe('F4.3 database guards (ledger rules)', () => {
   it('wallet balance can never go negative', async () => {
     const p = await registerPlayer(ctx, 1);

@@ -94,4 +94,5 @@ export const updateProfileSchema = z.object({
   name: registerSchema.shape.name.optional(),
   phone: phoneSchema.optional(),
   locale: localeSchema.optional(),
+  oddsChangePreference: z.enum(['NONE', 'HIGHER', 'ANY']).optional(),
 });

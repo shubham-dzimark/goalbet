@@ -5,8 +5,8 @@
 export const brand = {
   name: 'GoalBet',
   shortName: 'GB',
-  /** Google font names loaded with next/font in each app's root layout. */
-  fonts: { sans: 'Inter', display: 'Barlow Condensed' },
+  /** Self-hosted font families (see fonts.ts + tokens.css). */
+  fonts: { sans: 'Inter Variable', display: 'Barlow Condensed' },
   /** Logo mark (viewBox 0 0 32 32). Uses currentColor for the mark background. */
   logoMark: {
     viewBox: '0 0 32 32',

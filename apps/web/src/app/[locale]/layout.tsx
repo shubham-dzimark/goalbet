@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { Barlow_Condensed, Inter } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
@@ -8,16 +7,8 @@ import { routing } from '@/i18n/routing';
 import { AppChrome } from '@/components/app-chrome';
 import { Footer } from '@/components/footer';
 import { Providers } from '@/components/providers';
+import '@goalbet/ui/fonts';
 import '../globals.css';
-
-const sans = Inter({ subsets: ['latin', 'latin-ext'], variable: '--font-brand-sans', display: 'swap' });
-const display = Barlow_Condensed({
-  subsets: ['latin', 'latin-ext'],
-  weight: ['600', '700', '800'],
-  style: ['normal', 'italic'],
-  variable: '--font-brand-display',
-  display: 'swap',
-});
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -37,7 +28,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   setRequestLocale(locale);
 
   return (
-    <html lang={locale} className={`${sans.variable} ${display.variable}`}>
+    <html lang={locale}>
       <body className="min-h-dvh antialiased">
         <NextIntlClientProvider>
           <Providers>

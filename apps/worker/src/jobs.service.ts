@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger, type OnApplicationShutdown, type OnModuleInit } from '@nestjs/common';
 import { type Job, Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
-import { AuditService, ENV, type Env, IngestService, SYSTEM_ACTOR } from '@goalbet/api/kit';
+import { AuditService, BoostService, ENV, type Env, IngestService, SYSTEM_ACTOR } from '@goalbet/api/kit';
 
 type Handler = (job: Job) => Promise<unknown>;
 
@@ -26,6 +26,7 @@ export class JobsService implements OnModuleInit, OnApplicationShutdown {
 
   constructor(
     private readonly ingest: IngestService,
+    private readonly boosts: BoostService,
     private readonly audit: AuditService,
     @Inject(ENV) env: Env,
   ) {
@@ -41,7 +42,8 @@ export class JobsService implements OnModuleInit, OnApplicationShutdown {
         const now = Date.now();
         const ids = await this.ingest.syncFixtures(new Date(now - 4 * 3600_000), new Date(now + 7 * 24 * 3600_000));
         for (const id of ids) await this.ingest.syncMarkets(id);
-        return { fixtures: ids.length };
+        const boosts = await this.boosts.ensureDemoBoosts();
+        return { fixtures: ids.length, boosts };
       },
     },
     /** Pre-match odds drift for matches in the next 48 h. */

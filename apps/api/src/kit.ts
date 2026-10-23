@@ -14,3 +14,6 @@ export { ODDS_PROVIDER, type OddsProvider } from './modules/api-integration/odds
 export { MockProvider, FeedStalledError } from './modules/api-integration/mock/mock.provider.js';
 export { OddsManagementModule } from './modules/odds-management/odds-management.module.js';
 export { IngestService, type LiveTransition } from './modules/odds-management/ingest.service.js';
+export { BoostService } from './modules/odds-management/boost.service.js';
+export { WalletService } from './modules/wallet-ledger/wallet.service.js';
+export { WalletLedgerModule } from './modules/wallet-ledger/wallet-ledger.module.js';

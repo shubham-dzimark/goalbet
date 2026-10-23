@@ -252,15 +252,55 @@ export class IngestService {
       }
       if (st.status === 'LIVE') await this.syncMarkets(ev.id);
     }
+
+    // Events still LIVE in the DB that the feed no longer lists (e.g. the worker was down when
+    // they ended): ask the provider for their result.
+    const listed = new Set(states.map((s) => s.ref));
+    const stale = await this.prisma.event.findMany({
+      where: { status: 'LIVE', providerRef: { notIn: [...listed] } },
+      select: { id: true, providerRef: true, status: true, homeScore: true, awayScore: true },
+      take: 50,
+    });
+    for (const ev of stale) {
+      const result = await this.provider.getResult(ev.providerRef).catch(() => null);
+      if (!result) continue;
+      await this.applyLiveState(ev.id, ev.status, {
+        ref: ev.providerRef,
+        status: result.status,
+        period: result.status === 'FINISHED' ? 'FULL_TIME' : 'NOT_STARTED',
+        minute: result.status === 'FINISHED' ? 90 : null,
+        homeScore: result.outcome.ftHome,
+        awayScore: result.outcome.ftAway,
+        htHomeScore: result.outcome.htHome,
+        htAwayScore: result.outcome.htAway,
+        corners: result.outcome.corners,
+        cards: result.outcome.cards,
+        suspended: false,
+      });
+      transitions.push({ eventId: ev.id, from: ev.status, to: result.status });
+    }
     return transitions;
   }
 
-  private async applyLiveState(eventId: string, currentStatus: string, st: ProviderLiveState) {
+  /**
+   * F2.8 — when the provider reports full time (or a cancellation) the event leaves the betting
+   * catalogue at once and its markets are suspended; the settlement engine then settles every
+   * FINISHED/CANCELLED event that has no settledAt yet.
+   */
+  private async applyLiveState(eventId: string, _currentStatus: string, st: ProviderLiveState) {
     const terminal = st.status === 'FINISHED' || st.status === 'CANCELLED';
+    if (terminal) {
+      const suspended = await this.prisma.market.findMany({ where: { eventId, status: 'OPEN' }, select: { id: true } });
+      await this.prisma.market.updateMany({ where: { eventId, status: 'OPEN' }, data: { status: 'SUSPENDED' } });
+      if (suspended.length > 0) {
+        const msg: OddsMessage = { type: 'odds', eventId, selections: [], markets: suspended.map((m) => ({ marketId: m.id, status: 'SUSPENDED' })) };
+        await this.redis.publish(Channels.EVENT_UPDATES, msg);
+      }
+    }
     await this.prisma.event.update({
       where: { id: eventId },
       data: {
-        status: terminal ? (currentStatus as 'SCHEDULED' | 'LIVE') : st.status,
+        status: st.status,
         period: st.period,
         minute: st.minute,
         homeScore: st.homeScore,
@@ -273,7 +313,6 @@ export class IngestService {
         lastFeedAt: new Date(),
       },
     });
-    // FINISHED / CANCELLED are only written by the settlement engine once results are confirmed (F2.8).
   }
 
   async lastLiveSync(): Promise<number | null> {

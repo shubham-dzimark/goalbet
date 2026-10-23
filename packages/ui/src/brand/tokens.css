@@ -43,9 +43,9 @@
   --color-danger: #c2410c;
   --color-info: #2563eb;
 
-  /* Type: next/font sets --font-brand-sans / --font-brand-display in each app's root layout. */
-  --font-sans: var(--font-brand-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: var(--font-brand-display), var(--font-brand-sans), ui-sans-serif, system-ui, sans-serif;
+  /* Type: self-hosted via @fontsource (imported in each app's root layout) — change both here and there. */
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Barlow Condensed', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
 
   --radius-card: 0.75rem;
   --radius-control: 0.5rem;

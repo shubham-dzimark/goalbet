@@ -12,6 +12,7 @@ import { loadEnv } from './config/env.js';
 import { CoreModule } from './common/core.module.js';
 import { encryptSecret, hashPassword, randomToken } from './common/auth/crypto.js';
 import { PrismaService } from './common/prisma.service.js';
+import { BoostService } from './modules/odds-management/boost.service.js';
 import { IngestService } from './modules/odds-management/ingest.service.js';
 import { OddsManagementModule } from './modules/odds-management/odds-management.module.js';
 
@@ -96,6 +97,7 @@ async function main() {
   const eventIds = await ingest.syncFixtures(new Date(now - 4 * 3600_000), new Date(now + 7 * 24 * 3600_000));
   await ingest.syncLive();
   const soon = await ingest.refreshPrematch(48 * 3600_000);
+  await app.get(BoostService).ensureDemoBoosts();
   const live = await prisma.event.count({ where: { status: 'LIVE' } });
 
   lines.push(

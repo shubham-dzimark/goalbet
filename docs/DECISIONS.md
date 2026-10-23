@@ -37,8 +37,21 @@ Choices not dictated by the brief, with the reason. Newest last.
 22. **The mock world is deterministic and stateless.** A kickoff every 25 minutes around the clock, so 4–5 matches are live and never fewer than 3 (cancellations are spaced). Matches run in real time. Goals, corners, cards, shots, stoppage time and cancellations are derived from the fixture ref, so every process agrees without shared state. Test/demo control (kick off now, finish, set score, shift odds, suspend, stall the feed) is stored in Redis and exposed at `/dev/mock/*` only when `MOCK_CONTROL_ENABLED=true` (refused in production).
 23. **Mock odds come from a Poisson model priced through the shared settlement rules**, so prices can't disagree with settlement. Pre-match odds drift every 30 min for matches in the next 48 h, and live odds drift every 20 s. Margins are 5–15 % by market type.
 24. **Team names are real club names; player names are generated (fictional).**
-25. **An event stays LIVE in the database after full time until the settlement engine confirms the result** (F2.8). The ingest never writes FINISHED itself.
+25. **The ingest marks an event FINISHED / CANCELLED as soon as the provider reports it** and suspends its markets, so it leaves the catalogue at once. The settlement engine then settles every finished event without a `settledAt` (F2.8 → F2.9). A sweep asks the provider for the results of LIVE events missing from the feed (e.g. after worker downtime). *(Changed in phase 2: originally the event stayed LIVE until settlement, which kept finished matches in Top Live.)*
 
 ## Local development
 
 26. **No Docker on the development machine:** `scripts/local-services.sh` runs a project-local Postgres cluster on port 5434 and a portable Redis on 6379. `docker-compose.yml` + `Dockerfile` give the full containerised stack.
+
+## Phase 2
+
+27. **Live bet delay runs inside the bet request:** the API waits `betting.liveDelayMs` (default 5 s), re-runs the full F1.13 validation, then takes the stake. No money moves until the delay has passed, so a rejection after the delay never needs a refund. Phase 4 may move this to a worker if long-held requests become a problem.
+28. **Several singles = several tickets.** The slip's Single tab places one `POST /bets` per selection, each with its own Idempotency-Key. A failure stops the batch, and selections already placed are removed from the slip.
+29. **Idempotency keys are released when a request fails**, so the slip can retry after "accept new odds". The frontend sends a fresh key per click.
+30. **Odds-change preference** defaults to the player's profile value (`HIGHER`) and can be changed in the slip and on the account page. With HIGHER or ANY the ticket is written at the server's current price, never the submitted one.
+31. **Boosted odds:** an `OddsBoost` row overrides a selection's price while active. The price a player gets is `max(provider, boost)` (`effectiveOddsMilli`), used by both catalogue and bet engine. In mock mode the worker keeps 4 demo boosts (+15 % on favourites of top matches); admin management comes with sportsbook settings (F3.5).
+32. **Self-limits:** lowering or adding a limit applies at once; raising or removing it waits 24 h. Admin-set per-user limits (`source = ADMIN`) stack with the player's own, and the strictest applies.
+33. **Self-exclusion** cannot be lifted by the player. It blocks betting (`SELF_EXCLUDED`) but not logging in, so the player can still see bets and balance.
+34. **Fonts are self-hosted** (`@fontsource`, imported via `@goalbet/ui/fonts`) instead of `next/font/google`. Turbopack's dev server failed to load the Google font loader on this setup, and self-hosting also removes network calls from builds and Docker images.
+35. **The admin credit/debit backend arrived in phase 2** (screens in phase 3), so test players can be funded and the betting flow exercised end to end.
+36. **Bet Builder legs are refused (`BUILDER_INVALID`) until phase 6.** The slip shows the tab with an explanation.
