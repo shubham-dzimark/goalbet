@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/coverage
+**/.env
+**/.env.*
+!**/.env.example
+.local
+.git
+seed-credentials.txt
+packages/db/src/generated
+e2e/test-results
+e2e/playwright-report

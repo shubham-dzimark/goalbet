@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "title": "GoalBet Admin"
+  },
+  "nav": {
+    "dashboard": "Panou",
+    "users": "Utilizatori",
+    "wallet": "Portofel",
+    "bets": "Pariuri",
+    "sportsbook": "Setări sportsbook",
+    "reports": "Rapoarte",
+    "audit": "Jurnal audit",
+    "logout": "Deconectare",
+    "menu": "Meniu",
+    "signedInAs": "Autentificat ca {email}"
+  },
+  "roles": {
+    "SUPER_ADMIN": "Super admin",
+    "OPERATOR": "Operator",
+    "FINANCE": "Financiar"
+  },
+  "login": {
+    "title": "Autentificare operator",
+    "subtitle": "Zonă restricționată. Toate încercările de acces sunt înregistrate.",
+    "email": "Email",
+    "password": "Parolă",
+    "continue": "Continuă",
+    "totpTitle": "Autentificare în doi pași",
+    "totpHelp": "Introdu codul de 6 cifre din aplicația de autentificare.",
+    "totpCode": "Cod de autentificare",
+    "verify": "Verifică și intră",
+    "setupTitle": "Configurează autentificarea în doi pași",
+    "setupHelp": "Scanează acest cod QR cu o aplicație de autentificare (Google Authenticator, Authy, 1Password…), apoi introdu codul de 6 cifre afișat.",
+    "setupSecret": "Sau introdu manual această cheie:",
+    "back": "Înapoi",
+    "expired": "Sesiunea s-a încheiat din cauza inactivității. Te rugăm să te autentifici din nou."
+  },
+  "dashboard": {
+    "title": "Panou",
+    "welcome": "Bun venit, {name}",
+    "phaseNote": "Modulele de administrare (utilizatori, portofel, pariuri, setări sportsbook, rapoarte și jurnal audit) se adaugă în etapa următoare."
+  }
+}

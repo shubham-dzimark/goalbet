@@ -1,0 +1,70 @@
+/**
+ * Typed error codes returned by the API as { error: { code, details } }.
+ * Every code has a localised message under "errors.<code>" in packages/shared/i18n.
+ */
+export const ErrorCode = {
+  // generic
+  VALIDATION_FAILED: 'VALIDATION_FAILED',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
+  NOT_FOUND: 'NOT_FOUND',
+  RATE_LIMITED: 'RATE_LIMITED',
+  IDEMPOTENCY_KEY_REQUIRED: 'IDEMPOTENCY_KEY_REQUIRED',
+  IDEMPOTENCY_CONFLICT: 'IDEMPOTENCY_CONFLICT',
+  INTERNAL: 'INTERNAL',
+
+  // auth (F1.2, F1.3, F3.1)
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  EMAIL_TAKEN: 'EMAIL_TAKEN',
+  PHONE_TAKEN: 'PHONE_TAKEN',
+  UNDERAGE: 'UNDERAGE',
+  TERMS_REQUIRED: 'TERMS_REQUIRED',
+  INVALID_TOKEN: 'INVALID_TOKEN',
+  ACCOUNT_SUSPENDED: 'ACCOUNT_SUSPENDED',
+  TOTP_REQUIRED: 'TOTP_REQUIRED',
+  TOTP_INVALID: 'TOTP_INVALID',
+  SESSION_EXPIRED: 'SESSION_EXPIRED',
+
+  // bet validation (F1.13 / F1.14), in check order
+  USER_NOT_ACTIVE: 'USER_NOT_ACTIVE',
+  SELF_EXCLUDED: 'SELF_EXCLUDED',
+  SELECTION_NOT_FOUND: 'SELECTION_NOT_FOUND',
+  LEAGUE_DISABLED: 'LEAGUE_DISABLED',
+  EVENT_NOT_AVAILABLE: 'EVENT_NOT_AVAILABLE',
+  EVENT_SUSPENDED: 'EVENT_SUSPENDED',
+  MARKET_SUSPENDED: 'MARKET_SUSPENDED',
+  MARKET_CLOSED: 'MARKET_CLOSED',
+  DUPLICATE_EVENT: 'DUPLICATE_EVENT',
+  BUILDER_INVALID: 'BUILDER_INVALID',
+  ODDS_CHANGED: 'ODDS_CHANGED',
+  STAKE_TOO_LOW: 'STAKE_TOO_LOW',
+  STAKE_TOO_HIGH: 'STAKE_TOO_HIGH',
+  MAX_PAYOUT_EXCEEDED: 'MAX_PAYOUT_EXCEEDED',
+  USER_LIMIT_EXCEEDED: 'USER_LIMIT_EXCEEDED',
+  INSUFFICIENT_BALANCE: 'INSUFFICIENT_BALANCE',
+
+  // cash out (F2.3–F2.7)
+  TICKET_NOT_OPEN: 'TICKET_NOT_OPEN',
+  CASHOUT_UNAVAILABLE: 'CASHOUT_UNAVAILABLE',
+  CASHOUT_PRICE_CHANGED: 'CASHOUT_PRICE_CHANGED',
+
+  // wallet / admin (F3.3)
+  REASON_REQUIRED: 'REASON_REQUIRED',
+  APPROVAL_REQUIRED: 'APPROVAL_REQUIRED',
+  SELF_APPROVAL: 'SELF_APPROVAL',
+  NEGATIVE_BALANCE: 'NEGATIVE_BALANCE',
+} as const;
+export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
+export const ERROR_CODES = Object.values(ErrorCode) as ErrorCode[];
+
+export interface ApiErrorBody {
+  error: {
+    code: ErrorCode;
+    message: string;
+    details?: Record<string, unknown>;
+  };
+}
+
+export function isApiErrorBody(v: unknown): v is ApiErrorBody {
+  return typeof v === 'object' && v !== null && 'error' in v && typeof (v as ApiErrorBody).error?.code === 'string';
+}

@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+@import '@goalbet/ui/tokens.css';
+
+/* Tailwind scans the shared UI package too */
+@source '../../../../packages/ui/src';
+
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "meta": {
+    "title": "GoalBet — Pariuri fotbal",
+    "description": "Pariuri pe fotbal pre-meci și live, în RON."
+  },
+  "nav": {
+    "sport": "Sport",
+    "live": "Live",
+    "myBets": "Pariurile mele",
+    "account": "Cont",
+    "wallet": "Portofel",
+    "betslip": "Bilet",
+    "home": "Acasă",
+    "menu": "Meniu",
+    "search": "Caută echipe sau competiții",
+    "login": "Autentificare",
+    "register": "Înregistrare",
+    "balance": "Sold",
+    "logout": "Deconectare",
+    "skipToContent": "Sari la conținut"
+  },
+  "auth": {
+    "loginTitle": "Autentificare",
+    "loginSubtitle": "Bine ai revenit! Autentifică-te pentru a paria.",
+    "registerTitle": "Creează-ți contul",
+    "registerSubtitle": "Durează mai puțin de un minut. Trebuie să ai cel puțin 18 ani.",
+    "email": "Email",
+    "password": "Parolă",
+    "name": "Nume complet",
+    "phone": "Telefon",
+    "dateOfBirth": "Data nașterii",
+    "acceptTerms": "Am peste 18 ani și accept termenii și condițiile și politica de joc responsabil.",
+    "submitLogin": "Autentifică-te",
+    "submitRegister": "Creează contul",
+    "noAccount": "Nu ai cont?",
+    "haveAccount": "Ai deja cont?",
+    "forgot": "Ai uitat parola?",
+    "forgotTitle": "Resetează parola",
+    "forgotSubtitle": "Introdu emailul și îți trimitem un link de resetare.",
+    "forgotSubmit": "Trimite linkul",
+    "forgotSent": "Dacă există un cont pentru acest email, linkul de resetare este pe drum.",
+    "resetTitle": "Alege o parolă nouă",
+    "newPassword": "Parolă nouă",
+    "resetSubmit": "Salvează parola",
+    "resetDone": "Parola a fost schimbată. Te poți autentifica acum.",
+    "passwordHint": "Cel puțin 8 caractere, cu o literă și o cifră.",
+    "showPassword": "Arată parola",
+    "hidePassword": "Ascunde parola"
+  },
+  "home": {
+    "topLive": "Top Live",
+    "topMatches": "Meciuri de top",
+    "boosted": "Cote mărite",
+    "topCompetitions": "Competiții de top",
+    "competitions": "Competiții",
+    "allLive": "Vezi toate live",
+    "comingSoon": "Se încarcă cotele…"
+  },
+  "footer": {
+    "responsible": "Jocurile de noroc pot crea dependență. Joacă responsabil.",
+    "adultsOnly": "18+",
+    "currencyNote": "Toate sumele sunt în RON. Creditul din portofel este gestionat de operator.",
+    "rights": "© {year} GoalBet. Brand provizoriu."
+  },
+  "language": {
+    "label": "Limbă",
+    "switchTo": "Schimbă limba în {language}"
+  }
+}

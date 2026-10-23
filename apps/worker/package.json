@@ -1,0 +1,32 @@
+{
+  "name": "@goalbet/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@goalbet/api": "workspace:*",
+    "@goalbet/db": "workspace:*",
+    "@goalbet/shared": "workspace:*",
+    "@nestjs/common": "^12.2.0",
+    "@nestjs/core": "^12.2.0",
+    "bullmq": "^6.3.18",
+    "ioredis": "^6.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "nestjs-pino": "^5.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "concurrently": "^10.0.6",
+    "vitest": "^5.0.5"
+  },
+  "main": "./dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "concurrently -k -n tsc,worker \"tsc -p tsconfig.json --watch --preserveWatchOutput\" \"node --watch-path=dist --env-file-if-exists=../api/.env dist/main.js\"",
+    "start": "node dist/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run --passWithNoTests"
+  }
+}

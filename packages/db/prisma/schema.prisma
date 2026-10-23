@@ -1,0 +1,597 @@
+// GoalBet database schema (F4.3).
+// Money columns are integer bani (1 RON = 100 bani). Odds are Decimal(8,3).
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+  runtime             = "nodejs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── enums ─────────────────────────────
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  OPERATOR
+  FINANCE
+}
+
+enum ActorType {
+  USER
+  ADMIN
+  SYSTEM
+}
+
+enum OddsChangePreference {
+  NONE
+  HIGHER
+  ANY
+}
+
+enum UserLimitType {
+  DAILY_STAKE
+  WEEKLY_STAKE
+  MONTHLY_STAKE
+  MAX_STAKE_PER_BET
+}
+
+enum LimitSource {
+  USER
+  ADMIN
+}
+
+enum WalletTxType {
+  ADMIN_CREDIT
+  ADMIN_DEBIT
+  STAKE
+  WIN
+  CASHOUT
+  REFUND
+  VOID_REVERSAL
+}
+
+enum CreditApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum EventStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+  CANCELLED
+}
+
+enum MatchPeriod {
+  NOT_STARTED
+  FIRST_HALF
+  HALF_TIME
+  SECOND_HALF
+  FULL_TIME
+}
+
+enum MarketType {
+  MATCH_RESULT
+  DOUBLE_CHANCE
+  TOTAL_GOALS
+  TEAM_TOTAL_GOALS
+  BTTS
+  EUROPEAN_HANDICAP
+  ASIAN_HANDICAP
+  CORRECT_SCORE
+  TOTAL_CORNERS
+  TOTAL_CARDS
+  ANYTIME_SCORER
+  PLAYER_SHOTS
+}
+
+enum MarketPeriod {
+  FT
+  H1
+}
+
+enum Team {
+  HOME
+  AWAY
+}
+
+enum MarketStatus {
+  OPEN
+  SUSPENDED
+  SETTLED
+}
+
+enum SelectionResult {
+  PENDING
+  WON
+  LOST
+  VOID
+  HALF_WON
+  HALF_LOST
+}
+
+enum TicketType {
+  SINGLE
+  ACCA
+}
+
+enum TicketStatus {
+  PENDING
+  ACTIVE
+  LIVE
+  WON
+  LOST
+  VOID
+  CASHED_OUT
+  REJECTED
+}
+
+enum LegKind {
+  SELECTION
+  BET_BUILDER
+}
+
+enum AuditCategory {
+  ADMIN
+  WALLET
+  BETTING
+  SYSTEM
+}
+
+// ───────────────────────────── users ─────────────────────────────
+
+model User {
+  id                   String               @id @default(uuid(7)) @db.Uuid
+  name                 String
+  email                String               @unique
+  phone                String               @unique
+  passwordHash         String
+  dateOfBirth          DateTime             @db.Date
+  status               UserStatus           @default(ACTIVE)
+  locale               String               @default("ro")
+  oddsChangePreference OddsChangePreference @default(HIGHER)
+  termsAcceptedAt      DateTime
+  lastLoginAt          DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  wallet          Wallet?
+  tickets         Ticket[]
+  limits          UserLimit[]
+  selfExclusions  SelfExclusion[]
+  passwordResets  PasswordReset[]
+  betAttempts     BetAttempt[]
+  creditApprovals CreditApproval[]
+
+  @@index([createdAt])
+}
+
+model UserLimit {
+  id         String        @id @default(uuid(7)) @db.Uuid
+  userId     String        @db.Uuid
+  type       UserLimitType
+  source     LimitSource   @default(USER)
+  amountBani Int
+  /// Increases requested by the player take effect after a cooling-off period.
+  effectiveAt DateTime     @default(now())
+  /// Pending higher value waiting for effectiveAt.
+  pendingAmountBani Int?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, source])
+}
+
+model SelfExclusion {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @db.Uuid
+  startsAt  DateTime  @default(now())
+  /// null = permanent
+  endsAt    DateTime?
+  reason    String?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, endsAt])
+}
+
+model PasswordReset {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Refresh-token sessions for players and admins (rotated on every refresh).
+model AuthSession {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  subjectType ActorType
+  subjectId   String    @db.Uuid
+  tokenHash   String    @unique
+  /// Hash of the token this one replaced; presenting it again signals refresh-token theft.
+  prevTokenHash String? @unique
+  expiresAt   DateTime
+  lastUsedAt  DateTime  @default(now())
+  revokedAt   DateTime?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime  @default(now())
+
+  @@index([subjectType, subjectId])
+}
+
+// ───────────────────────────── admins ─────────────────────────────
+
+model AdminUser {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  email        String     @unique
+  name         String
+  passwordHash String
+  role         AdminRole
+  totpSecret   String?
+  totpEnabled  Boolean    @default(false)
+  /// Last accepted TOTP time step; codes at or before it are rejected (replay protection).
+  totpLastStep Int?
+  status       UserStatus @default(ACTIVE)
+  failedLogins Int        @default(0)
+  lockedUntil  DateTime?
+  lastLoginAt  DateTime?
+  locale       String     @default("ro")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  requestedApprovals CreditApproval[] @relation("requestedBy")
+  decidedApprovals   CreditApproval[] @relation("decidedBy")
+  transactions       WalletTransaction[]
+}
+
+// ───────────────────────────── wallet ─────────────────────────────
+
+model Wallet {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  userId      String   @unique @db.Uuid
+  balanceBani Int      @default(0)
+  version     Int      @default(0)
+  currency    String   @default("RON")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+  transactions WalletTransaction[]
+}
+
+/// Ledger: the wallet balance always equals the sum of its transactions.
+model WalletTransaction {
+  id               String       @id @default(uuid(7)) @db.Uuid
+  walletId         String       @db.Uuid
+  type             WalletTxType
+  /// Signed: credits positive, debits negative.
+  amountBani       Int
+  balanceAfterBani Int
+  reason           String
+  ticketId         String?      @db.Uuid
+  adminId          String?      @db.Uuid
+  approvalId       String?      @unique @db.Uuid
+  /// Uniqueness guard against double crediting (e.g. "WIN:<ticketId>").
+  uniqueRef        String?      @unique
+  createdAt        DateTime     @default(now())
+
+  wallet   Wallet          @relation(fields: [walletId], references: [id], onDelete: Restrict)
+  ticket   Ticket?         @relation(fields: [ticketId], references: [id], onDelete: Restrict)
+  admin    AdminUser?      @relation(fields: [adminId], references: [id], onDelete: Restrict)
+  approval CreditApproval? @relation(fields: [approvalId], references: [id], onDelete: Restrict)
+
+  @@index([walletId, createdAt])
+  @@index([type, createdAt])
+  @@index([ticketId])
+}
+
+/// Admin credit/debit above the threshold waiting for a second admin (F3.3).
+model CreditApproval {
+  id            String               @id @default(uuid(7)) @db.Uuid
+  userId        String               @db.Uuid
+  type          WalletTxType
+  amountBani    Int
+  reason        String
+  status        CreditApprovalStatus @default(PENDING)
+  requestedById String               @db.Uuid
+  decidedById   String?              @db.Uuid
+  decidedAt     DateTime?
+  decisionNote  String?
+  createdAt     DateTime             @default(now())
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  requestedBy AdminUser          @relation("requestedBy", fields: [requestedById], references: [id])
+  decidedBy   AdminUser?         @relation("decidedBy", fields: [decidedById], references: [id])
+  transaction WalletTransaction?
+
+  @@index([status, createdAt])
+}
+
+// ───────────────────────────── sportsbook ─────────────────────────────
+
+model Competition {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  providerRef String   @unique
+  name        String
+  country     String
+  countryCode String
+  enabled     Boolean  @default(true)
+  isTop       Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  events Event[]
+}
+
+model Event {
+  id            String      @id @default(uuid(7)) @db.Uuid
+  providerRef   String      @unique
+  competitionId String      @db.Uuid
+  homeTeam      String
+  awayTeam      String
+  startTime     DateTime
+  status        EventStatus @default(SCHEDULED)
+  period        MatchPeriod @default(NOT_STARTED)
+  minute        Int?
+  homeScore     Int         @default(0)
+  awayScore     Int         @default(0)
+  htHomeScore   Int?
+  htAwayScore   Int?
+  corners       Int         @default(0)
+  cards         Int         @default(0)
+  /// Suspended by an admin (F3.5).
+  suspended     Boolean     @default(false)
+  /// Suspended automatically because the live feed stalled (F4.1).
+  feedSuspended Boolean     @default(false)
+  isTop         Boolean     @default(false)
+  /// Squads: [{ ref, name, team }]
+  players       Json        @default("[]")
+  /// Final MatchOutcome from the provider once finished.
+  result        Json?
+  lastFeedAt    DateTime?
+  settledAt     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  competition       Competition        @relation(fields: [competitionId], references: [id], onDelete: Restrict)
+  markets           Market[]
+  legs              TicketLeg[]
+  settlementRecords SettlementRecord[]
+
+  @@index([startTime])
+  @@index([status, startTime])
+  @@index([competitionId, startTime])
+}
+
+model Market {
+  id         String       @id @default(uuid(7)) @db.Uuid
+  eventId    String       @db.Uuid
+  /// Stable key within the event (see packages/shared marketKey).
+  key        String
+  type       MarketType
+  period     MarketPeriod @default(FT)
+  line       Decimal?     @db.Decimal(5, 2)
+  team       Team?
+  playerRef  String?
+  playerName String?
+  status     MarketStatus @default(OPEN)
+  /// Disabled by an admin for this event (F3.5).
+  enabled    Boolean      @default(true)
+  sortOrder  Int          @default(0)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  event      Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  selections Selection[]
+
+  @@unique([eventId, key])
+  @@index([eventId, type])
+}
+
+/// Global enable/disable per market type (F3.5).
+model MarketTypeSetting {
+  type      MarketType @id
+  enabled   Boolean    @default(true)
+  updatedAt DateTime   @updatedAt
+}
+
+model Selection {
+  id        String          @id @default(uuid(7)) @db.Uuid
+  marketId  String          @db.Uuid
+  outcome   String
+  /// Display label for player outcomes; otherwise derived from outcome via i18n.
+  label     String?
+  /// Team of the player (scorer selections).
+  team      Team?
+  odds      Decimal         @db.Decimal(8, 3)
+  active    Boolean         @default(true)
+  result    SelectionResult @default(PENDING)
+  sortOrder Int             @default(0)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  market         Market               @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  history        OddsHistory[]
+  legSelections  TicketLegSelection[]
+
+  @@unique([marketId, outcome])
+}
+
+model OddsHistory {
+  id          BigInt   @id @default(autoincrement())
+  selectionId String   @db.Uuid
+  odds        Decimal  @db.Decimal(8, 3)
+  createdAt   DateTime @default(now())
+
+  selection Selection @relation(fields: [selectionId], references: [id], onDelete: Cascade)
+
+  @@index([selectionId, createdAt])
+}
+
+// ───────────────────────────── tickets ─────────────────────────────
+
+model Ticket {
+  id                   String               @id @default(uuid(7)) @db.Uuid
+  code                 String               @unique @db.VarChar(10)
+  userId               String               @db.Uuid
+  type                 TicketType
+  status               TicketStatus
+  stakeBani            Int
+  totalOdds            Decimal              @db.Decimal(14, 3)
+  potentialWinBani     Int
+  /// Actual winnings credited at settlement (WIN/REFUND).
+  payoutBani           Int?
+  cashedOutBani        Int?
+  /// Placed while at least one event was live.
+  isLive               Boolean              @default(false)
+  oddsChangePreference OddsChangePreference @default(NONE)
+  idempotencyKey       String?
+  /// Live bets: time after which the bet delay has elapsed.
+  acceptAfter          DateTime?
+  placedAt             DateTime             @default(now())
+  settledAt            DateTime?
+  cashedOutAt          DateTime?
+  rejectReason         String?
+  voidReason           String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+  legs         TicketLeg[]
+  transactions WalletTransaction[]
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model TicketLeg {
+  id              String          @id @default(uuid(7)) @db.Uuid
+  ticketId        String          @db.Uuid
+  eventId         String          @db.Uuid
+  kind            LegKind
+  oddsAtPlacement Decimal         @db.Decimal(8, 3)
+  status          SelectionResult @default(PENDING)
+  sortOrder       Int             @default(0)
+  settledAt       DateTime?
+
+  ticket     Ticket               @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  event      Event                @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  selections TicketLegSelection[]
+
+  @@index([ticketId])
+  @@index([eventId, status])
+}
+
+model TicketLegSelection {
+  id              String          @id @default(uuid(7)) @db.Uuid
+  legId           String          @db.Uuid
+  selectionId     String          @db.Uuid
+  oddsAtPlacement Decimal         @db.Decimal(8, 3)
+  result          SelectionResult @default(PENDING)
+
+  leg       TicketLeg @relation(fields: [legId], references: [id], onDelete: Cascade)
+  selection Selection @relation(fields: [selectionId], references: [id], onDelete: Restrict)
+
+  @@index([legId])
+  @@index([selectionId])
+}
+
+/// Rejected bet attempts (F1.14) — no ticket, no money moved.
+model BetAttempt {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  userId    String?  @db.Uuid
+  code      String
+  payload   Json
+  details   Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([code, createdAt])
+}
+
+/// Result used to settle an event (F2.9). A resettle adds a new version.
+model SettlementRecord {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  eventId   String   @db.Uuid
+  version   Int
+  result    Json
+  source    String
+  adminId   String?  @db.Uuid
+  reason    String?
+  ticketsSettled Int @default(0)
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  @@unique([eventId, version])
+}
+
+// ───────────────────────────── platform ─────────────────────────────
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedBy String?  @db.Uuid
+  updatedAt DateTime @updatedAt
+}
+
+/// Stored responses for Idempotency-Key requests (POST /bets, POST /tickets/:id/cashout).
+model IdempotencyRecord {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  scope       String
+  subjectId   String   @db.Uuid
+  key         String
+  requestHash String
+  status      Int?
+  response    Json?
+  createdAt   DateTime @default(now())
+
+  @@unique([scope, subjectId, key])
+}
+
+/// F3.8 — admin actions, wallet changes, betting activity and system events.
+model AuditLog {
+  id         String        @id @default(uuid(7)) @db.Uuid
+  category   AuditCategory
+  action     String
+  actorType  ActorType
+  actorId    String?       @db.Uuid
+  actorLabel String?
+  entityType String?
+  entityId   String?
+  before     Json?
+  after      Json?
+  meta       Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime      @default(now())
+
+  @@index([category, createdAt])
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+}

@@ -1,0 +1,20 @@
+packages:
+  - apps/*
+  - packages/*
+  - e2e
+
+# Dependencies allowed to run install scripts (pnpm blocks all others).
+allowBuilds:
+  '@prisma/engines': true
+  prisma: true
+  '@scarf/scarf': false
+  esbuild: true
+  '@swc/core': true
+  sharp: true
+  unrs-resolver: true
+  '@nestjs/core': false
+  msgpackr-extract: true
+  '@parcel/watcher': true
+  cpu-features: false
+  ssh2: false
+  protobufjs: false

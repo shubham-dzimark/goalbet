@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "title": "GoalBet Admin"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "wallet": "Wallet",
+    "bets": "Bets",
+    "sportsbook": "Sportsbook settings",
+    "reports": "Reports",
+    "audit": "Audit logs",
+    "logout": "Log out",
+    "menu": "Menu",
+    "signedInAs": "Signed in as {email}"
+  },
+  "roles": {
+    "SUPER_ADMIN": "Super admin",
+    "OPERATOR": "Operator",
+    "FINANCE": "Finance"
+  },
+  "login": {
+    "title": "Operator sign in",
+    "subtitle": "Restricted area. All access attempts are logged.",
+    "email": "Email",
+    "password": "Password",
+    "continue": "Continue",
+    "totpTitle": "Two-factor authentication",
+    "totpHelp": "Enter the 6-digit code from your authenticator app.",
+    "totpCode": "Authentication code",
+    "verify": "Verify and sign in",
+    "setupTitle": "Set up two-factor authentication",
+    "setupHelp": "Scan this QR code with an authenticator app (Google Authenticator, Authy, 1Password…), then enter the 6-digit code it shows.",
+    "setupSecret": "Or enter this key manually:",
+    "back": "Back",
+    "expired": "Your session ended after inactivity. Please sign in again."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {name}",
+    "phaseNote": "Management modules (users, wallet, bets, sportsbook settings, reports and audit logs) are added in the next phase."
+  }
+}

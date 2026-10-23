@@ -1,0 +1,76 @@
+/*
+ * GoalBet design tokens — the single place to rebrand colours and fonts.
+ * (Brand name and logo live next to this file in brand.ts.)
+ * Tailwind 4 picks up everything in @theme as utilities: bg-brand, text-ink-muted, font-display, …
+ */
+@theme {
+  /* Brand */
+  --color-brand: #0e9f6e;
+  --color-brand-strong: #087a54;
+  --color-brand-soft: #d9f6ea;
+  --color-brand-ink: #ffffff;
+
+  /* Chrome (header, nav, sidebar headers) */
+  --color-chrome: #0b1f45;
+  --color-chrome-strong: #071631;
+  --color-chrome-soft: #16306a;
+  --color-chrome-ink: #e8eefb;
+  --color-chrome-muted: #93a4c8;
+
+  /* Surfaces */
+  --color-surface: #eef1f6;
+  --color-card: #ffffff;
+  --color-card-alt: #f6f8fb;
+  --color-line: #dfe4ee;
+  --color-ink: #0e1a2b;
+  --color-ink-muted: #5b6b82;
+  --color-ink-faint: #8c99ad;
+
+  /* Odds buttons */
+  --color-odds: #f1f4f9;
+  --color-odds-hover: #e3e9f3;
+  --color-odds-active: #0b1f45;
+  --color-odds-active-ink: #ffffff;
+  --color-odds-up: #0e9f6e;
+  --color-odds-down: #e8590c;
+
+  /* Status */
+  --color-live: #0e9f6e;
+  --color-boost: #f5b301;
+  --color-boost-ink: #3d2c00;
+  --color-success: #0e9f6e;
+  --color-warning: #d97706;
+  --color-danger: #c2410c;
+  --color-info: #2563eb;
+
+  /* Type: next/font sets --font-brand-sans / --font-brand-display in each app's root layout. */
+  --font-sans: var(--font-brand-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: var(--font-brand-display), var(--font-brand-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 0.75rem;
+  --radius-control: 0.5rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+}
+
+@keyframes gb-flash-up {
+  0% { background-color: color-mix(in srgb, var(--color-odds-up) 35%, transparent); }
+  100% { background-color: transparent; }
+}
+@keyframes gb-flash-down {
+  0% { background-color: color-mix(in srgb, var(--color-odds-down) 35%, transparent); }
+  100% { background-color: transparent; }
+}

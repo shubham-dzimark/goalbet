@@ -1,0 +1,69 @@
+{
+  "meta": {
+    "title": "GoalBet — Football betting",
+    "description": "Pre-match and live football betting in RON."
+  },
+  "nav": {
+    "sport": "Sport",
+    "live": "Live",
+    "myBets": "My Bets",
+    "account": "Account",
+    "wallet": "Wallet",
+    "betslip": "Bet slip",
+    "home": "Home",
+    "menu": "Menu",
+    "search": "Search teams or competitions",
+    "login": "Log in",
+    "register": "Register",
+    "balance": "Balance",
+    "logout": "Log out",
+    "skipToContent": "Skip to content"
+  },
+  "auth": {
+    "loginTitle": "Log in",
+    "loginSubtitle": "Welcome back! Log in to place bets.",
+    "registerTitle": "Create your account",
+    "registerSubtitle": "It takes less than a minute. You must be 18 or older.",
+    "email": "Email",
+    "password": "Password",
+    "name": "Full name",
+    "phone": "Phone",
+    "dateOfBirth": "Date of birth",
+    "acceptTerms": "I am over 18 and accept the terms and conditions and the responsible gambling policy.",
+    "submitLogin": "Log in",
+    "submitRegister": "Create account",
+    "noAccount": "No account yet?",
+    "haveAccount": "Already have an account?",
+    "forgot": "Forgot your password?",
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "Enter your email and we will send you a reset link.",
+    "forgotSubmit": "Send reset link",
+    "forgotSent": "If an account exists for this email, a reset link is on its way.",
+    "resetTitle": "Choose a new password",
+    "newPassword": "New password",
+    "resetSubmit": "Save new password",
+    "resetDone": "Your password was changed. You can log in now.",
+    "passwordHint": "At least 8 characters, with a letter and a digit.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
+  },
+  "home": {
+    "topLive": "Top Live",
+    "topMatches": "Top matches",
+    "boosted": "Boosted odds",
+    "topCompetitions": "Top competitions",
+    "competitions": "Competitions",
+    "allLive": "See all live",
+    "comingSoon": "Odds are loading…"
+  },
+  "footer": {
+    "responsible": "Gambling can be addictive. Play responsibly.",
+    "adultsOnly": "18+",
+    "currencyNote": "All amounts are in RON. Wallet credit is managed by the operator.",
+    "rights": "© {year} GoalBet. Placeholder brand."
+  },
+  "language": {
+    "label": "Language",
+    "switchTo": "Switch language to {language}"
+  }
+}

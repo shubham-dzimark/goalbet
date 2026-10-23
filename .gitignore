@@ -1,0 +1,26 @@
+node_modules/
+dist/
+.next/
+out/
+coverage/
+.turbo/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+!.env.test.example
+*.log
+
+# local Postgres/Redis binaries + data (see scripts/local-services.sh)
+.local/
+
+# generated Prisma client
+packages/db/src/generated/
+
+# seed output with admin credentials (never commit)
+seed-credentials.txt
+
+# Playwright
+e2e/test-results/
+e2e/playwright-report/
+e2e/.auth/
