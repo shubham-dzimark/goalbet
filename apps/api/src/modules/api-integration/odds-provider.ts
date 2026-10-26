@@ -97,6 +97,12 @@ export interface OddsProvider {
   getMarkets(fixtureRef: string): Promise<ProviderMarket[]>;
   /** Live scores for fixtures that are live (and those that just finished). */
   getLiveStates(): Promise<ProviderLiveState[]>;
+  /**
+   * When the live data last returned by getLiveStates was fetched from the source (epoch ms).
+   * Providers that cache live data (to save API calls) must implement it, so the feed-stall
+   * check measures how fresh the scores really are; omitted = fetched just now.
+   */
+  liveDataTime?(): Promise<number | null>;
   /** Final result for settlement; null while not finished. */
   getResult(fixtureRef: string): Promise<ProviderResult | null>;
   /** Correlated price for a same-match combination (if supported). */

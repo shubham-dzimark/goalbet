@@ -39,6 +39,8 @@ export class JobsService implements OnModuleInit, OnApplicationShutdown {
     'prematch-odds': { every: 60_000, handler: () => this.tasks.prematch() },
     /** F1.6 / F2.2 live scores, in-play markets and live odds. */
     'live-sync': { every: 2_000, handler: () => this.tasks.live() },
+    /** F4.1 suspends live markets when the live data goes stale. */
+    'feed-watchdog': { every: 5_000, handler: () => this.tasks.watchdog() },
   };
 
   async onModuleInit() {

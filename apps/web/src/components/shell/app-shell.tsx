@@ -6,6 +6,7 @@ import { usePathname } from '@/i18n/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-store';
 import { useSlip } from '@/lib/slip-store';
+import { useRealtimeConnection } from '@/lib/realtime';
 import { useSyncTimeZone } from '@/lib/time-zone';
 import { ScrollProgress } from '../fx/scroll-progress';
 import { BetSlip } from '../slip/bet-slip';
@@ -32,6 +33,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     void useSlip.persist.rehydrate();
   }, []);
+  useRealtimeConnection();
   useSyncTimeZone();
 
   const { data: summary } = useQuery({

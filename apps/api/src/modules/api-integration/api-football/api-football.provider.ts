@@ -211,6 +211,12 @@ export class ApiFootballProvider implements OddsProvider {
     return states;
   }
 
+  /** Live scores are cached to stay inside the call budget; this is when they were really fetched. */
+  async liveDataTime(): Promise<number | null> {
+    const meta = await this.redis.get('af:live');
+    return meta ? (JSON.parse(meta) as Cached<unknown>).at : null;
+  }
+
   private toLiveState(f: ApiFixture, sinceFetchMs: number): ProviderLiveState {
     const st = STATUS[f.fixture.status.short] ?? { status: 'LIVE' as const, period: 'SECOND_HALF' as const };
     let minute = f.fixture.status.elapsed;

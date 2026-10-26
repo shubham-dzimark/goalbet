@@ -12,6 +12,7 @@ import { BetProcessingModule } from './modules/bet-processing/bet-processing.mod
 import { CashOutEngineModule } from './modules/cash-out-engine/cash-out-engine.module.js';
 import { HealthController } from './modules/health/health.controller.js';
 import { OddsManagementModule } from './modules/odds-management/odds-management.module.js';
+import { RealtimeModule } from './modules/realtime/realtime.module.js';
 import { SettlementEngineModule } from './modules/settlement-engine/settlement-engine.module.js';
 import { UserManagementModule } from './modules/user-management/user-management.module.js';
 import { WalletLedgerModule } from './modules/wallet-ledger/wallet-ledger.module.js';
@@ -51,6 +52,8 @@ export const ENGINE_MODULES = [
       }),
     }),
     ...ENGINE_MODULES,
+    // serverless functions cannot hold WebSockets; the web app falls back to polling there
+    ...(env.JOBS_MODE === 'on-request' ? [] : [RealtimeModule]),
   ],
   controllers: [HealthController],
   providers: [

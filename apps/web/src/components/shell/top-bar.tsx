@@ -12,6 +12,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-store';
 import { ThemeToggle } from './theme-toggle';
 import { useFormat } from '@/lib/format';
+import { useRealtime } from '@/lib/realtime';
 import { utcOffset } from '@/lib/time-zone';
 
 /** Top bar: brand (mobile), command search trigger, language, balance or log in / register. */
@@ -21,6 +22,7 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
   const { status, user } = useAuth();
   const router = useRouter();
   const f = useFormat();
+  const connected = useRealtime((s) => s.connected);
   const zone = f.zone();
   const zoneTitle = t('timeZone', { zone: `${f.tz.replace(/_/g, ' ')} (${utcOffset(f.tz)})` });
 
@@ -56,6 +58,15 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
           >
             <Clock3 className="size-3.5 text-brand" aria-hidden="true" />
             {zone}
+            {/* live-updates indicator: green pulse while pushes arrive over the socket */}
+            <span
+              className={connected ? 'ml-1 size-2 rounded-full bg-brand shadow-[0_0_0_3px_rgb(var(--brand-rgb)/0.25)]' : 'ml-1 size-2 rounded-full bg-ink-faint'}
+              title={t(connected ? 'realtimeOn' : 'realtimeOff')}
+              role="status"
+              aria-label={t(connected ? 'realtimeOn' : 'realtimeOff')}
+              data-testid="realtime-dot"
+              data-connected={connected}
+            />
           </span>
           <ThemeToggle />
           <Suspense>

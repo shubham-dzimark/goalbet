@@ -20,7 +20,9 @@
     "skipToContent": "Skip to content",
     "timeZone": "Times shown in {zone}",
     "themeLight": "Switch to light theme",
-    "themeDark": "Switch to dark theme"
+    "themeDark": "Switch to dark theme",
+    "realtimeOn": "Live updates on",
+    "realtimeOff": "Reconnecting to live updates…"
   },
   "auth": {
     "loginTitle": "Log in",

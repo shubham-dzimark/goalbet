@@ -6,10 +6,27 @@
 | 2 | Homepage + browsing (F1.1, F1.4, F1.5, F1.9), bet slip (F1.12), normal bets (F1.10), validate/reject/create (F1.13–F1.15), wallet + My Bets (F1.7, F1.8) | ✅ Done |
 | 3 | Admin app (F3.2–F3.8) | ✅ Done |
 | — | Redesign (Emerald Pitch, light/dark, 3D), real fixtures (API-Football free plan), local time zones, Vercel-ready API | ✅ Done |
-| 4 | Live (F1.6, F2.1, F2.2), WebSocket + Redis pub/sub, live delay, feed-stall safety | — |
+| 4 | Live (F1.6, F2.1, F2.2), WebSocket + Redis pub/sub, live delay, feed-stall safety | ✅ Done |
 | 5 | Cash out (F2.3–F2.7), settlement + payout + credit (F2.8–F2.11), reconciliation | — |
 | 6 | Bet Builder (F1.11), sportsbook settings (F3.5), reports + exposure (F3.6) | — |
 | 7 | Responsive polish, responsible gambling, provider skeleton, all E2E, README | — |
+
+## Phase 4 — what was built
+
+- **Real-time push (F1.6, F2.2):** a Socket.IO gateway in the API (`modules/realtime`) relays the Redis channels the ingest, betting and wallet code already publish on. Rooms: `live` (every match update), `event:<id>` (one match), `user:<id>` (that player's tickets and balance, joined with the access token and re-authenticated on login/logout/refresh). The web app keeps one socket (through its `/api` proxy, WebSocket with polling fallback), follows what each page needs, and patches its cached data in place: scores, minute and status, odds (with the up/down flash), market locks, boosted prices kept at the boost. The bet slip re-fetches exact prices when one of its matches changes; balance and My Bets update on push. Polling stays as a 30 s safety net while connected (the old intervals when not). A dot next to the time zone shows the connection.
+- **Kick-off (F2.1):** when a match starts, open tickets with a leg on it become LIVE and the player is notified.
+- **Feed-stall safety (F4.1):** the worker checks the live feed every 5 s; when the live data is older than the *feed silence* setting (default 30 s) every live match is suspended (no bets, shown as suspended) until fresh data arrives. Freshness is the age of the data itself, so cached data from a budget-limited provider counts as old. Stalls and recoveries are audited.
+- **Fixes:** the HTTP rate limiter no longer runs on socket messages.
+
+**Tests:** 78 API integration (5 new in `realtime.test.ts`, over a real socket) · i18n parity. All green. Browser check: WebSocket through the web proxy, pushed score rendered in about 0.6 s.
+
+**Free API-Football plan:** to stay inside 100 calls/day the provider refreshes live scores every few minutes, so with the default 30 s setting live matches are suspended most of the time (the scores could be out of date). For a demo, raise *Suspend live markets after feed silence of* under Admin → Sportsbook → Limits (e.g. 600 s), or use the mock feed; a paid plan removes the limit.
+
+## How to try phase 4
+
+1. `pnpm dev`, open http://localhost:3000. The dot next to the time zone turns green when live updates are on.
+2. With the mock feed (`ODDS_PROVIDER=mock`), live matches tick every few seconds without page refreshes; odds flash up/down. Use `/dev/mock/*` in http://localhost:4000/docs to score a goal or stall the feed and watch matches lock and unlock.
+3. Place a bet on a match about to start: in My Bets it turns LIVE at kick-off by itself.
 
 ## Phase 3 — what was built
 

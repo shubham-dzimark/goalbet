@@ -35,6 +35,11 @@ export class SyncTasksService {
     return { transitions: (await this.ingest.syncLive()).length };
   }
 
+  /** F4.1 feed-stall safety (always-on worker only: on-request hosts sync live data on visits). */
+  watchdog() {
+    return this.ingest.checkFeed();
+  }
+
   run(task: SyncTask) {
     return this[task]();
   }

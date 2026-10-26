@@ -12,6 +12,7 @@ import { Segmented } from '@/components/fx/segmented';
 import { PageTitle } from '@/components/sport/event-list';
 import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/api';
+import { usePoll } from '@/lib/realtime';
 import { useRequireAuth } from '@/lib/use-require-auth';
 
 type Tab = 'active' | 'settled' | 'cashout';
@@ -21,6 +22,8 @@ export default function MyBetsPage() {
   const t = useTranslations('bets');
   const authed = useRequireAuth();
   const [tab, setTab] = useState<Tab>('active');
+  // ticket pushes (kick-off, settlement) refresh this list; polling is the fallback
+  const poll = usePoll(10_000);
   const counts = useQuery({ queryKey: ['ticket-counts'], queryFn: () => api<Record<Tab, number>>('/tickets/counts'), enabled: authed });
   const list = useInfiniteQuery({
     queryKey: ['tickets', tab],
@@ -28,7 +31,7 @@ export default function MyBetsPage() {
     initialPageParam: '' as string,
     getNextPageParam: (p) => p.nextCursor ?? undefined,
     enabled: authed,
-    refetchInterval: tab === 'active' ? 10_000 : false,
+    refetchInterval: tab === 'active' ? poll : false,
   });
   const tickets = list.data?.pages.flatMap((p) => p.items) ?? [];
 

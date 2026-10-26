@@ -10,6 +10,7 @@ import { Reveal, RevealHeading } from '@/components/fx/reveal';
 import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/api';
 import { useFormat } from '@/lib/format';
+import { usePoll, useWatch } from '@/lib/realtime';
 import { useTilt } from '@/lib/use-interactions';
 import { BoostCard } from './boost-card';
 import { LiveSpotlight } from './live-spotlight';
@@ -38,11 +39,13 @@ function CompetitionTile({ competition: c }: { competition: HomeFeedDto['topComp
 export function HomeView({ initial, upcoming }: { initial: HomeFeedDto | null; upcoming: EventSummaryDto[] | null }) {
   const t = useTranslations();
   const f = useFormat();
+  const poll = usePoll(6_000);
+  useWatch({ live: true });
   const { data } = useQuery({
     queryKey: ['home'],
     queryFn: () => api<HomeFeedDto>('/catalog/home'),
     ...(initial ? { initialData: initial } : {}),
-    refetchInterval: 6_000,
+    refetchInterval: poll,
   });
 
   return (

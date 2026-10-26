@@ -5,12 +5,15 @@ import {
   type EventStateMessage,
   type OddsChange,
   type OddsMessage,
+  type TicketMessage,
   lineToDecimalString,
   oddsToDecimalString,
   parseOddsMilli,
 } from '@goalbet/shared';
+import { AuditService, SYSTEM_ACTOR } from '../../common/audit.service.js';
 import { PrismaService } from '../../common/prisma.service.js';
 import { Channels, RedisService } from '../../common/redis.service.js';
+import { SettingsService } from '../../common/settings.service.js';
 import { ODDS_PROVIDER, type OddsProvider, type ProviderLiveState, type ProviderMarket } from '../api-integration/odds-provider.js';
 
 export interface LiveTransition {
@@ -32,6 +35,8 @@ export class IngestService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly settings: SettingsService,
+    private readonly audit: AuditService,
     @Inject(ODDS_PROVIDER) private readonly provider: OddsProvider,
   ) {}
 
@@ -221,7 +226,12 @@ export class IngestService {
    */
   async syncLive(): Promise<LiveTransition[]> {
     const states = await this.provider.getLiveStates();
-    await this.redis.client.set(FEED_HEARTBEAT_KEY, String(Date.now()));
+    // the heartbeat is the age of the data, not of this call: cached live data counts as old
+    const dataAt = (await this.provider.liveDataTime?.()) ?? Date.now();
+    await this.redis.client.set(FEED_HEARTBEAT_KEY, String(dataAt));
+    // only fresh data may lift a feed-stall suspension (otherwise sync and watchdog would flap)
+    const fresh = Date.now() - dataAt <= (await this.settings.get('feed.stallSeconds')) * 1000;
+    let recovered = 0;
     const events = await this.prisma.event.findMany({
       where: { providerRef: { in: states.map((s) => s.ref) } },
       select: { id: true, providerRef: true, status: true, period: true, minute: true, homeScore: true, awayScore: true, corners: true, cards: true, suspended: true, feedSuspended: true },
@@ -240,8 +250,9 @@ export class IngestService {
         ev.awayScore !== st.awayScore ||
         ev.corners !== st.corners ||
         ev.cards !== st.cards ||
-        ev.feedSuspended;
-      if (changed) await this.applyLiveState(ev.id, ev.status, st);
+        (ev.feedSuspended && fresh);
+      if (ev.feedSuspended && fresh) recovered++;
+      if (changed) await this.applyLiveState(ev.id, ev.status, st, ev.feedSuspended && !fresh);
       if (ev.status !== st.status) transitions.push({ eventId: ev.id, from: ev.status, to: st.status });
       if (changed) {
         const msg: EventStateMessage = {
@@ -254,7 +265,7 @@ export class IngestService {
           awayScore: st.awayScore,
           corners: st.corners,
           cards: st.cards,
-          suspended: ev.suspended || st.suspended,
+          suspended: ev.suspended || st.suspended || (ev.feedSuspended && !fresh),
         };
         await this.redis.publish(Channels.EVENT_UPDATES, msg);
       }
@@ -287,6 +298,9 @@ export class IngestService {
       });
       transitions.push({ eventId: ev.id, from: ev.status, to: result.status });
     }
+    if (recovered > 0) {
+      await this.audit.log({ category: 'SYSTEM', action: 'FEED_RECOVERED', actor: SYSTEM_ACTOR, meta: { resumedEvents: recovered } });
+    }
     return transitions;
   }
 
@@ -295,7 +309,7 @@ export class IngestService {
    * catalogue at once and its markets are suspended; the settlement engine then settles every
    * FINISHED/CANCELLED event that has no settledAt yet.
    */
-  private async applyLiveState(eventId: string, _currentStatus: string, st: ProviderLiveState) {
+  private async applyLiveState(eventId: string, currentStatus: string, st: ProviderLiveState, keepFeedSuspended = false) {
     const terminal = st.status === 'FINISHED' || st.status === 'CANCELLED';
     if (terminal) {
       const suspended = await this.prisma.market.findMany({ where: { eventId, status: 'OPEN' }, select: { id: true } });
@@ -317,10 +331,61 @@ export class IngestService {
         htAwayScore: st.htAwayScore,
         corners: st.corners,
         cards: st.cards,
-        feedSuspended: false,
+        feedSuspended: keepFeedSuspended,
         lastFeedAt: new Date(),
       },
     });
+    if (currentStatus === 'SCHEDULED' && st.status === 'LIVE') await this.ticketsGoLive(eventId);
+  }
+
+  /** F2.1 — at kick-off, open tickets with a leg on the match become LIVE; players are told at once. */
+  private async ticketsGoLive(eventId: string) {
+    const tickets = await this.prisma.ticket.findMany({
+      where: { status: 'ACTIVE', legs: { some: { eventId } } },
+      select: { id: true, userId: true },
+    });
+    if (tickets.length === 0) return;
+    await this.prisma.ticket.updateMany({ where: { id: { in: tickets.map((t) => t.id) }, status: 'ACTIVE' }, data: { status: 'LIVE' } });
+    for (const t of tickets) {
+      const msg: TicketMessage = { type: 'ticket', userId: t.userId, ticketId: t.id, status: 'LIVE' };
+      await this.redis.publish(Channels.TICKET_UPDATES, msg);
+    }
+    await this.audit.log({ category: 'BETTING', action: 'TICKETS_WENT_LIVE', actor: SYSTEM_ACTOR, entityType: 'Event', entityId: eventId, meta: { tickets: tickets.length } });
+  }
+
+  /**
+   * F4.1 feed-stall safety: when live data is older than `feed.stallSeconds`, every live match is
+   * suspended (no bets) until fresh data arrives; the next live sync lifts it. Audited per stall.
+   */
+  async checkFeed(): Promise<{ stalled: boolean; ageSeconds: number | null; suspended: number }> {
+    const [last, limit] = await Promise.all([this.lastLiveSync(), this.settings.get('feed.stallSeconds')]);
+    const ageSeconds = last === null ? null : Math.round((Date.now() - last) / 1000);
+    const stalled = ageSeconds === null || ageSeconds > limit;
+    if (!stalled) return { stalled, ageSeconds, suspended: 0 };
+    const events = await this.prisma.event.findMany({
+      where: { status: 'LIVE', feedSuspended: false, competition: { active: true } },
+      select: { id: true, status: true, period: true, minute: true, homeScore: true, awayScore: true, corners: true, cards: true },
+    });
+    if (events.length === 0) return { stalled, ageSeconds, suspended: 0 };
+    await this.prisma.event.updateMany({ where: { id: { in: events.map((e) => e.id) } }, data: { feedSuspended: true } });
+    for (const e of events) {
+      const msg: EventStateMessage = {
+        type: 'event',
+        eventId: e.id,
+        status: e.status,
+        period: e.period,
+        minute: e.minute,
+        homeScore: e.homeScore,
+        awayScore: e.awayScore,
+        corners: e.corners,
+        cards: e.cards,
+        suspended: true,
+      };
+      await this.redis.publish(Channels.EVENT_UPDATES, msg);
+    }
+    this.logger.warn(`live feed stalled (${ageSeconds ?? '∞'} s): ${events.length} live events suspended`);
+    await this.audit.log({ category: 'SYSTEM', action: 'FEED_STALLED', actor: SYSTEM_ACTOR, meta: { ageSeconds, limitSeconds: limit, suspendedEvents: events.length } });
+    return { stalled, ageSeconds, suspended: events.length };
   }
 
   async lastLiveSync(): Promise<number | null> {

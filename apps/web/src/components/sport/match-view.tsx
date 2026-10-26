@@ -10,6 +10,7 @@ import { Countdown, MinuteRing } from '@/components/fx/match-clock';
 import { TeamCrest } from '@/components/fx/team-crest';
 import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/api';
+import { usePoll, useWatch } from '@/lib/realtime';
 import { useFormat } from '@/lib/format';
 import { MarketBoard } from './market-board';
 
@@ -17,11 +18,14 @@ import { MarketBoard } from './market-board';
 export function MatchView({ id, initial }: { id: string; initial: EventDetailDto | null }) {
   const t = useTranslations();
   const f = useFormat();
+  const livePoll = usePoll(3_000);
+  const slowPoll = usePoll(15_000);
+  useWatch({ eventIds: [id] });
   const { data, isError } = useQuery({
     queryKey: ['event', id],
     queryFn: () => api<EventDetailDto>(`/catalog/events/${id}`),
     ...(initial ? { initialData: initial } : {}),
-    refetchInterval: (q) => (q.state.data?.status === 'LIVE' ? 3_000 : 15_000),
+    refetchInterval: (q) => (q.state.data?.status === 'LIVE' ? livePoll : slowPoll),
   });
 
   if (isError || !data) {

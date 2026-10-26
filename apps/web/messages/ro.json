@@ -20,7 +20,9 @@
     "skipToContent": "Sari la conținut",
     "timeZone": "Ore afișate în fusul {zone}",
     "themeLight": "Treci la tema luminoasă",
-    "themeDark": "Treci la tema întunecată"
+    "themeDark": "Treci la tema întunecată",
+    "realtimeOn": "Actualizări live active",
+    "realtimeOff": "Se reconectează actualizările live…"
   },
   "auth": {
     "loginTitle": "Autentificare",

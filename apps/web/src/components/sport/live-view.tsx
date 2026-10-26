@@ -10,6 +10,7 @@ import { MinuteRing } from '@/components/fx/match-clock';
 import { TeamCrest } from '@/components/fx/team-crest';
 import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/api';
+import { usePoll, useWatch } from '@/lib/realtime';
 import { useMarketText } from '@/lib/markets';
 import { EventList, PageTitle } from './event-list';
 import { OddsButton } from './odds-button';
@@ -20,7 +21,9 @@ const KEY_MARKETS = ['MATCH_RESULT|FT||||', 'TOTAL_GOALS|FT|250||', 'BTTS|FT||||
 function LivePanel({ id }: { id: string }) {
   const t = useTranslations();
   const { marketTitle, outcomeShort } = useMarketText();
-  const { data } = useQuery({ queryKey: ['event', id], queryFn: () => api<EventDetailDto>(`/catalog/events/${id}`), refetchInterval: 3_000 });
+  const poll = usePoll(3_000);
+  useWatch({ eventIds: [id] });
+  const { data } = useQuery({ queryKey: ['event', id], queryFn: () => api<EventDetailDto>(`/catalog/events/${id}`), refetchInterval: poll });
   if (!data) return <Skeleton className="h-96 rounded-3xl" />;
   const markets = KEY_MARKETS.map((k) => data.markets.find((m) => m.key === k)).filter((m): m is NonNullable<typeof m> => !!m);
   return (
@@ -75,11 +78,13 @@ function LivePanel({ id }: { id: string }) {
 /** F1.6 — live centre: every live match (scores, minute, live odds) + a focus panel on desktop. */
 export function LiveView({ initial }: { initial: EventSummaryDto[] | null }) {
   const t = useTranslations();
+  const poll = usePoll(4_000);
+  useWatch({ live: true });
   const { data } = useQuery({
     queryKey: ['live'],
     queryFn: () => api<EventSummaryDto[]>('/catalog/live'),
     ...(initial ? { initialData: initial } : {}),
-    refetchInterval: 4_000,
+    refetchInterval: poll,
   });
   const events = data ?? [];
   const [selected, setSelected] = useState<string | null>(null);

@@ -13,6 +13,7 @@ import { Link } from '@/i18n/navigation';
 import { ApiError, api, newIdempotencyKey } from '@/lib/api';
 import { type SessionUser, useAuth } from '@/lib/auth-store';
 import { useFormat } from '@/lib/format';
+import { usePoll, useWatch } from '@/lib/realtime';
 import { type OddsPref, type SlipItem, type SlipMode, slipHasConflict, useSlip } from '@/lib/slip-store';
 import { useErrorMessage } from '@/lib/use-error-message';
 
@@ -21,12 +22,16 @@ const QUICK_STAKES = [10, 20, 50, 100];
 /** Keeps slip prices and availability fresh while the slip is open. */
 function useSlipRefresh() {
   const ids = useSlip((s) => s.items.map((i) => i.selectionId).join(','));
+  const eventIds = useSlip((s) => [...new Set(s.items.map((i) => i.eventId))].join(','));
   const applyUpdates = useSlip((s) => s.applyUpdates);
+  // pushed changes to these matches re-fetch the slip prices at once (see lib/realtime.ts)
+  useWatch({ eventIds: eventIds ? eventIds.split(',') : [] });
+  const poll = usePoll(4_000);
   const { data } = useQuery({
     queryKey: ['slip-odds', ids],
     queryFn: () => api<{ id: string; oddsMilli: number; available: boolean; live: boolean }[]>(`/catalog/selections?ids=${ids}`),
     enabled: ids.length > 0,
-    refetchInterval: 4_000,
+    refetchInterval: poll,
   });
   useEffect(() => {
     if (data) applyUpdates(data);

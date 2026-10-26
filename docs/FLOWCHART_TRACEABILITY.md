@@ -23,7 +23,7 @@ _Last update: Phase 2 (pre-match betting)._
 | F1.3 | Register | Done | `schemas/auth.ts`, `auth.service.ts › register`, web `register` | `auth.test.ts › F1.3 Register` (4); `schemas-i18n.test.ts › register schema` |
 | F1.4 | User account | Done | `account.controller.ts` (`/me`, `/me/dashboard`, `/me/limits`, `/me/self-exclusion`), `responsible-gaming.service.ts`, web `account/page.tsx` (balance, open bets, recent activity, profile, language, odds preference, limits, self-exclusion, links) | `betting.test.ts › F1.4 account dashboard`, `› F1.4 responsible gambling limits`, `› 1. self-excluded`; `auth.test.ts › F0.3…` |
 | F1.5 | Pre-match football | Done | `catalog.service.ts › countries / competition / upcoming`, web `sport/page.tsx`, `sport/[competitionId]`, `event-list.tsx` (grouped by date), `event-row.tsx` (1/X/2 + "+N") | `catalog.test.ts › competition page, live list, match page and search`, `› hides disabled…` |
-| F1.6 | Live betting | Partial | `catalog.service.ts › live`, web `live/page.tsx` (scores, minute/period, live odds; polling every 4 s) | `catalog.test.ts › … live list …`; `betting.test.ts › live bets wait the bet delay…`. WebSocket push in phase 4. |
+| F1.6 | Live betting | Done | `catalog.service.ts › live`, web `live/page.tsx`; live scores, minute/period and odds pushed over Socket.IO (`realtime.gateway.ts`, web `lib/realtime.ts`), polling only as a 30 s safety net while connected; live bets wait the bet delay | `realtime.test.ts › F1.6 / F2.2` (2); `betting.test.ts › live bets wait the bet delay…`; browser check: pushed score rendered in < 1 s |
 | F1.7 | My Bets | Done | `tickets.service.ts`, `bets.controller.ts` (`/tickets?tab=active|settled|cashout`, `/tickets/:id`, `/tickets/counts`), web `my-bets`, `my-bets/[id]`, `bets/ticket-card.tsx` | `betting.test.ts › F1.7 My Bets / F1.8 wallet history` |
 | F1.8 | Wallet | Done | `wallet.controller.ts`, `wallet.service.ts › history` (type/date filters, cursor), web `account/wallet` | `betting.test.ts › lists tickets per tab and wallet transactions with filters` |
 | F1.9 | Select match & markets | Done | `catalog.service.ts › event`, web `match/[id]`, `market-board.tsx` (tabs per group; 1X2, DC, goals O/U 0.5–5.5, team goals, BTTS, European + Asian handicap, correct score, corners, cards, anytime scorer, player shots, half-time) | `mock-provider.test.ts › offers every market group of F1.9`; `catalog.test.ts › … match page …` |
@@ -38,8 +38,8 @@ _Last update: Phase 2 (pre-match betting)._
 
 | ID | Box | Status | Implementing files | Tests |
 | --- | --- | --- | --- | --- |
-| F2.1 | Active ticket → Live | Partial | tickets placed on a live event start as LIVE (`bet.service.ts`) | `betting.test.ts › live bets … become LIVE`. Kick-off transition worker: phase 4. |
-| F2.2 | Live match updates | Partial | `ingest.service.ts › syncLive` → Redis pub/sub; web polling + odds flash / lock (`odds-button.tsx`) | `ingest-and-schema.test.ts › records odds changes…` |
+| F2.1 | Active ticket → Live | Done | tickets placed on a live event start LIVE (`bet.service.ts`); at kick-off `IngestService.ticketsGoLive` flips ACTIVE tickets with a leg on the match to LIVE, pushes a ticket message to the player and audits `TICKETS_WENT_LIVE` | `realtime.test.ts › F2.1`; `betting.test.ts › live bets … become LIVE` |
+| F2.2 | Live match updates | Done | `ingest.service.ts › syncLive` → Redis pub/sub → `RealtimeGateway` rooms (`live`, `event:<id>`, `user:<id>`) → web cache patch (scores, odds flash, market lock, boosted prices kept), slip prices re-fetched on change, balance + ticket pushes | `realtime.test.ts` (5); `ingest-and-schema.test.ts › records odds changes…` |
 | F2.3 | Cash out available? | Partial | `packages/shared/src/cashout.ts › quoteCashOut` | `cashout.test.ts` (6) |
 | F2.4 | User continues | Missing | — | — |
 | F2.5 | Accept cash out | Missing | — | — |
@@ -67,7 +67,7 @@ _Last update: Phase 2 (pre-match betting)._
 
 | ID | Box | Status | Implementing files | Tests |
 | --- | --- | --- | --- | --- |
-| F4.1 | Sports data / odds provider | Partial | `odds-provider.ts`, `mock/*`, `api-football/*`, `mock-control.controller.ts`; feed-stall auto-suspend in phase 4 | `mock-provider.test.ts` (7), `ingest-and-schema.test.ts` |
+| F4.1 | Sports data / odds provider | Done | `odds-provider.ts` (+ `liveDataTime` for cached feeds), `mock/*`, `api-football/*`, `mock-control.controller.ts`; feed-stall safety: worker `feed-watchdog` (5 s) → `IngestService.checkFeed` suspends live matches when live data is older than `feed.stallSeconds`, fresh data lifts it; `FEED_STALLED` / `FEED_RECOVERED` audited | `mock-provider.test.ts` (7), `ingest-and-schema.test.ts`, `realtime.test.ts › F4.1` (2) |
 | F4.2 | Backend / betting engine modules | Done | `apps/api/src/modules/*` (8 chart-named modules) | `ingest-and-schema.test.ts › F4.2…` |
 | F4.3 | Database | Done | `packages/db/prisma/schema.prisma` + migrations | `ingest-and-schema.test.ts › F4.3…` |
 | F4.4 | User frontend | Partial | `apps/web` (Next.js 16, responsive: 0 px horizontal overflow at 375 px verified) | `web/test/i18n-parity.test.ts`; Playwright viewports in phase 7 |
@@ -78,7 +78,7 @@ _Last update: Phase 2 (pre-match betting)._
 | ID | Feature | Status | Proof |
 | --- | --- | --- | --- |
 | F5.1 | Pre-match betting | Partial | API: `betting.test.ts › places a pre-match single`; E2E in phase 7 |
-| F5.2 | Live betting | Partial | API: `betting.test.ts › live bets wait the bet delay…`; E2E in phase 7 |
+| F5.2 | Live betting | Partial | API: `betting.test.ts › live bets wait the bet delay…`, `realtime.test.ts`; E2E in phase 7 |
 | F5.3 | Multiple markets | Partial | `mock-provider.test.ts › offers every market group`; UI E2E in phase 7 |
 | F5.4 | Bet Builder | Missing | phase 6 |
 | F5.5 | Cash out | Missing | phase 5 |
