@@ -7,6 +7,7 @@ export default defineConfig({
     path: 'prisma/migrations',
   },
   datasource: {
-    url: process.env['DATABASE_URL'] ?? 'postgresql://goalbet@127.0.0.1:5434/goalbet',
+    // migrations need a direct connection; Neon (Vercel Storage) exposes it as DATABASE_URL_UNPOOLED
+    url: process.env['DATABASE_URL_UNPOOLED'] ?? process.env['DATABASE_URL'] ?? 'postgresql://goalbet@127.0.0.1:5434/goalbet',
   },
 });

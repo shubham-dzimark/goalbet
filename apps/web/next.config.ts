@@ -13,7 +13,9 @@ const securityHeaders = [
 ];
 
 const config: NextConfig = {
-  output: 'standalone',
+  // standalone server for Docker (Linux). Skipped on Vercel (own output) and on Windows, where
+  // copying the pnpm symlinks needs admin rights (EPERM).
+  ...(process.env.VERCEL || process.platform === 'win32' ? {} : { output: 'standalone' as const }),
   // monorepo: trace workspace packages into the standalone bundle
   outputFileTracingRoot: fileURLToPath(new URL('../..', import.meta.url)),
   transpilePackages: ['@goalbet/ui'],

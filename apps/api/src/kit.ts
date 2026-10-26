@@ -15,5 +15,6 @@ export { MockProvider, FeedStalledError } from './modules/api-integration/mock/m
 export { OddsManagementModule } from './modules/odds-management/odds-management.module.js';
 export { IngestService, type LiveTransition } from './modules/odds-management/ingest.service.js';
 export { BoostService } from './modules/odds-management/boost.service.js';
+export { SyncTasksService, type SyncTask } from './modules/odds-management/sync-tasks.service.js';
 export { WalletService } from './modules/wallet-ledger/wallet.service.js';
 export { WalletLedgerModule } from './modules/wallet-ledger/wallet-ledger.module.js';

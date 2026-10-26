@@ -13,6 +13,9 @@
         ".next/**",
         "!.next/cache/**",
         "src/generated/**"
+      ],
+      "env": [
+        "API_URL"
       ]
     },
     "dev": {
@@ -54,5 +57,10 @@
         "@goalbet/admin#build"
       ]
     }
-  }
+  },
+  "globalPassThroughEnv": [
+    "VERCEL",
+    "VERCEL_ENV",
+    "VERCEL_URL"
+  ]
 }

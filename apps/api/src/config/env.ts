@@ -32,6 +32,13 @@ const envSchema = z.object({
   /** Our own cap per UTC day (free plan: 100). */
   API_FOOTBALL_DAILY_BUDGET: z.coerce.number().int().min(1).default(90),
   API_FOOTBALL_PER_MINUTE: z.coerce.number().int().min(1).default(8),
+  /**
+   * How the background sync runs: `worker` = apps/worker on an always-on host (BullMQ);
+   * `on-request` = serverless (Vercel): catalogue visits refresh stale data, plus a daily cron.
+   */
+  JOBS_MODE: z.enum(['worker', 'on-request']).default('worker'),
+  /** Bearer secret for GET /cron/refresh (Vercel Cron sends it). */
+  CRON_SECRET: z.string().min(16).optional(),
   /** Dev/test-only endpoints to drive the mock provider (never in production). */
   MOCK_CONTROL_ENABLED: bool.default(false),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
@@ -45,7 +52,8 @@ let cached: Env | null = null;
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   if (cached && source === process.env) return cached;
-  const parsed = envSchema.safeParse(source);
+  // Upstash Redis added from the Vercel Marketplace exposes its URL as KV_URL
+  const parsed = envSchema.safeParse({ ...source, REDIS_URL: source['REDIS_URL'] || source['KV_URL'] || undefined });
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('\n  ');
     throw new Error(`Invalid environment:\n  ${issues}`);

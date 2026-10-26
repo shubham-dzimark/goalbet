@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger, type OnApplicationShutdown, type OnModuleInit } from '@nestjs/common';
 import { type Job, Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
-import { AuditService, BoostService, ENV, type Env, IngestService, SYSTEM_ACTOR } from '@goalbet/api/kit';
+import { AuditService, ENV, type Env, SYSTEM_ACTOR, SyncTasksService } from '@goalbet/api/kit';
 
 type Handler = (job: Job) => Promise<unknown>;
 
@@ -25,8 +25,7 @@ export class JobsService implements OnModuleInit, OnApplicationShutdown {
   private readonly lastFailureAudit = new Map<string, number>();
 
   constructor(
-    private readonly ingest: IngestService,
-    private readonly boosts: BoostService,
+    private readonly tasks: SyncTasksService,
     private readonly audit: AuditService,
     @Inject(ENV) env: Env,
   ) {
@@ -35,21 +34,11 @@ export class JobsService implements OnModuleInit, OnApplicationShutdown {
 
   readonly jobs: Record<string, JobDef> = {
     /** F4.1 odds ingest: competitions, fixtures for the next 7 days and their markets. */
-    'fixtures-sync': {
-      every: 5 * 60_000,
-      handler: async () => {
-        await this.ingest.syncCompetitions();
-        const now = Date.now();
-        const ids = await this.ingest.syncFixtures(new Date(now - 4 * 3600_000), new Date(now + 7 * 24 * 3600_000));
-        for (const id of ids) await this.ingest.syncMarkets(id);
-        const boosts = await this.boosts.ensureDemoBoosts();
-        return { fixtures: ids.length, boosts };
-      },
-    },
+    'fixtures-sync': { every: 5 * 60_000, handler: () => this.tasks.fixtures() },
     /** Pre-match odds drift for matches in the next 48 h. */
-    'prematch-odds': { every: 60_000, handler: () => this.ingest.refreshPrematch(48 * 3600_000) },
+    'prematch-odds': { every: 60_000, handler: () => this.tasks.prematch() },
     /** F1.6 / F2.2 live scores, in-play markets and live odds. */
-    'live-sync': { every: 2_000, handler: async () => ({ transitions: (await this.ingest.syncLive()).length }) },
+    'live-sync': { every: 2_000, handler: () => this.tasks.live() },
   };
 
   async onModuleInit() {
