@@ -53,6 +53,9 @@ export const ErrorCode = {
   APPROVAL_REQUIRED: 'APPROVAL_REQUIRED',
   SELF_APPROVAL: 'SELF_APPROVAL',
   NEGATIVE_BALANCE: 'NEGATIVE_BALANCE',
+  // admin accounts
+  LAST_SUPER_ADMIN: 'LAST_SUPER_ADMIN',
+  SELF_ACTION: 'SELF_ACTION',
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 export const ERROR_CODES = Object.values(ErrorCode) as ErrorCode[];

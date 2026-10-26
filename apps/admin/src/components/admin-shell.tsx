@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, Gauge, LogOut, ScrollText, Settings2, ShieldCheck, Ticket, Users, Wallet } from 'lucide-react';
+import { BarChart3, Gauge, LogOut, ScrollText, Settings2, ShieldCheck, Ticket, UserCog, Users, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type ReactNode, useEffect } from 'react';
 import { LogoMark, Skeleton, cn } from '@goalbet/ui';
@@ -29,6 +29,8 @@ const GROUPS = [
       { href: '/audit', key: 'audit', icon: ScrollText },
     ],
   },
+  // only Super admins see this group
+  { key: 'system', items: [{ href: '/admins', key: 'admins', icon: UserCog }] },
 ] as const;
 
 /** Protected admin chrome (F4.5): redirects to login when there is no session or it timed out. */
@@ -91,7 +93,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </div>
 
         <nav aria-label={t('nav.menu')} className="no-scrollbar flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-1 lg:flex-col lg:gap-5 lg:overflow-y-auto lg:pt-2">
-          {GROUPS.map((g) => (
+          {GROUPS.filter((g) => g.key !== 'system' || can()).map((g) => (
             <div key={g.key} className="flex gap-1 lg:flex-col">
               <p className="hidden px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-ink-faint lg:block">{t(`nav.groups.${g.key}`)}</p>
               {g.items.map(({ href, key, icon: Icon }) => {
@@ -125,14 +127,21 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
         <div className="hidden border-t border-line p-4 lg:block">
           <div className="flex items-center gap-3">
-            <span className="grid size-9 place-items-center rounded-full bg-brand text-sm font-bold text-brand-ink">{initials}</span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">{admin.name}</p>
-              <p className="flex items-center gap-1 text-[11px] text-ink-muted">
-                <ShieldCheck className="size-3 text-brand" aria-hidden="true" />
-                {t(`roles.${admin.role}`)}
-              </p>
-            </div>
+            <Link
+              href="/account"
+              className={cn('-m-1 flex min-w-0 flex-1 items-center gap-3 rounded-xl p-1 transition-colors hover:bg-tint/[0.05]', active('/account') && 'bg-brand-soft')}
+              title={t('nav.account')}
+              data-testid="nav-account"
+            >
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand text-sm font-bold text-brand-ink">{initials}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold">{admin.name}</span>
+                <span className="flex items-center gap-1 text-[11px] text-ink-muted">
+                  <ShieldCheck className="size-3 text-brand" aria-hidden="true" />
+                  {t(`roles.${admin.role}`)}
+                </span>
+              </span>
+            </Link>
             <button type="button" onClick={logout} aria-label={t('nav.logout')} className="rounded-lg p-2 text-ink-muted hover:bg-tint/10 hover:text-ink" data-testid="logout">
               <LogOut className="size-4" aria-hidden="true" />
             </button>
@@ -146,9 +155,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-12 items-center justify-end gap-2 border-b border-line px-4 lg:hidden">
-          <span className="truncate text-xs text-ink-muted">
+          <Link href="/account" className="truncate text-xs text-ink-muted hover:text-ink">
             {admin.email} · <strong className="text-ink">{t(`roles.${admin.role}`)}</strong>
-          </span>
+          </Link>
           <button type="button" onClick={logout} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-ink-muted hover:text-ink">
             <LogOut className="size-3.5" aria-hidden="true" />
             {t('nav.logout')}

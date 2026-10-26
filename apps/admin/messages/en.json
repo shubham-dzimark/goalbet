@@ -17,9 +17,12 @@
     "groups": {
       "overview": "Overview",
       "operations": "Operations",
-      "insights": "Insights"
+      "insights": "Insights",
+      "system": "System"
     },
-    "pendingApprovals": "{count} pending approvals"
+    "pendingApprovals": "{count} pending approvals",
+    "account": "My account",
+    "admins": "Admin users"
   },
   "roles": {
     "SUPER_ADMIN": "Super admin",
@@ -477,5 +480,132 @@
     "before": "Before",
     "after": "After",
     "meta": "Details"
+  },
+  "account": {
+    "kicker": "Settings",
+    "title": "My account",
+    "description": "Your profile, password, two-factor authentication and where you are signed in.",
+    "profile": {
+      "title": "Profile",
+      "name": "Display name",
+      "save": "Save",
+      "saved": "Name updated",
+      "email": "Email",
+      "role": "Role",
+      "since": "Admin since",
+      "lastLogin": "Last login",
+      "emailHelp": "Email and role are changed by a Super admin."
+    },
+    "password": {
+      "title": "Password",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Repeat new password",
+      "rules": "At least 8 characters, with a letter and a digit.",
+      "code": "Code from your authenticator",
+      "note": "Your other devices will be signed out.",
+      "submit": "Change password",
+      "changed": "Password changed. Other devices were signed out."
+    },
+    "totp": {
+      "title": "Two-factor authentication",
+      "app": "Authenticator app",
+      "on": "On",
+      "off": "Not set up",
+      "help": "Got a new phone? Move your codes to it here. You need a code from the current app first.",
+      "move": "Move to a new phone",
+      "step1": "Step 1 of 2: enter a code from your current authenticator app.",
+      "step2": "Step 2 of 2: scan this QR code with the new phone, then enter the code it shows.",
+      "manual": "Or enter this key manually:",
+      "currentCode": "Code from the current app",
+      "newCode": "Code from the new app",
+      "continue": "Continue",
+      "confirm": "Switch to the new phone",
+      "changed": "Two-factor moved to the new phone. Other devices were signed out."
+    },
+    "sessions": {
+      "title": "Signed in on",
+      "current": "This device",
+      "active": "active {when}",
+      "end": "Sign out",
+      "endOthers": "Sign out {count, plural, one {the other device} other {# other devices}}",
+      "ended": "Signed out"
+    }
+  },
+  "admins": {
+    "kicker": "System",
+    "title": "Admin users",
+    "description": "Who can access the back office and what each person can do. Only Super admins see this page.",
+    "add": "Add admin",
+    "you": "you",
+    "never": "Never",
+    "locked": "Locked",
+    "totpOn": "On",
+    "totpPending": "QR at next login",
+    "forbiddenTitle": "Super admins only",
+    "forbiddenHelp": "Ask a Super admin to create or change admin accounts.",
+    "status": {
+      "ACTIVE": "Active",
+      "SUSPENDED": "Suspended"
+    },
+    "cols": {
+      "admin": "Admin",
+      "role": "Role",
+      "status": "Status",
+      "totp": "Two-factor",
+      "lastLogin": "Last login",
+      "actions": "Actions"
+    },
+    "actions": {
+      "edit": "Edit name, email, role",
+      "suspend": "Suspend",
+      "activate": "Activate",
+      "resetPassword": "Reset password",
+      "resetTotp": "Reset two-factor"
+    },
+    "fields": {
+      "name": "Full name",
+      "email": "Email",
+      "role": "Role"
+    },
+    "roleHelp": {
+      "SUPER_ADMIN": "Everything, including managing admins.",
+      "OPERATOR": "Players, bets and sportsbook settings (leagues, markets, matches, betting limits).",
+      "FINANCE": "Money: add/remove credit, approvals, the approval threshold."
+    },
+    "create": {
+      "title": "Add an admin",
+      "help": "They get a temporary password and set up two-factor with a QR code at their first login.",
+      "submit": "Create admin"
+    },
+    "edit": {
+      "title": "Edit admin",
+      "emailHelp": "Changing the email or role signs them out everywhere.",
+      "ownRole": "You cannot change your own role."
+    },
+    "confirm": {
+      "suspendTitle": "Suspend {name}?",
+      "suspendHelp": "They are signed out at once and cannot log in until activated.",
+      "activateTitle": "Activate {name}?",
+      "activateHelp": "They can log in again (a lockout is cleared too).",
+      "passwordTitle": "Reset the password of {name}?",
+      "passwordHelp": "A new temporary password is shown once; they are signed out everywhere.",
+      "totpTitle": "Reset two-factor for {name}?",
+      "totpHelp": "Their authenticator is unlinked; they scan a new QR code at the next login. Use this when a phone is lost."
+    },
+    "temp": {
+      "title": "Temporary password",
+      "copy": "Copy",
+      "copied": "Copied",
+      "once": "This password is shown only now. Copy it and send it to the admin through a secure channel.",
+      "next": "At their next login they set up two-factor with a QR code, then can change this password under My account.",
+      "done": "Done"
+    },
+    "toast": {
+      "saved": "Admin updated",
+      "suspended": "Admin suspended and signed out",
+      "activated": "Admin activated",
+      "totpReset": "Two-factor reset: QR at next login"
+    }
   }
 }

@@ -26,6 +26,15 @@ export interface AdminDto {
 
 const toDto = (a: AdminUser): AdminDto => ({ id: a.id, email: a.email, name: a.name, role: a.role, locale: a.locale });
 
+/**
+ * Verifies a 6-digit code against a plain TOTP secret. Codes at or before `lastStep` are refused
+ * (replay protection); returns the accepted time step to store, or null.
+ */
+export async function checkAdminTotp(secret: string, code: string, lastStep: number | null): Promise<number | null> {
+  const r = await verify({ secret, token: code, epochTolerance: TOTP_PERIOD_SEC, ...(lastStep !== null ? { afterTimeStep: lastStep } : {}) });
+  return r.valid ? (r as { timeStep: number }).timeStep : null;
+}
+
 export type AdminLoginResult =
   | { status: 'OK'; accessToken: string; admin: AdminDto; refresh: { token: string; expiresAt: Date } }
   | { status: 'TOTP_REQUIRED' }
@@ -64,14 +73,8 @@ export class AdminAuthService {
     });
   }
 
-  private async checkTotp(admin: AdminUser, secret: string, code: string): Promise<number | null> {
-    const r = await verify({
-      secret,
-      token: code,
-      epochTolerance: TOTP_PERIOD_SEC,
-      ...(admin.totpLastStep !== null ? { afterTimeStep: admin.totpLastStep } : {}),
-    });
-    return r.valid ? (r as { timeStep: number }).timeStep : null;
+  private checkTotp(admin: AdminUser, secret: string, code: string): Promise<number | null> {
+    return checkAdminTotp(secret, code, admin.totpLastStep);
   }
 
   private async succeed(admin: AdminUser, meta: RequestMeta, timeStep: number): Promise<AdminLoginResult> {

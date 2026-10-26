@@ -17,9 +17,12 @@
     "groups": {
       "overview": "Privire de ansamblu",
       "operations": "Operațiuni",
-      "insights": "Analiză"
+      "insights": "Analiză",
+      "system": "Sistem"
     },
-    "pendingApprovals": "{count} aprobări în așteptare"
+    "pendingApprovals": "{count} aprobări în așteptare",
+    "account": "Contul meu",
+    "admins": "Administratori"
   },
   "roles": {
     "SUPER_ADMIN": "Super admin",
@@ -477,5 +480,132 @@
     "before": "Înainte",
     "after": "După",
     "meta": "Detalii"
+  },
+  "account": {
+    "kicker": "Setări",
+    "title": "Contul meu",
+    "description": "Profilul, parola, autentificarea în doi pași și dispozitivele conectate.",
+    "profile": {
+      "title": "Profil",
+      "name": "Nume afișat",
+      "save": "Salvează",
+      "saved": "Nume actualizat",
+      "email": "Email",
+      "role": "Rol",
+      "since": "Administrator din",
+      "lastLogin": "Ultima autentificare",
+      "emailHelp": "Emailul și rolul sunt modificate de un Super admin."
+    },
+    "password": {
+      "title": "Parolă",
+      "current": "Parola actuală",
+      "new": "Parola nouă",
+      "confirm": "Repetă parola nouă",
+      "rules": "Minimum 8 caractere, cu o literă și o cifră.",
+      "code": "Cod din aplicația de autentificare",
+      "note": "Celelalte dispozitive vor fi deconectate.",
+      "submit": "Schimbă parola",
+      "changed": "Parolă schimbată. Celelalte dispozitive au fost deconectate."
+    },
+    "totp": {
+      "title": "Autentificare în doi pași",
+      "app": "Aplicație de autentificare",
+      "on": "Activă",
+      "off": "Neconfigurată",
+      "help": "Ai telefon nou? Mută codurile aici. Ai nevoie mai întâi de un cod din aplicația actuală.",
+      "move": "Mută pe un telefon nou",
+      "step1": "Pasul 1 din 2: introdu un cod din aplicația actuală.",
+      "step2": "Pasul 2 din 2: scanează codul QR cu noul telefon, apoi introdu codul afișat.",
+      "manual": "Sau introdu manual această cheie:",
+      "currentCode": "Cod din aplicația actuală",
+      "newCode": "Cod din aplicația nouă",
+      "continue": "Continuă",
+      "confirm": "Treci pe noul telefon",
+      "changed": "Autentificarea a fost mutată pe noul telefon. Celelalte dispozitive au fost deconectate."
+    },
+    "sessions": {
+      "title": "Conectat pe",
+      "current": "Acest dispozitiv",
+      "active": "activ {when}",
+      "end": "Deconectează",
+      "endOthers": "Deconectează {count, plural, one {celălalt dispozitiv} few {# alte dispozitive} other {# de alte dispozitive}}",
+      "ended": "Deconectat"
+    }
+  },
+  "admins": {
+    "kicker": "Sistem",
+    "title": "Administratori",
+    "description": "Cine are acces la back office și ce poate face fiecare. Doar Super adminii văd această pagină.",
+    "add": "Adaugă administrator",
+    "you": "tu",
+    "never": "Niciodată",
+    "locked": "Blocat",
+    "totpOn": "Activă",
+    "totpPending": "QR la următoarea autentificare",
+    "forbiddenTitle": "Doar pentru Super admini",
+    "forbiddenHelp": "Cere unui Super admin să creeze sau să modifice conturi de administrator.",
+    "status": {
+      "ACTIVE": "Activ",
+      "SUSPENDED": "Suspendat"
+    },
+    "cols": {
+      "admin": "Administrator",
+      "role": "Rol",
+      "status": "Stare",
+      "totp": "Autentificare 2 pași",
+      "lastLogin": "Ultima autentificare",
+      "actions": "Acțiuni"
+    },
+    "actions": {
+      "edit": "Editează nume, email, rol",
+      "suspend": "Suspendă",
+      "activate": "Activează",
+      "resetPassword": "Resetează parola",
+      "resetTotp": "Resetează autentificarea în doi pași"
+    },
+    "fields": {
+      "name": "Nume complet",
+      "email": "Email",
+      "role": "Rol"
+    },
+    "roleHelp": {
+      "SUPER_ADMIN": "Tot, inclusiv gestionarea administratorilor.",
+      "OPERATOR": "Jucători, pariuri și setări sportsbook (ligi, piețe, meciuri, limite de pariere).",
+      "FINANCE": "Bani: adăugare/retragere credit, aprobări, pragul de aprobare."
+    },
+    "create": {
+      "title": "Adaugă un administrator",
+      "help": "Primește o parolă temporară și configurează autentificarea în doi pași cu un cod QR la prima autentificare.",
+      "submit": "Creează administrator"
+    },
+    "edit": {
+      "title": "Editează administratorul",
+      "emailHelp": "Schimbarea emailului sau a rolului îl deconectează peste tot.",
+      "ownRole": "Nu îți poți schimba propriul rol."
+    },
+    "confirm": {
+      "suspendTitle": "Suspenzi pe {name}?",
+      "suspendHelp": "Este deconectat imediat și nu se poate autentifica până la reactivare.",
+      "activateTitle": "Activezi pe {name}?",
+      "activateHelp": "Se poate autentifica din nou (și blocarea se ridică).",
+      "passwordTitle": "Resetezi parola lui {name}?",
+      "passwordHelp": "O parolă temporară nouă este afișată o singură dată; este deconectat peste tot.",
+      "totpTitle": "Resetezi autentificarea în doi pași pentru {name}?",
+      "totpHelp": "Aplicația de autentificare este deconectată; la următoarea autentificare scanează un cod QR nou. Folosește când telefonul s-a pierdut."
+    },
+    "temp": {
+      "title": "Parolă temporară",
+      "copy": "Copiază",
+      "copied": "Copiat",
+      "once": "Parola este afișată doar acum. Copiaz-o și trimite-o administratorului pe un canal sigur.",
+      "next": "La următoarea autentificare configurează autentificarea în doi pași cu un cod QR, apoi pot schimba parola din Contul meu.",
+      "done": "Gata"
+    },
+    "toast": {
+      "saved": "Administrator actualizat",
+      "suspended": "Administrator suspendat și deconectat",
+      "activated": "Administrator activat",
+      "totpReset": "Autentificare resetată: QR la următoarea autentificare"
+    }
   }
 }

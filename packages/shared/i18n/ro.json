@@ -40,7 +40,9 @@
     "REASON_REQUIRED": "Motivul este obligatoriu.",
     "APPROVAL_REQUIRED": "Această sumă necesită aprobarea unui al doilea administrator.",
     "SELF_APPROVAL": "Nu îți poți aproba propria cerere.",
-    "NEGATIVE_BALANCE": "Soldul nu poate scădea sub zero."
+    "NEGATIVE_BALANCE": "Soldul nu poate scădea sub zero.",
+    "LAST_SUPER_ADMIN": "Trebuie să existe mereu cel puțin un Super admin activ.",
+    "SELF_ACTION": "Nu poți face această acțiune pe propriul cont."
   },
   "validation": {
     "required": "Acest câmp este obligatoriu.",

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { AUDIT_CATEGORIES, MARKET_TYPES, TicketStatus, USER_LIMIT_TYPES, WALLET_TX_TYPES } from '../enums.js';
 import { SETTING_KEYS } from '../settings.js';
-import { phoneSchema } from './auth.js';
+import { emailSchema, passwordSchema, phoneSchema } from './auth.js';
 
 /** Request schemas for the admin panel (F3.2–F3.8). Shared by the API and the admin app. */
 
@@ -119,3 +119,30 @@ export const adminAuditQuerySchema = z.object({
   ...dateRange,
   ...cursorPage,
 });
+
+// ── admin accounts (own account + Super admin management) ──
+const totpCode = z.string().trim().regex(/^\d{6}$/, { message: 'validation.totp' });
+const adminName = z.string().trim().min(2, { message: 'validation.name' }).max(80);
+const adminRole = z.enum(['SUPER_ADMIN', 'OPERATOR', 'FINANCE']);
+
+export const adminAccountUpdateSchema = z.object({ name: adminName });
+
+/** Changing the password needs the current one and a fresh 2FA code; other sessions end. */
+export const adminPasswordChangeSchema = z.object({
+  currentPassword: z.string().min(1, { message: 'validation.required' }),
+  newPassword: passwordSchema,
+  totp: totpCode,
+});
+
+/** Moving 2FA to a new phone: prove the current authenticator, then confirm the new one. */
+export const adminTotpCodeSchema = z.object({ totp: totpCode });
+export const adminTotpConfirmSchema = z.object({ setupToken: z.string().min(10), totp: totpCode });
+
+export const adminCreateSchema = z.object({ name: adminName, email: emailSchema, role: adminRole });
+
+export const adminUpdateSchema = z
+  .object({ name: adminName.optional(), email: emailSchema.optional(), role: adminRole.optional(), reason })
+  .refine((v) => v.name !== undefined || v.email !== undefined || v.role !== undefined, { message: 'validation.required' });
+
+export const adminStatusSchema = z.object({ status: z.enum(['ACTIVE', 'SUSPENDED']), reason });
+export const adminReasonSchema = z.object({ reason });

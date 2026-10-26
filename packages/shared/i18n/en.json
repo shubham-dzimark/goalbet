@@ -40,7 +40,9 @@
     "REASON_REQUIRED": "A reason is required.",
     "APPROVAL_REQUIRED": "This amount needs approval from a second admin.",
     "SELF_APPROVAL": "You cannot approve your own request.",
-    "NEGATIVE_BALANCE": "The balance cannot go below zero."
+    "NEGATIVE_BALANCE": "The balance cannot go below zero.",
+    "LAST_SUPER_ADMIN": "There must always be at least one active Super admin.",
+    "SELF_ACTION": "You cannot do this to your own account."
   },
   "validation": {
     "required": "This field is required.",

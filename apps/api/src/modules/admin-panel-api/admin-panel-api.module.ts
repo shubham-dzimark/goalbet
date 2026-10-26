@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { WalletLedgerModule } from '../wallet-ledger/wallet-ledger.module.js';
+import { AdminAccountController, AdminAdminsController } from './admin-accounts.controller.js';
+import { AdminAccountsService } from './admin-accounts.service.js';
 import { AdminAuthController } from './admin-auth.controller.js';
 import { AdminAuthService } from './admin-auth.service.js';
 import { AdminBetsController } from './admin-bets.controller.js';
@@ -14,7 +16,7 @@ import { AdminWalletController } from './admin-wallet.controller.js';
 /** F4.2 AdminPanelApi — everything behind the admin app (F3.1–F3.8). */
 @Module({
   imports: [WalletLedgerModule],
-  controllers: [AdminAuthController, AdminUsersController, AdminWalletController, AdminBetsController, AdminSportsbookController, AdminReportsController],
-  providers: [AdminAuthService, AdminUsersService, AdminSportsbookService, AdminReportsService],
+  controllers: [AdminAuthController, AdminAccountController, AdminAdminsController, AdminUsersController, AdminWalletController, AdminBetsController, AdminSportsbookController, AdminReportsController],
+  providers: [AdminAuthService, AdminAccountsService, AdminUsersService, AdminSportsbookService, AdminReportsService],
 })
 export class AdminPanelApiModule {}

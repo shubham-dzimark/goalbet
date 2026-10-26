@@ -24,7 +24,9 @@
 - **Admin access:** admins are seeded without an authenticator, so the first login shows a QR code; `pnpm --filter @goalbet/api admin:access [--email …] [--rotate-passwords]` unlinks authenticators (e.g. lost phone) and can rotate passwords.
 - **Fixes:** the odds feed no longer reopens a market an operator suspended; the settings cache is cleared between tests.
 
-**Tests:** 77 API integration (12 new in `admin-panel.test.ts`) · i18n parity (web + admin). All green. Admin screens checked in Chromium at 1600 px and 390 px.
+- **Admin accounts:** *My account* for every admin (name, password change with current password + 2FA code, moving 2FA to a new phone, active sessions with sign-out) and *Admin users* for Super admins (create admins with a role and a one-time temporary password, edit name/email/role, suspend/activate, reset password or 2FA). Role/email/password/2FA/status changes sign the admin out everywhere; nobody can demote, suspend or reset themselves, and one active Super admin always remains.
+
+**Tests:** 73 API integration (12 in `admin-panel.test.ts`, 8 in `admin-accounts.test.ts`) · i18n parity (web + admin). All green. Admin screens checked in Chromium at 1600 px and 390 px.
 
 ## How to try phase 3
 
@@ -32,6 +34,7 @@
 2. Users → open a player → Add credit (above 5,000 RON it waits for a second admin under Wallet → Approvals), Suspend, Limits.
 3. Sportsbook → Matches → suspend a match, open it to suspend a single market; Leagues / Markets toggles; Limits.
 4. Bets, Reports (7/30/90 days, CSV) and Audit logs (every action above is there, with before/after).
+5. Click your name at the bottom of the sidebar for *My account*; Super admins also get *Admin users* (Add admin → pick Super admin / Operator / Finance → copy the one-time password).
 
 ## Phase 1 — what was built
 

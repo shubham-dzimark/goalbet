@@ -170,3 +170,49 @@ export interface AdminSettings {
 }
 
 export type AdminRoleName = AdminRole;
+
+export interface AdminSessionRow {
+  id: string;
+  ip: string | null;
+  userAgent: string | null;
+  createdAt: string;
+  lastUsedAt: string;
+  current: boolean;
+}
+
+export interface AdminAccount {
+  id: string;
+  name: string;
+  email: string;
+  role: AdminRole;
+  locale: string;
+  totpEnabled: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+  sessions: AdminSessionRow[];
+}
+
+export interface AdminUserAccountRow {
+  id: string;
+  name: string;
+  email: string;
+  role: AdminRole;
+  status: UserStatus;
+  totpEnabled: boolean;
+  locked: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+}
+
+/** Shown once, never stored in clear text. */
+export interface AdminTempPassword {
+  admin: AdminUserAccountRow;
+  temporaryPassword: string;
+}
+
+export interface AdminTotpSetup {
+  setupToken: string;
+  otpauthUrl: string;
+  qrDataUrl: string;
+  secret: string;
+}
