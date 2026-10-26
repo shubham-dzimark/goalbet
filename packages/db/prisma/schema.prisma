@@ -58,6 +58,27 @@ enum WalletTxType {
   CASHOUT
   REFUND
   VOID_REVERSAL
+  /// player deposit, credited when Finance confirms the money arrived
+  DEPOSIT
+  /// player withdrawal, debited when Finance confirms the payout
+  WITHDRAWAL
+}
+
+enum PaymentRequestType {
+  DEPOSIT
+  WITHDRAWAL
+}
+
+enum PaymentRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CASH_AT_SHOP
 }
 
 enum CreditApprovalStatus {
@@ -173,22 +194,23 @@ model User {
   passwordResets  PasswordReset[]
   betAttempts     BetAttempt[]
   creditApprovals CreditApproval[]
+  paymentRequests PaymentRequest[]
 
   @@index([createdAt])
 }
 
 model UserLimit {
-  id         String        @id @default(uuid(7)) @db.Uuid
-  userId     String        @db.Uuid
-  type       UserLimitType
-  source     LimitSource   @default(USER)
-  amountBani Int
+  id                String        @id @default(uuid(7)) @db.Uuid
+  userId            String        @db.Uuid
+  type              UserLimitType
+  source            LimitSource   @default(USER)
+  amountBani        Int
   /// Increases requested by the player take effect after a cooling-off period.
-  effectiveAt DateTime     @default(now())
+  effectiveAt       DateTime      @default(now())
   /// Pending higher value waiting for effectiveAt.
   pendingAmountBani Int?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -222,18 +244,18 @@ model PasswordReset {
 
 /// Refresh-token sessions for players and admins (rotated on every refresh).
 model AuthSession {
-  id          String    @id @default(uuid(7)) @db.Uuid
-  subjectType ActorType
-  subjectId   String    @db.Uuid
-  tokenHash   String    @unique
+  id            String    @id @default(uuid(7)) @db.Uuid
+  subjectType   ActorType
+  subjectId     String    @db.Uuid
+  tokenHash     String    @unique
   /// Hash of the token this one replaced; presenting it again signals refresh-token theft.
-  prevTokenHash String? @unique
-  expiresAt   DateTime
-  lastUsedAt  DateTime  @default(now())
-  revokedAt   DateTime?
-  ip          String?
-  userAgent   String?
-  createdAt   DateTime  @default(now())
+  prevTokenHash String?   @unique
+  expiresAt     DateTime
+  lastUsedAt    DateTime  @default(now())
+  revokedAt     DateTime?
+  ip            String?
+  userAgent     String?
+  createdAt     DateTime  @default(now())
 
   @@index([subjectType, subjectId])
 }
@@ -258,9 +280,11 @@ model AdminUser {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  requestedApprovals CreditApproval[] @relation("requestedBy")
-  decidedApprovals   CreditApproval[] @relation("decidedBy")
-  transactions       WalletTransaction[]
+  requestedApprovals    CreditApproval[]    @relation("requestedBy")
+  decidedApprovals      CreditApproval[]    @relation("decidedBy")
+  decidedPayments       PaymentRequest[]    @relation("paymentDecidedBy")
+  firstApprovedPayments PaymentRequest[]    @relation("paymentFirstApprovedBy")
+  transactions          WalletTransaction[]
 }
 
 // ───────────────────────────── wallet ─────────────────────────────
@@ -269,6 +293,8 @@ model Wallet {
   id          String   @id @default(uuid(7)) @db.Uuid
   userId      String   @unique @db.Uuid
   balanceBani Int      @default(0)
+  /// reserved by pending withdrawals; available = balance - held
+  heldBani    Int      @default(0)
   version     Int      @default(0)
   currency    String   @default("RON")
   createdAt   DateTime @default(now())
@@ -387,24 +413,24 @@ model Event {
 }
 
 model Market {
-  id         String       @id @default(uuid(7)) @db.Uuid
-  eventId    String       @db.Uuid
+  id             String       @id @default(uuid(7)) @db.Uuid
+  eventId        String       @db.Uuid
   /// Stable key within the event (see packages/shared marketKey).
-  key        String
-  type       MarketType
-  period     MarketPeriod @default(FT)
-  line       Decimal?     @db.Decimal(5, 2)
-  team       Team?
-  playerRef  String?
-  playerName String?
-  status     MarketStatus @default(OPEN)
+  key            String
+  type           MarketType
+  period         MarketPeriod @default(FT)
+  line           Decimal?     @db.Decimal(5, 2)
+  team           Team?
+  playerRef      String?
+  playerName     String?
+  status         MarketStatus @default(OPEN)
   /// Disabled by an admin for this event (F3.5).
-  enabled    Boolean      @default(true)
+  enabled        Boolean      @default(true)
   /// Suspended by an admin (F3.5); the provider ingest never touches this flag.
-  adminSuspended Boolean  @default(false)
-  sortOrder  Int          @default(0)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  adminSuspended Boolean      @default(false)
+  sortOrder      Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   event      Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
   selections Selection[]
@@ -435,10 +461,10 @@ model Selection {
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 
-  market         Market               @relation(fields: [marketId], references: [id], onDelete: Cascade)
-  history        OddsHistory[]
-  legSelections  TicketLegSelection[]
-  boost          OddsBoost?
+  market        Market               @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  history       OddsHistory[]
+  legSelections TicketLegSelection[]
+  boost         OddsBoost?
 
   @@unique([marketId, outcome])
 }
@@ -556,15 +582,15 @@ model BetAttempt {
 
 /// Result used to settle an event (F2.9). A resettle adds a new version.
 model SettlementRecord {
-  id        String   @id @default(uuid(7)) @db.Uuid
-  eventId   String   @db.Uuid
-  version   Int
-  result    Json
-  source    String
-  adminId   String?  @db.Uuid
-  reason    String?
-  ticketsSettled Int @default(0)
-  createdAt DateTime @default(now())
+  id             String   @id @default(uuid(7)) @db.Uuid
+  eventId        String   @db.Uuid
+  version        Int
+  result         Json
+  source         String
+  adminId        String?  @db.Uuid
+  reason         String?
+  ticketsSettled Int      @default(0)
+  createdAt      DateTime @default(now())
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Restrict)
 
@@ -615,4 +641,36 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([actorId, createdAt])
   @@index([action, createdAt])
+}
+
+/// Player deposit / withdrawal request (admin-controlled wallet): the player asks, Finance decides.
+/// A withdrawal holds its amount on the wallet until approved (debited) or rejected/cancelled (released).
+model PaymentRequest {
+  id                String               @id @default(uuid(7)) @db.Uuid
+  /// short code the player puts on a bank transfer / shows at the shop, e.g. D-7K2Q9M
+  reference         String               @unique @db.VarChar(12)
+  userId            String               @db.Uuid
+  type              PaymentRequestType
+  method            PaymentMethod
+  amountBani        Int
+  status            PaymentRequestStatus @default(PENDING)
+  /// deposit: payer's transfer reference; withdrawal: { iban, accountHolder }
+  details           Json                 @default("{}")
+  note              String?
+  /// above the approval threshold a second, different admin must approve too
+  firstApprovedById String?              @db.Uuid
+  firstApprovedAt   DateTime?
+  decidedById       String?              @db.Uuid
+  decidedAt         DateTime?
+  decisionNote      String?
+  transactionId     String?              @unique @db.Uuid
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  user            User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  firstApprovedBy AdminUser? @relation("paymentFirstApprovedBy", fields: [firstApprovedById], references: [id])
+  decidedBy       AdminUser? @relation("paymentDecidedBy", fields: [decidedById], references: [id])
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
 }

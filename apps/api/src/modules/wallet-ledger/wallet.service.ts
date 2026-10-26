@@ -18,6 +18,8 @@ export interface LedgerEntry {
   approvalId?: string | null;
   /** Guards against double crediting (e.g. `WIN:<ticketId>`). */
   uniqueRef?: string | null;
+  /** WITHDRAWAL only: the hold this payout consumes (released in the same update). */
+  releaseHoldBani?: number;
 }
 
 /**
@@ -36,8 +38,8 @@ export class WalletService {
 
   /** Lock and read the wallet row for the rest of the transaction. */
   async lock(tx: Tx, userId: string) {
-    const rows = await tx.$queryRaw<{ id: string; balanceBani: number }[]>`
-      SELECT id, "balanceBani" FROM "Wallet" WHERE "userId" = ${userId}::uuid FOR UPDATE`;
+    const rows = await tx.$queryRaw<{ id: string; balanceBani: number; heldBani: number }[]>`
+      SELECT id, "balanceBani", "heldBani" FROM "Wallet" WHERE "userId" = ${userId}::uuid FOR UPDATE`;
     const w = rows[0];
     if (!w) throw new DomainError('NOT_FOUND');
     return w;
@@ -48,9 +50,13 @@ export class WalletService {
     if (!e.reason.trim()) throw new DomainError('REASON_REQUIRED');
     const w = await this.lock(tx, e.userId);
     const balanceAfter = w.balanceBani + e.amountBani;
-    if (balanceAfter < 0) throw new DomainError(e.type === 'STAKE' ? 'INSUFFICIENT_BALANCE' : 'NEGATIVE_BALANCE');
+    // money held for a pending withdrawal can't be staked or debited; only that withdrawal consumes it
+    const release = e.type === 'WITHDRAWAL' ? (e.releaseHoldBani ?? 0) : 0;
+    const heldAfter = w.heldBani - release;
+    if (heldAfter < 0) throw new Error('hold release larger than the held amount');
+    if (balanceAfter < heldAfter) throw new DomainError(e.type === 'STAKE' ? 'INSUFFICIENT_BALANCE' : 'NEGATIVE_BALANCE');
 
-    await tx.wallet.update({ where: { id: w.id }, data: { balanceBani: balanceAfter, version: { increment: 1 } } });
+    await tx.wallet.update({ where: { id: w.id }, data: { balanceBani: balanceAfter, heldBani: heldAfter, version: { increment: 1 } } });
     const row = await tx.walletTransaction.create({
       data: {
         walletId: w.id,
@@ -80,18 +86,32 @@ export class WalletService {
     return { transaction: row, balanceBani: balanceAfter };
   }
 
+  /** Reserve money for a pending withdrawal (no ledger entry: nothing has left the wallet yet). */
+  async hold(tx: Tx, userId: string, bani: number) {
+    const w = await this.lock(tx, userId);
+    if (w.balanceBani - w.heldBani < bani) throw new DomainError('INSUFFICIENT_BALANCE', { availableBani: w.balanceBani - w.heldBani });
+    await tx.wallet.update({ where: { id: w.id }, data: { heldBani: w.heldBani + bani, version: { increment: 1 } } });
+    return { balanceBani: w.balanceBani, heldBani: w.heldBani + bani };
+  }
+
+  /** Give held money back (withdrawal rejected or cancelled). */
+  async releaseHold(tx: Tx, userId: string, bani: number) {
+    const w = await this.lock(tx, userId);
+    await tx.wallet.update({ where: { id: w.id }, data: { heldBani: Math.max(0, w.heldBani - bani), version: { increment: 1 } } });
+  }
+
   /** Push the new balance to the player's sockets (call after commit). */
   async publishBalance(userId: string) {
-    const w = await this.prisma.wallet.findUnique({ where: { userId }, select: { balanceBani: true } });
+    const w = await this.prisma.wallet.findUnique({ where: { userId }, select: { balanceBani: true, heldBani: true } });
     if (!w) return;
-    const msg: WalletMessage = { type: 'wallet', userId, balanceBani: w.balanceBani };
+    const msg: WalletMessage = { type: 'wallet', userId, balanceBani: w.balanceBani, heldBani: w.heldBani };
     await this.redis.publish(Channels.WALLET_UPDATES, msg).catch(() => undefined);
   }
 
   async balance(userId: string) {
     const w = await this.prisma.wallet.findUnique({ where: { userId } });
     if (!w) throw new DomainError('NOT_FOUND');
-    return { balanceBani: w.balanceBani, currency: w.currency };
+    return { balanceBani: w.balanceBani, heldBani: w.heldBani, availableBani: w.balanceBani - w.heldBani, currency: w.currency };
   }
 
   /** F1.8 — transaction history with type/date filters, newest first. */

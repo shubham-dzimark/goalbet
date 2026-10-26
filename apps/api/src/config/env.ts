@@ -39,6 +39,10 @@ const envSchema = z.object({
   JOBS_MODE: z.enum(['worker', 'on-request']).default('worker'),
   /** Bearer secret for GET /cron/refresh (Vercel Cron sends it). */
   CRON_SECRET: z.string().min(16).optional(),
+  /** Where players send bank-transfer deposits (shown on the wallet page). Placeholders until real details exist. */
+  PAYMENT_BANK_BENEFICIARY: z.string().default('GoalBet Demo SRL'),
+  PAYMENT_BANK_IBAN: z.string().default('RO49AAAA1B31007593840000'),
+  PAYMENT_BANK_NAME: z.string().default('Demo Bank'),
   /** Dev/test-only endpoints to drive the mock provider (never in production). */
   MOCK_CONTROL_ENABLED: bool.default(false),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),

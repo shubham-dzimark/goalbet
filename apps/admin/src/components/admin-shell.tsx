@@ -52,6 +52,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
     enabled: status === 'authed' && can('FINANCE'),
     refetchInterval: 30_000,
   });
+  // player deposit / withdrawal requests waiting for Finance
+  const { data: pendingPayments } = useQuery({
+    queryKey: ['pending-payments'],
+    queryFn: () => adminApi<{ items: unknown[] }>('/admin/payment-requests?status=PENDING&limit=100').then((p) => p.items.length),
+    enabled: status === 'authed' && can('FINANCE'),
+    refetchInterval: 30_000,
+  });
 
   if (status !== 'authed' || !admin) {
     return (
@@ -70,7 +77,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
     useSession.getState().clear();
   };
   const active = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
-  const badge = (key: string) => (key === 'wallet' && approvals && approvals.length > 0 ? approvals.length : null);
+  const walletWaiting = (approvals?.length ?? 0) + (pendingPayments ?? 0);
+  const badge = (key: string) => (key === 'wallet' && walletWaiting > 0 ? walletWaiting : null);
   const initials = admin.name
     .split(/\s+/)
     .map((w) => w[0])

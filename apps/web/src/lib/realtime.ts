@@ -137,6 +137,10 @@ export function useRealtimeConnection() {
       const { user, setUser } = useAuth.getState();
       if (user && user.id === m.userId && user.balanceBani !== m.balanceBani) setUser({ ...user, balanceBani: m.balanceBani });
       void qc.invalidateQueries({ queryKey: ['wallet'] });
+      void qc.invalidateQueries({ queryKey: ['payment-info'] });
+    });
+    s.on('payment', () => {
+      for (const k of ['payment-requests', 'payment-info', 'wallet', 'wallet-tx']) void qc.invalidateQueries({ queryKey: [k] });
     });
     s.on('ticket', (m: TicketMessage) => {
       void qc.invalidateQueries({ queryKey: ['tickets'] });

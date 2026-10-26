@@ -111,8 +111,8 @@ export default function ReportsPage() {
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard label={t('kpi.users')} value={f.num(data.users.total)} icon={Users} hint={t('kpi.usersHint', { new: data.users.new, active: data.users.active, suspended: data.users.suspended })} />
             <StatCard label={t('kpi.exposure')} value={f.ron(data.exposure.potentialPayoutBani)} icon={ShieldAlert} tone="gold" hint={t('kpi.exposureHint', { count: data.exposure.openTickets, stake: f.ron(data.exposure.openStakeBani) })} />
-            <StatCard label={t('kpi.credits')} value={f.ron(data.wallet.creditsBani)} icon={Banknote} tone="brand" />
-            <StatCard label={t('kpi.debits')} value={f.ron(data.wallet.debitsBani)} icon={Banknote} />
+            <StatCard label={t('kpi.deposits')} value={f.ron(data.wallet.depositsBani)} icon={Banknote} tone="brand" hint={t('kpi.creditsHint', { amount: f.ron(data.wallet.creditsBani) })} />
+            <StatCard label={t('kpi.withdrawals')} value={f.ron(data.wallet.withdrawalsBani)} icon={Banknote} hint={t('kpi.debitsHint', { amount: f.ron(data.wallet.debitsBani) })} />
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">

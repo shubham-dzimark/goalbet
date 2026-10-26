@@ -1,4 +1,4 @@
-import type { EventStatus, MarketStatus, MatchPeriod, TicketStatus } from './enums.js';
+import type { EventStatus, MarketStatus, MatchPeriod, PaymentRequestStatus, PaymentRequestType, TicketStatus } from './enums.js';
 import type { CashOutUnavailableReason } from './cashout.js';
 
 /** WebSocket / Redis pub-sub payloads (F1.6, F2.2, F2.3). */
@@ -45,6 +45,18 @@ export interface WalletMessage {
   type: 'wallet';
   userId: string;
   balanceBani: number;
+  /** reserved by pending withdrawals */
+  heldBani: number;
+}
+
+/** A deposit / withdrawal request changed status (approved, rejected…). */
+export interface PaymentMessage {
+  type: 'payment';
+  userId: string;
+  requestId: string;
+  requestType: PaymentRequestType;
+  status: PaymentRequestStatus;
+  amountBani: number;
 }
 
 /** Socket.IO rooms */

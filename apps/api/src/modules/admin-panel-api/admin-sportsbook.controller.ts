@@ -98,7 +98,7 @@ export class AdminSportsbookController {
     return this.sportsbook.getSettings();
   }
 
-  /** Betting/cash-out limits belong to OPERATOR, wallet.* (approval threshold) to FINANCE. */
+  /** Betting/cash-out limits belong to OPERATOR; wallet.* and payments.* (money rules) to FINANCE. */
   @Put('settings')
   @Roles('OPERATOR', 'FINANCE')
   updateSetting(
@@ -106,7 +106,7 @@ export class AdminSportsbookController {
     @ZBody(adminSettingUpdateSchema) body: z.output<typeof adminSettingUpdateSchema>,
     @ReqMeta() meta: RequestMeta,
   ) {
-    const owner = body.key.startsWith('wallet.') ? 'FINANCE' : 'OPERATOR';
+    const owner = body.key.startsWith('wallet.') || body.key.startsWith('payments.') ? 'FINANCE' : 'OPERATOR';
     if (admin.role !== 'SUPER_ADMIN' && admin.role !== owner) throw new DomainError('FORBIDDEN');
     return this.sportsbook.updateSetting(actorOf(admin, meta), body.key as SettingKey, body.value);
   }

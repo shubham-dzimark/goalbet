@@ -8,8 +8,10 @@ export const Channels = {
   EVENT_UPDATES: 'gb:event-updates',
   /** Per-user ticket updates (status, cash-out offers): payload { userId, ... } */
   TICKET_UPDATES: 'gb:ticket-updates',
-  /** Wallet balance changes: payload { userId, balanceBani } */
+  /** Wallet balance changes: payload { userId, balanceBani, heldBani } */
   WALLET_UPDATES: 'gb:wallet-updates',
+  /** Deposit / withdrawal request status changes: payload PaymentMessage */
+  PAYMENT_UPDATES: 'gb:payment-updates',
   /** Settings changed by an admin: payload { key } */
   SETTINGS_CHANGED: 'gb:settings-changed',
 } as const;

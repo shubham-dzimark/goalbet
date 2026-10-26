@@ -2,7 +2,7 @@ import { Logger, type OnModuleInit } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { ConnectedSocket, MessageBody, type OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
-import { type EventMessage, type TicketMessage, type WalletMessage, rooms } from '@goalbet/shared';
+import { type EventMessage, type PaymentMessage, type TicketMessage, type WalletMessage, rooms } from '@goalbet/shared';
 import { TokensService } from '../../common/auth/tokens.service.js';
 import { Channels, RedisService } from '../../common/redis.service.js';
 import { loadEnv } from '../../config/env.js';
@@ -48,6 +48,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnModuleInit {
     await this.redis.subscribe(Channels.WALLET_UPDATES, (m) => {
       const msg = m as WalletMessage;
       this.server?.to(rooms.user(msg.userId)).emit('wallet', msg);
+    });
+    await this.redis.subscribe(Channels.PAYMENT_UPDATES, (m) => {
+      const msg = m as PaymentMessage;
+      this.server?.to(rooms.user(msg.userId)).emit('payment', msg);
     });
   }
 

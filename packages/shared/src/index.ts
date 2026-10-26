@@ -11,6 +11,8 @@ export * from './settings.js';
 export * from './schemas/auth.js';
 export * from './schemas/betting.js';
 export * from './schemas/admin.js';
+export * from './schemas/payments.js';
+export * from './payments.js';
 export * from './admin.js';
 export * from './catalog.js';
 export * from './i18n-keys.js';

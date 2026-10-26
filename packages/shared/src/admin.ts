@@ -131,7 +131,7 @@ export interface AdminReport {
   range: { from: string; to: string };
   users: { total: number; new: number; active: number; suspended: number };
   betting: { tickets: number; stakesBani: number; payoutsBani: number; ggrBani: number; avgStakeBani: number };
-  wallet: { creditsBani: number; debitsBani: number };
+  wallet: { creditsBani: number; debitsBani: number; depositsBani: number; withdrawalsBani: number };
   byStatus: Partial<Record<TicketStatus, number>>;
   exposure: { openTickets: number; openStakeBani: number; potentialPayoutBani: number };
   daily: { date: string; stakesBani: number; payoutsBani: number; tickets: number }[];
@@ -142,6 +142,8 @@ export interface AdminDashboard {
   liveEvents: number;
   openTickets: number;
   pendingApprovals: number;
+  /** player deposit / withdrawal requests waiting for Finance */
+  pendingPayments: number;
   today: { tickets: number; stakesBani: number; payoutsBani: number; newUsers: number };
   exposureBani: number;
   last7Days: { date: string; stakesBani: number; payoutsBani: number }[];

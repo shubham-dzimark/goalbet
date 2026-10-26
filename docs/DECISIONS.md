@@ -85,3 +85,11 @@ Choices not dictated by the brief, with the reason. Newest last.
 55. **A ticket is LIVE as soon as any of its matches has kicked off** (placed live, or flipped at kick-off). It stays LIVE until settlement (phase 5).
 56. **Feed freshness = age of the live data, not of the last sync call.** Providers that cache live data report when it was fetched (`liveDataTime`). The watchdog suspends live matches of active leagues when the data is older than `feed.stallSeconds`; only fresh data lifts it (so sync and watchdog never flap). It runs in the always-on worker only.
 57. **Socket messages skip the HTTP rate limiter**: they only join/leave rooms and carry no money actions.
+
+## Deposit & withdrawal requests
+
+58. **Players request, Finance approves** — no self-service money movement, so F0.4 (admin-controlled wallet) still holds. Approved requests write ledger `DEPOSIT` / `WITHDRAWAL` entries with `uniqueRef = PAY:<requestId>` (no double posting). Methods: bank transfer and cash at a partner shop, each switchable; no card processing.
+59. **Withdrawals hold funds immediately** (`Wallet.heldBani`, CHECK 0 ≤ held ≤ balance). Every debit except the approved withdrawal itself must leave held money untouched (stakes → `INSUFFICIENT_BALANCE`, admin debits → `NEGATIVE_BALANCE`). Cancel/reject releases the hold. Cash out and settlement (phase 5) only ever add money, so they need no change.
+60. **Same four-eyes rule as manual credits:** above `wallet.approvalThresholdBani` a second, different Finance/Super admin must approve.
+61. **Limits:** per-request min/max for deposits and withdrawals (settings, Finance-owned), one waiting withdrawal and three waiting deposits per player. Self-excluded players can't deposit but can withdraw (it's their money).
+62. **Reference codes** (`D-`/`W-` + 6 characters without 0/O/1/I) identify a payment on a bank statement or at a shop counter. Players see a masked IBAN; Finance sees it in full. Bank details for deposits come from env vars (`PAYMENT_BANK_*`).

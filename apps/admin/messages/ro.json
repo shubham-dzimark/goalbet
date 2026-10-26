@@ -69,7 +69,8 @@
     "last7Days": "Ultimele 7 zile",
     "fullReport": "Raport complet",
     "recentActivity": "Activitate recentă",
-    "allActivity": "Toată activitatea"
+    "allActivity": "Toată activitatea",
+    "waitingSplit": "{requests} cereri jucători · {credits} creditări →"
   },
   "table": {
     "empty": "Nimic de afișat încă.",
@@ -195,7 +196,8 @@
     "tabs": {
       "approvals": "Aprobări",
       "adjust": "Adaugă / retrage credit",
-      "transactions": "Jurnal tranzacții"
+      "transactions": "Jurnal tranzacții",
+      "requests": "Cereri jucători"
     },
     "approvals": {
       "approved": "Aprobat și aplicat",
@@ -243,6 +245,62 @@
       "from": "De la",
       "to": "Până la",
       "export": "Export CSV"
+    },
+    "requests": {
+      "search": "Cod de referință sau email jucător…",
+      "balance": "Sold {balance} · rezervat {held}",
+      "payerRef": "Ref. plătitor: {ref}",
+      "secondNeeded": "Necesită a doua aprobare (prima: {email})",
+      "ownFirst": "Ai dat prima aprobare; al doilea administrator trebuie să fie altcineva.",
+      "reject": "Respinge",
+      "approveDeposit": "Bani primiți",
+      "approveWithdrawal": "Plătit",
+      "empty": "Nicio cerere aici.",
+      "emptyPending": "Nimic în așteptare. Cererile noi de depunere și retragere ale jucătorilor apar aici.",
+      "cols": {
+        "request": "Cerere",
+        "player": "Jucător",
+        "details": "Metodă și detalii",
+        "amount": "Sumă",
+        "status": "Stare",
+        "actions": "Acțiuni"
+      },
+      "views": {
+        "PENDING": "În așteptare",
+        "APPROVED": "Finalizate",
+        "REJECTED": "Respinse",
+        "CANCELLED": "Anulate",
+        "ALL": "Toate"
+      },
+      "types": {
+        "all": "Ambele",
+        "DEPOSIT": "Depuneri",
+        "WITHDRAWAL": "Retrageri"
+      },
+      "status": {
+        "PENDING": "În așteptare",
+        "APPROVED": "Finalizată",
+        "REJECTED": "Respinsă",
+        "CANCELLED": "Anulată de jucător"
+      },
+      "methods": {
+        "BANK_TRANSFER": "Transfer bancar",
+        "CASH_AT_SHOP": "Numerar la agenție"
+      },
+      "confirm": {
+        "approve": "Confirmă",
+        "approveDeposit": "Creditezi {amount} pentru {ref}?",
+        "approveDepositHelp": "Confirmă doar după ce banii de la {name} au intrat în cont (sau agenția a confirmat numerarul). Soldul se creditează imediat.",
+        "approveWithdrawal": "Marchezi {ref} ({amount}) ca plătită?",
+        "approveWithdrawalHelp": "Confirmă doar după ce {name} a fost plătit (transfer trimis sau numerar înmânat). Suma rezervată iese din portofel.",
+        "reject": "Respingi {ref} ({amount})?",
+        "rejectHelp": "{name} vede motivul. Suma rezervată a unei retrageri revine în sold."
+      },
+      "toast": {
+        "approved": "Gata: portofelul este actualizat și jucătorul notificat",
+        "firstApproval": "Prima aprobare salvată; un al doilea administrator financiar trebuie să confirme",
+        "rejected": "Cerere respinsă; jucătorul este notificat"
+      }
     }
   },
   "bets": {
@@ -372,7 +430,8 @@
         "cashout": "Cash out",
         "builder": "Bet Builder",
         "wallet": "Portofel (financiar)",
-        "feed": "Flux de cote"
+        "feed": "Flux de cote",
+        "payments": "Depuneri și retrageri (financiar)"
       },
       "keys": {
         "betting_minStakeBani": "Miză minimă",
@@ -384,7 +443,13 @@
         "cashout_marginBps": "Marjă cash out",
         "builder_factorBps": "Factor de preț Bet Builder",
         "wallet_approvalThresholdBani": "Aprobare de al doilea administrator peste",
-        "feed_stallSeconds": "Suspendă piețele live după o pauză a fluxului de"
+        "feed_stallSeconds": "Suspendă piețele live după o pauză a fluxului de",
+        "payments_bankTransferEnabled": "Transfer bancar",
+        "payments_cashAtShopEnabled": "Numerar la agenție",
+        "wallet_minDepositBani": "Depunere minimă",
+        "wallet_maxDepositBani": "Depunere maximă",
+        "wallet_minWithdrawalBani": "Retragere minimă",
+        "wallet_maxWithdrawalBani": "Retragere maximă"
       },
       "help": {
         "betting_minStakeBani": "Cea mai mică miză pe bilet",
@@ -396,7 +461,13 @@
         "cashout_marginBps": "Reținută de casă la un cash out",
         "builder_factorBps": "Aplicat prețurilor combinate din același meci",
         "wallet_approvalThresholdBani": "Creditările și debitările mai mari cer al doilea administrator",
-        "feed_stallSeconds": "Protejează împotriva cotelor live neactualizate"
+        "feed_stallSeconds": "Protejează împotriva cotelor live neactualizate",
+        "payments_bankTransferEnabled": "Oferă transfer bancar pentru depuneri și retrageri",
+        "payments_cashAtShopEnabled": "Oferă numerar la agențiile partenere",
+        "wallet_minDepositBani": "Cea mai mică depunere pe care o poate cere un jucător",
+        "wallet_maxDepositBani": "Cea mai mare cerere de depunere",
+        "wallet_minWithdrawalBani": "Cea mai mică retragere pe care o poate cere un jucător",
+        "wallet_maxWithdrawalBani": "Cea mai mare cerere de retragere"
       },
       "updated": "modificat {date}",
       "saved": "{name} salvat",
@@ -432,7 +503,11 @@
       "exposure": "Expunere deschisă",
       "exposureHint": "{count} bilete deschise · {stake} pariați",
       "credits": "Credit adăugat",
-      "debits": "Credit retras"
+      "debits": "Credit retras",
+      "deposits": "Depuneri",
+      "withdrawals": "Retrageri",
+      "creditsHint": "+ {amount} credit manual",
+      "debitsHint": "+ {amount} debit manual"
     },
     "trend": "Mize vs plăți",
     "byStatus": "Bilete după rezultat",

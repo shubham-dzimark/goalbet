@@ -357,7 +357,7 @@ function EventMarketsPanel({ event, onClose }: { event: AdminEventRow | null; on
 
 // ── limits & settings ──
 type Unit = 'ron' | 'percentBps' | 'seconds' | 'secondsMs' | 'count' | 'bool';
-const SETTINGS: { group: 'betting' | 'cashout' | 'builder' | 'wallet' | 'feed'; key: SettingKey; unit: Unit }[] = [
+const SETTINGS: { group: 'betting' | 'cashout' | 'builder' | 'wallet' | 'payments' | 'feed'; key: SettingKey; unit: Unit }[] = [
   { group: 'betting', key: 'betting.minStakeBani', unit: 'ron' },
   { group: 'betting', key: 'betting.maxStakeBani', unit: 'ron' },
   { group: 'betting', key: 'betting.maxPayoutBani', unit: 'ron' },
@@ -367,6 +367,12 @@ const SETTINGS: { group: 'betting' | 'cashout' | 'builder' | 'wallet' | 'feed'; 
   { group: 'cashout', key: 'cashout.marginBps', unit: 'percentBps' },
   { group: 'builder', key: 'builder.factorBps', unit: 'percentBps' },
   { group: 'wallet', key: 'wallet.approvalThresholdBani', unit: 'ron' },
+  { group: 'payments', key: 'payments.bankTransferEnabled', unit: 'bool' },
+  { group: 'payments', key: 'payments.cashAtShopEnabled', unit: 'bool' },
+  { group: 'payments', key: 'wallet.minDepositBani', unit: 'ron' },
+  { group: 'payments', key: 'wallet.maxDepositBani', unit: 'ron' },
+  { group: 'payments', key: 'wallet.minWithdrawalBani', unit: 'ron' },
+  { group: 'payments', key: 'wallet.maxWithdrawalBani', unit: 'ron' },
   { group: 'feed', key: 'feed.stallSeconds', unit: 'seconds' },
 ];
 
@@ -399,7 +405,7 @@ function Limits() {
               setting={s}
               value={data.values[s.key]}
               updatedAt={data.updatedAt[s.key] ? f.dateTime(data.updatedAt[s.key]!) : null}
-              canEdit={can(g === 'wallet' ? 'FINANCE' : 'OPERATOR')}
+              canEdit={can(g === 'wallet' || g === 'payments' ? 'FINANCE' : 'OPERATOR')}
             />
           ))}
         </Panel>

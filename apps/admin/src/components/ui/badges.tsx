@@ -47,6 +47,7 @@ export function AuditCategoryBadge({ category }: { category: string }) {
 /** Ledger type with direction colour. */
 export function TxTypeBadge({ type }: { type: string }) {
   const t = useTranslations('txType');
-  const tone: Tone = type === 'STAKE' || type === 'ADMIN_DEBIT' ? 'neutral' : type === 'ADMIN_CREDIT' ? 'brand' : 'success';
+  const tone: Tone =
+    type === 'STAKE' || type === 'ADMIN_DEBIT' || type === 'WITHDRAWAL' ? 'neutral' : type === 'ADMIN_CREDIT' || type === 'DEPOSIT' ? 'brand' : 'success';
   return <Badge tone={tone}>{t(type)}</Badge>;
 }

@@ -8,7 +8,7 @@ const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 const num = (v: bigint | number | null | undefined) => Number(v ?? 0);
 
 /** Money flows come from the ledger (WalletTransaction), so reports always match the balances. */
-type LedgerTotals = { stakes: bigint; payouts: bigint; credits: bigint; debits: bigint };
+type LedgerTotals = { stakes: bigint; payouts: bigint; credits: bigint; debits: bigint; deposits: bigint; withdrawals: bigint };
 
 export function toAuditRow(a: AuditLog): AdminAuditRow {
   return {
@@ -39,9 +39,11 @@ export class AdminReportsService {
         COALESCE(SUM(-"amountBani") FILTER (WHERE type = 'STAKE'), 0)::bigint AS stakes,
         COALESCE(SUM("amountBani") FILTER (WHERE type IN ('WIN', 'CASHOUT', 'REFUND', 'VOID_REVERSAL')), 0)::bigint AS payouts,
         COALESCE(SUM("amountBani") FILTER (WHERE type = 'ADMIN_CREDIT'), 0)::bigint AS credits,
-        COALESCE(SUM(-"amountBani") FILTER (WHERE type = 'ADMIN_DEBIT'), 0)::bigint AS debits
+        COALESCE(SUM(-"amountBani") FILTER (WHERE type = 'ADMIN_DEBIT'), 0)::bigint AS debits,
+        COALESCE(SUM("amountBani") FILTER (WHERE type = 'DEPOSIT'), 0)::bigint AS deposits,
+        COALESCE(SUM(-"amountBani") FILTER (WHERE type = 'WITHDRAWAL'), 0)::bigint AS withdrawals
       FROM "WalletTransaction" WHERE "createdAt" >= ${from} AND "createdAt" < ${to}`;
-    return row ?? { stakes: 0n, payouts: 0n, credits: 0n, debits: 0n };
+    return row ?? { stakes: 0n, payouts: 0n, credits: 0n, debits: 0n, deposits: 0n, withdrawals: 0n };
   }
 
   /** One row per day in [from, to), zeros included. */
@@ -105,7 +107,7 @@ export class AdminReportsService {
       range: { from: isoDay(from), to: isoDay(new Date(to.getTime() - DAY)) },
       users: { total: totalUsers, new: newUsers, active: activeUsers, suspended },
       betting: { tickets, stakesBani: stakes, payoutsBani: payouts, ggrBani: stakes - payouts, avgStakeBani: tickets ? Math.round(stakes / tickets) : 0 },
-      wallet: { creditsBani: num(ledger.credits), debitsBani: num(ledger.debits) },
+      wallet: { creditsBani: num(ledger.credits), debitsBani: num(ledger.debits), depositsBani: num(ledger.deposits), withdrawalsBani: num(ledger.withdrawals) },
       byStatus: Object.fromEntries(byStatus.map((g) => [g.status, g._count])) as Partial<Record<TicketStatus, number>>,
       exposure,
       daily,
@@ -123,9 +125,10 @@ export class AdminReportsService {
   async dashboard(): Promise<AdminDashboard> {
     const today = new Date(`${isoDay(new Date())}T00:00:00Z`);
     const tomorrow = new Date(today.getTime() + DAY);
-    const [liveEvents, pendingApprovals, todayTickets, newUsers, ledger, exposure, last7, audit] = await Promise.all([
+    const [liveEvents, pendingApprovals, pendingPayments, todayTickets, newUsers, ledger, exposure, last7, audit] = await Promise.all([
       this.prisma.event.count({ where: { status: 'LIVE', competition: { active: true } } }),
       this.prisma.creditApproval.count({ where: { status: 'PENDING' } }),
+      this.prisma.paymentRequest.count({ where: { status: 'PENDING' } }),
       this.prisma.ticket.count({ where: { placedAt: { gte: today, lt: tomorrow }, status: { not: 'REJECTED' } } }),
       this.prisma.user.count({ where: { createdAt: { gte: today, lt: tomorrow } } }),
       this.ledger(today, tomorrow),
@@ -137,6 +140,7 @@ export class AdminReportsService {
       liveEvents,
       openTickets: exposure.openTickets,
       pendingApprovals,
+      pendingPayments,
       today: { tickets: todayTickets, stakesBani: num(ledger.stakes), payoutsBani: num(ledger.payouts), newUsers },
       exposureBani: exposure.potentialPayoutBani,
       last7Days: last7.map(({ date, stakesBani, payoutsBani }) => ({ date, stakesBani, payoutsBani })),

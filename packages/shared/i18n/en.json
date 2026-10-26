@@ -42,7 +42,12 @@
     "SELF_APPROVAL": "You cannot approve your own request.",
     "NEGATIVE_BALANCE": "The balance cannot go below zero.",
     "LAST_SUPER_ADMIN": "There must always be at least one active Super admin.",
-    "SELF_ACTION": "You cannot do this to your own account."
+    "SELF_ACTION": "You cannot do this to your own account.",
+    "PAYMENT_METHOD_DISABLED": "This payment method is not available right now.",
+    "PAYMENT_AMOUNT_LIMIT": "The amount is outside the allowed limits.",
+    "WITHDRAWAL_PENDING": "You already have a withdrawal waiting. Cancel it or wait for it to be processed.",
+    "TOO_MANY_PENDING": "You have too many deposit requests waiting.",
+    "REQUEST_NOT_PENDING": "This request has already been processed."
   },
   "validation": {
     "required": "This field is required.",
@@ -58,7 +63,9 @@
     "terms": "You must accept the terms and conditions.",
     "totp": "Enter the 6-digit code.",
     "amount": "Enter a valid amount.",
-    "reason": "Enter a reason (at least 3 characters)."
+    "reason": "Enter a reason (at least 3 characters).",
+    "iban": "Enter a valid IBAN (e.g. RO49 AAAA 1B31 0075 9384 0000).",
+    "holder": "Enter the account holder’s full name."
   },
   "markets": {
     "MATCH_RESULT": "Final result (1X2)",
@@ -138,7 +145,9 @@
     "WIN": "Winnings",
     "CASHOUT": "Cash out",
     "REFUND": "Refund",
-    "VOID_REVERSAL": "Void reversal"
+    "VOID_REVERSAL": "Void reversal",
+    "DEPOSIT": "Deposit",
+    "WITHDRAWAL": "Withdrawal"
   },
   "eventStatus": {
     "SCHEDULED": "Scheduled",

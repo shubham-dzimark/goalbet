@@ -283,5 +283,72 @@
     "statToday": "Azi",
     "statCompetitions": "Ligi",
     "statBoosted": "Cote mărite"
+  },
+  "payments": {
+    "copy": "Copiază",
+    "copied": "Copiat",
+    "close": "Închide",
+    "cancel": "Anulează",
+    "ok": "Gata",
+    "amount": "Sumă",
+    "reference": "Codul tău de referință",
+    "available": "Disponibil pentru retragere",
+    "requests": "Cererile mele",
+    "more": "Mai multe",
+    "cancelRequest": "Anulează",
+    "secondApproval": "Aprobată o dată; așteaptă a doua verificare.",
+    "rejectedBecause": "Respinsă: {note}",
+    "limits": "Între {min} și {max}",
+    "heldLine": "{held} rezervați pentru o retragere · {available} disponibili",
+    "note": "Depunerile și retragerile sunt verificate și confirmate de echipa noastră, de obicei într-o zi lucrătoare.",
+    "depositBlocked": "Depunerile sunt oprite cât timp ești autoexclus. Îți poți retrage în continuare soldul.",
+    "methods": {
+      "label": "Metodă de plată",
+      "BANK_TRANSFER": "Transfer bancar",
+      "BANK_TRANSFER_help": "Spre sau din contul bancar pe numele tău",
+      "CASH_AT_SHOP": "Numerar la agenție",
+      "CASH_AT_SHOP_help": "La o agenție parteneră, cu actul de identitate și codul de referință"
+    },
+    "status": {
+      "PENDING": "În așteptare",
+      "APPROVED": "Finalizată",
+      "REJECTED": "Respinsă",
+      "CANCELLED": "Anulată"
+    },
+    "bank": {
+      "iban": "Plătește în IBAN-ul",
+      "beneficiary": "Beneficiar",
+      "instructions": "Fă transferul din {bank} sau din orice bancă și scrie codul de referință în detaliile plății. Soldul este creditat după ce primim banii."
+    },
+    "shop": {
+      "depositInstructions": "Plătește suma în numerar la orice agenție parteneră, arătând actul de identitate și codul de referință. Soldul este creditat după confirmarea agenției.",
+      "withdrawInstructions": "După aprobare poți ridica banii de la o agenție parteneră, cu actul de identitate și acest cod de referință."
+    },
+    "deposit": {
+      "button": "Depune",
+      "label": "Depunere",
+      "title": "Cere o depunere",
+      "help": "Alege cum plătești și cât. Primești un cod de referință și detaliile de plată.",
+      "doneHelp": "Folosește aceste detalii pentru plată. Credităm soldul când primim banii.",
+      "done": "Cerere de depunere pentru {amount} creată.",
+      "payerReference": "Referința transferului (opțional)",
+      "payerReferenceHelp": "Dacă ai plătit deja, referința de la bancă ne ajută să identificăm plata.",
+      "submit": "Vezi detaliile de plată"
+    },
+    "withdraw": {
+      "button": "Retrage",
+      "label": "Retragere",
+      "title": "Cere o retragere",
+      "help": "Plătim după o verificare. Suma este rezervată acum ca să nu fie pariată din greșeală.",
+      "done": "Cerere de retragere pentru {amount} creată. Suma este rezervată.",
+      "bankNext": "Transferăm banii în contul tău după verificare, de obicei într-o zi lucrătoare.",
+      "alreadyPending": "Ai deja o retragere în așteptare. O poți anula mai jos, în Cererile mele.",
+      "range": "Între {min} și {max}",
+      "iban": "IBAN",
+      "holder": "Titularul contului (ca la bancă)",
+      "holdNote": "Suma rămâne rezervată până la finalizarea sau anularea retragerii; o poți anula cât timp este în așteptare.",
+      "submit": "Cere retragerea",
+      "tooLow": "Ai nevoie de cel puțin {min} disponibili pentru retragere. Ai {available}."
+    }
   }
 }

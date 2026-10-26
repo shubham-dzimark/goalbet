@@ -45,10 +45,18 @@ export default function DashboardPage() {
             <StatCard label={t('exposure')} value={f.compactRon(data.exposureBani)} icon={ShieldAlert} tone="gold" hint={t('exposureHint')} />
             <StatCard
               label={t('pendingApprovals')}
-              value={f.num(data.pendingApprovals)}
+              value={f.num(data.pendingApprovals + data.pendingPayments)}
               icon={Hourglass}
-              tone={data.pendingApprovals > 0 ? 'gold' : 'neutral'}
-              hint={data.pendingApprovals > 0 ? <Link href="/wallet" className="font-semibold text-brand hover:underline">{t('review')}</Link> : t('noneWaiting')}
+              tone={data.pendingApprovals + data.pendingPayments > 0 ? 'gold' : 'neutral'}
+              hint={
+                data.pendingApprovals + data.pendingPayments > 0 ? (
+                  <Link href="/wallet" className="font-semibold text-brand hover:underline">
+                    {t('waitingSplit', { requests: data.pendingPayments, credits: data.pendingApprovals })}
+                  </Link>
+                ) : (
+                  t('noneWaiting')
+                )
+              }
             />
           </div>
 

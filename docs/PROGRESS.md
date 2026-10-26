@@ -7,9 +7,26 @@
 | 3 | Admin app (F3.2–F3.8) | ✅ Done |
 | — | Redesign (Emerald Pitch, light/dark, 3D), real fixtures (API-Football free plan), local time zones, Vercel-ready API | ✅ Done |
 | 4 | Live (F1.6, F2.1, F2.2), WebSocket + Redis pub/sub, live delay, feed-stall safety | ✅ Done |
-| 5 | Cash out (F2.3–F2.7), settlement + payout + credit (F2.8–F2.11), reconciliation | — |
-| 6 | Bet Builder (F1.11), sportsbook settings (F3.5), reports + exposure (F3.6) | — |
-| 7 | Responsive polish, responsible gambling, provider skeleton, all E2E, README | — |
+| — | Player deposit & withdrawal requests (admin-approved), held funds, Finance queue | ✅ Done |
+| 5 | Cash out (F2.3–F2.7), settlement + payout + credit (F2.8–F2.11), reconciliation (incl. held funds = pending withdrawals); cash out and payouts respect held money | — |
+| 6 | Bet Builder (F1.11), sportsbook settings (F3.5), reports + exposure (F3.6) incl. deposits/withdrawals by day and method and queue age; player deposit limits (daily/weekly/monthly) | — |
+| 7 | Responsive polish, responsible gambling, provider skeleton, all E2E (incl. deposit/withdrawal flows), README with the licence / KYC / AML notes for real money | — |
+
+## Deposit & withdrawal requests — what was built
+
+- **Players ask, Finance decides** (the wallet stays admin-controlled, F0.4). Wallet page: *Deposit* (bank transfer or cash at a shop → a reference code like `D-7K2Q9M` and the bank details to pay to) and *Withdraw* (amount + IBAN and account holder, or cash at a shop). *My requests* shows each request's status live, the reason when rejected, and lets the player cancel while waiting.
+- **Withdrawals hold their amount at once** (`Wallet.heldBani`): held money can't be staked, debited by an admin or requested twice; approval pays it out (ledger `WITHDRAWAL`), rejection/cancel gives it back. Available = balance − held.
+- **Admin → Wallet → Player requests** (FINANCE): a queue oldest-first with player balance/held, method and details (full IBAN for Finance); *Money received* / *Paid out* or *Reject* with a reason. Above the approval threshold two different admins must approve. Sidebar badge and dashboard count waiting requests; reports show deposits and withdrawals separately from manual credits.
+- **Rules:** limits per request (min/max deposit and withdrawal), methods switchable, at most one waiting withdrawal and three waiting deposits, deposits blocked while self-excluded (withdrawals still allowed), IBAN checked (format + mod-97). Settings live under Sportsbook → Limits (*Deposits & withdrawals*, Finance only). Bank details come from `PAYMENT_BANK_*` env vars (demo values by default).
+- **Not included:** card/online payments; real money in Romania needs an ONJN licence, KYC and AML procedures (see phase 7).
+
+**Tests:** 84 API integration (6 new in `payments.test.ts`) · 4 new shared unit tests (IBAN) · i18n parity. Browser check: deposit + rejection flow, player notified live, balance unchanged.
+
+## How to try deposits & withdrawals
+
+1. Log in on http://localhost:3000 → Wallet → *Deposit*: pick a method and amount, note the reference code.
+2. Admin (Finance or Super admin) → Wallet → *Player requests*: *Money received* → the player's balance goes up instantly.
+3. Player → *Withdraw*: the amount shows as on hold; admin *Paid out* (or *Reject* → the hold returns).
 
 ## Phase 4 — what was built
 

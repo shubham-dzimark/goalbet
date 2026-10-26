@@ -283,5 +283,72 @@
     "statToday": "Today",
     "statCompetitions": "Leagues",
     "statBoosted": "Boosts"
+  },
+  "payments": {
+    "copy": "Copy",
+    "copied": "Copied",
+    "close": "Close",
+    "cancel": "Cancel",
+    "ok": "Done",
+    "amount": "Amount",
+    "reference": "Your reference code",
+    "available": "Available to withdraw",
+    "requests": "My requests",
+    "more": "Show more",
+    "cancelRequest": "Cancel",
+    "secondApproval": "Approved once; waiting for a second check.",
+    "rejectedBecause": "Rejected: {note}",
+    "limits": "Between {min} and {max}",
+    "heldLine": "{held} on hold for a withdrawal · {available} available",
+    "note": "Deposits and withdrawals are checked and confirmed by our team, usually within one working day.",
+    "depositBlocked": "Deposits are paused while you are self-excluded. You can still withdraw your balance.",
+    "methods": {
+      "label": "Payment method",
+      "BANK_TRANSFER": "Bank transfer",
+      "BANK_TRANSFER_help": "To or from a bank account in your name",
+      "CASH_AT_SHOP": "Cash at a shop",
+      "CASH_AT_SHOP_help": "At a partner shop, with your ID and reference code"
+    },
+    "status": {
+      "PENDING": "Waiting",
+      "APPROVED": "Completed",
+      "REJECTED": "Rejected",
+      "CANCELLED": "Cancelled"
+    },
+    "bank": {
+      "iban": "Pay to IBAN",
+      "beneficiary": "Beneficiary",
+      "instructions": "Make the transfer from {bank} or any bank and put your reference code in the payment details. Your balance is credited once we see the money."
+    },
+    "shop": {
+      "depositInstructions": "Pay the amount in cash at any partner shop, showing your ID and the reference code. Your balance is credited once the shop confirms.",
+      "withdrawInstructions": "Once approved you can collect the cash at a partner shop with your ID and this reference code."
+    },
+    "deposit": {
+      "button": "Deposit",
+      "label": "Deposit",
+      "title": "Request a deposit",
+      "help": "Choose how you will pay and how much. You will get a reference code and payment details.",
+      "doneHelp": "Use these details to pay. We credit your balance when the money arrives.",
+      "done": "Deposit request for {amount} created.",
+      "payerReference": "Transfer reference (optional)",
+      "payerReferenceHelp": "If you already paid, the reference from your bank helps us match it.",
+      "submit": "Get payment details"
+    },
+    "withdraw": {
+      "button": "Withdraw",
+      "label": "Withdrawal",
+      "title": "Request a withdrawal",
+      "help": "We pay out after a check. The amount is put on hold now so it is not bet by mistake.",
+      "done": "Withdrawal request for {amount} created. The amount is on hold.",
+      "bankNext": "We will transfer the money to your account after the check, usually within one working day.",
+      "alreadyPending": "You already have a withdrawal waiting. You can cancel it below in My requests.",
+      "range": "Between {min} and {max}",
+      "iban": "IBAN",
+      "holder": "Account holder (as on the bank account)",
+      "holdNote": "The amount is held until the withdrawal is completed or cancelled; you can cancel while it is waiting.",
+      "submit": "Request withdrawal",
+      "tooLow": "You need at least {min} available to withdraw. You have {available}."
+    }
   }
 }

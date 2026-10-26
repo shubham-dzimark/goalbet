@@ -69,7 +69,8 @@
     "last7Days": "Last 7 days",
     "fullReport": "Full report",
     "recentActivity": "Recent activity",
-    "allActivity": "All activity"
+    "allActivity": "All activity",
+    "waitingSplit": "{requests} player requests · {credits} credits →"
   },
   "table": {
     "empty": "Nothing to show yet.",
@@ -195,7 +196,8 @@
     "tabs": {
       "approvals": "Approvals",
       "adjust": "Add / remove credit",
-      "transactions": "Transaction log"
+      "transactions": "Transaction log",
+      "requests": "Player requests"
     },
     "approvals": {
       "approved": "Approved and applied",
@@ -243,6 +245,62 @@
       "from": "From",
       "to": "To",
       "export": "Export CSV"
+    },
+    "requests": {
+      "search": "Reference code or player email…",
+      "balance": "Balance {balance} · held {held}",
+      "payerRef": "Payer ref: {ref}",
+      "secondNeeded": "Needs a second approval (first: {email})",
+      "ownFirst": "You gave the first approval; another admin must give the second.",
+      "reject": "Reject",
+      "approveDeposit": "Money received",
+      "approveWithdrawal": "Paid out",
+      "empty": "No requests here.",
+      "emptyPending": "Nothing waiting. New deposit and withdrawal requests from players appear here.",
+      "cols": {
+        "request": "Request",
+        "player": "Player",
+        "details": "Method & details",
+        "amount": "Amount",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "views": {
+        "PENDING": "Waiting",
+        "APPROVED": "Completed",
+        "REJECTED": "Rejected",
+        "CANCELLED": "Cancelled",
+        "ALL": "All"
+      },
+      "types": {
+        "all": "Both",
+        "DEPOSIT": "Deposits",
+        "WITHDRAWAL": "Withdrawals"
+      },
+      "status": {
+        "PENDING": "Waiting",
+        "APPROVED": "Completed",
+        "REJECTED": "Rejected",
+        "CANCELLED": "Cancelled by player"
+      },
+      "methods": {
+        "BANK_TRANSFER": "Bank transfer",
+        "CASH_AT_SHOP": "Cash at a shop"
+      },
+      "confirm": {
+        "approve": "Confirm",
+        "approveDeposit": "Credit {amount} for {ref}?",
+        "approveDepositHelp": "Only confirm once the money from {name} is in our account (or the shop has confirmed the cash). The balance is credited at once.",
+        "approveWithdrawal": "Mark {ref} ({amount}) as paid?",
+        "approveWithdrawalHelp": "Only confirm once {name} has been paid (transfer sent or cash handed over). The held amount leaves the wallet.",
+        "reject": "Reject {ref} ({amount})?",
+        "rejectHelp": "{name} sees your reason. A withdrawal’s held amount goes back to the balance."
+      },
+      "toast": {
+        "approved": "Done: the wallet is updated and the player notified",
+        "firstApproval": "First approval saved; a second Finance admin must confirm",
+        "rejected": "Request rejected; the player is notified"
+      }
     }
   },
   "bets": {
@@ -372,7 +430,8 @@
         "cashout": "Cash out",
         "builder": "Bet Builder",
         "wallet": "Wallet (finance)",
-        "feed": "Odds feed"
+        "feed": "Odds feed",
+        "payments": "Deposits & withdrawals (finance)"
       },
       "keys": {
         "betting_minStakeBani": "Minimum stake",
@@ -384,7 +443,13 @@
         "cashout_marginBps": "Cash out margin",
         "builder_factorBps": "Bet Builder price factor",
         "wallet_approvalThresholdBani": "Second-admin approval above",
-        "feed_stallSeconds": "Suspend live markets after feed silence of"
+        "feed_stallSeconds": "Suspend live markets after feed silence of",
+        "payments_bankTransferEnabled": "Bank transfer",
+        "payments_cashAtShopEnabled": "Cash at a shop",
+        "wallet_minDepositBani": "Minimum deposit",
+        "wallet_maxDepositBani": "Maximum deposit",
+        "wallet_minWithdrawalBani": "Minimum withdrawal",
+        "wallet_maxWithdrawalBani": "Maximum withdrawal"
       },
       "help": {
         "betting_minStakeBani": "Smallest stake per ticket",
@@ -396,7 +461,13 @@
         "cashout_marginBps": "Kept by the house on a cash out",
         "builder_factorBps": "Applied to combined same-match prices",
         "wallet_approvalThresholdBani": "Larger credits and debits need a second admin",
-        "feed_stallSeconds": "Protects against stale live odds"
+        "feed_stallSeconds": "Protects against stale live odds",
+        "payments_bankTransferEnabled": "Offer bank transfers for deposits and withdrawals",
+        "payments_cashAtShopEnabled": "Offer cash at partner shops",
+        "wallet_minDepositBani": "Smallest deposit a player can request",
+        "wallet_maxDepositBani": "Largest single deposit request",
+        "wallet_minWithdrawalBani": "Smallest withdrawal a player can request",
+        "wallet_maxWithdrawalBani": "Largest single withdrawal request"
       },
       "updated": "changed {date}",
       "saved": "{name} saved",
@@ -432,7 +503,11 @@
       "exposure": "Open exposure",
       "exposureHint": "{count} open tickets · {stake} staked",
       "credits": "Credit added",
-      "debits": "Credit removed"
+      "debits": "Credit removed",
+      "deposits": "Deposits",
+      "withdrawals": "Withdrawals",
+      "creditsHint": "+ {amount} manual credit",
+      "debitsHint": "+ {amount} manual debit"
     },
     "trend": "Stakes vs payouts",
     "byStatus": "Tickets by result",

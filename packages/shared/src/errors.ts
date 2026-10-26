@@ -56,6 +56,12 @@ export const ErrorCode = {
   // admin accounts
   LAST_SUPER_ADMIN: 'LAST_SUPER_ADMIN',
   SELF_ACTION: 'SELF_ACTION',
+  // deposit / withdrawal requests
+  PAYMENT_METHOD_DISABLED: 'PAYMENT_METHOD_DISABLED',
+  PAYMENT_AMOUNT_LIMIT: 'PAYMENT_AMOUNT_LIMIT',
+  WITHDRAWAL_PENDING: 'WITHDRAWAL_PENDING',
+  TOO_MANY_PENDING: 'TOO_MANY_PENDING',
+  REQUEST_NOT_PENDING: 'REQUEST_NOT_PENDING',
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 export const ERROR_CODES = Object.values(ErrorCode) as ErrorCode[];

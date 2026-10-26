@@ -31,9 +31,21 @@ export const WalletTxType = {
   CASHOUT: 'CASHOUT',
   REFUND: 'REFUND',
   VOID_REVERSAL: 'VOID_REVERSAL',
+  DEPOSIT: 'DEPOSIT',
+  WITHDRAWAL: 'WITHDRAWAL',
 } as const;
 export type WalletTxType = (typeof WalletTxType)[keyof typeof WalletTxType];
 export const WALLET_TX_TYPES = values(WalletTxType);
+
+/** Player deposit / withdrawal requests, decided by Finance (admin-controlled wallet). */
+export const PaymentRequestType = { DEPOSIT: 'DEPOSIT', WITHDRAWAL: 'WITHDRAWAL' } as const;
+export type PaymentRequestType = (typeof PaymentRequestType)[keyof typeof PaymentRequestType];
+export const PaymentRequestStatus = { PENDING: 'PENDING', APPROVED: 'APPROVED', REJECTED: 'REJECTED', CANCELLED: 'CANCELLED' } as const;
+export type PaymentRequestStatus = (typeof PaymentRequestStatus)[keyof typeof PaymentRequestStatus];
+export const PAYMENT_REQUEST_STATUSES = values(PaymentRequestStatus);
+export const PaymentMethod = { BANK_TRANSFER: 'BANK_TRANSFER', CASH_AT_SHOP: 'CASH_AT_SHOP' } as const;
+export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
+export const PAYMENT_METHODS = values(PaymentMethod);
 
 export const CreditApprovalStatus = { PENDING: 'PENDING', APPROVED: 'APPROVED', REJECTED: 'REJECTED' } as const;
 export type CreditApprovalStatus = (typeof CreditApprovalStatus)[keyof typeof CreditApprovalStatus];

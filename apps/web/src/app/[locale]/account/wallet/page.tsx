@@ -1,7 +1,7 @@
 'use client';
 
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { ArrowDownLeft, ArrowUpRight, Banknote, Info, type LucideIcon, RotateCcw, Ticket, Trophy } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, Banknote, Hourglass, Info, type LucideIcon, RotateCcw, Ticket, Trophy } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { type FormEvent, useState } from 'react';
 import { type Page, WALLET_TX_TYPES, type WalletTransactionDto, type WalletTxType, formatRon } from '@goalbet/shared';
@@ -9,6 +9,7 @@ import { Button, EmptyState, Input, Skeleton, cn } from '@goalbet/ui';
 import { AnimatedNumber } from '@/components/fx/animated-number';
 import { Reveal } from '@/components/fx/reveal';
 import { PageTitle } from '@/components/sport/event-list';
+import { DepositDialog, PaymentRequestsList, WithdrawDialog, usePaymentInfo } from '@/components/wallet/payment-requests';
 import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/api';
 import { useFormat } from '@/lib/format';
@@ -22,6 +23,8 @@ const TX_ICON: Record<WalletTxType, { icon: LucideIcon; tone: string }> = {
   CASHOUT: { icon: Banknote, tone: 'bg-boost/15 text-boost' },
   REFUND: { icon: RotateCcw, tone: 'bg-accent/15 text-accent' },
   VOID_REVERSAL: { icon: RotateCcw, tone: 'bg-danger/15 text-danger' },
+  DEPOSIT: { icon: ArrowDownLeft, tone: 'bg-brand/15 text-brand' },
+  WITHDRAWAL: { icon: ArrowUpRight, tone: 'bg-accent/15 text-accent' },
 };
 
 interface Filters {
@@ -38,6 +41,8 @@ export default function WalletPage() {
   const authed = useRequireAuth();
   const [draft, setDraft] = useState<Filters>({ type: '', from: '', to: '' });
   const [filters, setFilters] = useState<Filters>(draft);
+  const [dialog, setDialog] = useState<'deposit' | 'withdraw' | null>(null);
+  const info = usePaymentInfo(authed);
 
   const balance = useQuery({ queryKey: ['wallet'], queryFn: () => api<{ balanceBani: number }>('/wallet'), enabled: authed, refetchInterval: 15_000 });
   const qs = new URLSearchParams(Object.entries(filters).filter(([, v]) => v) as [string, string][]).toString();
@@ -84,7 +89,7 @@ export default function WalletPage() {
           </div>
           <div className="grid grid-cols-3 gap-3 text-sm">
             {[
-              { label: t('txType.ADMIN_CREDIT'), value: sum(['ADMIN_CREDIT', 'REFUND']), tone: 'text-brand' },
+              { label: t('txType.DEPOSIT'), value: sum(['DEPOSIT', 'ADMIN_CREDIT', 'REFUND']), tone: 'text-brand' },
               { label: t('txType.STAKE'), value: sum(['STAKE']), tone: 'text-ink' },
               { label: t('txType.WIN'), value: sum(['WIN', 'CASHOUT']), tone: 'text-boost' },
             ].map((s) => (
@@ -95,11 +100,36 @@ export default function WalletPage() {
             ))}
           </div>
         </div>
-        <p className="relative mt-5 flex items-start gap-2 text-sm text-ink-muted">
-          <Info className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
-          {t('wallet.adminNote')}
-        </p>
+        {info.data && info.data.heldBani > 0 ? (
+          <p className="relative mt-4 flex items-center gap-2 text-sm text-ink-muted" data-testid="wallet-held">
+            <Hourglass className="size-4 text-accent" aria-hidden="true" />
+            {t('payments.heldLine', { held: f.ron(info.data.heldBani), available: f.ron(info.data.availableBani) })}
+          </p>
+        ) : null}
+        <div className="relative mt-5 flex flex-wrap items-center gap-3">
+          <Button onClick={() => setDialog('deposit')} disabled={!info.data || info.data.methods.length === 0 || info.data.depositBlocked} data-testid="deposit-btn">
+            <ArrowDownLeft aria-hidden="true" />
+            {t('payments.deposit.button')}
+          </Button>
+          <Button variant="secondary" onClick={() => setDialog('withdraw')} disabled={!info.data || info.data.methods.length === 0} data-testid="withdraw-btn">
+            <ArrowUpRight aria-hidden="true" />
+            {t('payments.withdraw.button')}
+          </Button>
+          <p className="flex min-w-0 flex-1 items-start gap-2 text-sm text-ink-muted">
+            <Info className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
+            {info.data?.depositBlocked ? t('payments.depositBlocked') : t('payments.note')}
+          </p>
+        </div>
       </section>
+
+      {info.data ? (
+        <>
+          <DepositDialog open={dialog === 'deposit'} onOpenChange={(o) => setDialog(o ? 'deposit' : null)} info={info.data} />
+          <WithdrawDialog open={dialog === 'withdraw'} onOpenChange={(o) => setDialog(o ? 'withdraw' : null)} info={info.data} />
+        </>
+      ) : null}
+
+      <PaymentRequestsList enabled={authed} />
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">

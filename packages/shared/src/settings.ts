@@ -9,6 +9,12 @@ export const SETTING_DEFAULTS = {
   'cashout.enabled': true,
   'builder.factorBps': 8_500,
   'wallet.approvalThresholdBani': 500_000,
+  'wallet.minDepositBani': 1_000,
+  'wallet.maxDepositBani': 2_000_000,
+  'wallet.minWithdrawalBani': 2_000,
+  'wallet.maxWithdrawalBani': 2_000_000,
+  'payments.bankTransferEnabled': true,
+  'payments.cashAtShopEnabled': true,
   'feed.stallSeconds': 30,
 } as const;
 

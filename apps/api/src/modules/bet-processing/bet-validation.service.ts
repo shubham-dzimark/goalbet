@@ -135,8 +135,10 @@ export class BetValidationService {
     await this.checkLimits(user.id, user.limits, input.stakeBani, win, settings);
 
     // ── 5. enough balance ──
-    if (user.wallet.balanceBani < input.stakeBani) {
-      throw new DomainError('INSUFFICIENT_BALANCE', { balanceBani: user.wallet.balanceBani, stakeBani: input.stakeBani });
+    // money held for a pending withdrawal can't be staked
+    const available = user.wallet.balanceBani - user.wallet.heldBani;
+    if (available < input.stakeBani) {
+      throw new DomainError('INSUFFICIENT_BALANCE', { balanceBani: available, stakeBani: input.stakeBani });
     }
 
     return {

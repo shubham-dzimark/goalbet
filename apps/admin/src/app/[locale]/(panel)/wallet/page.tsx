@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { type AdminApprovalRow, type AdminTransactionRow, type AdminUserRow, type Page, WALLET_TX_TYPES } from '@goalbet/shared';
 import { Button, EmptyState, Skeleton, Tabs, TabsContent, TabsList, TabsTrigger } from '@goalbet/ui';
+import { PaymentRequests } from '@/components/payment-requests';
 import { TransactionsTable } from '@/components/transactions-table';
 import { ReasonDialog, toast } from '@/components/ui/feedback';
 import { DateInput, FilterSelect, PageHeader, Panel, SearchInput } from '@/components/ui/page';
@@ -24,12 +25,16 @@ export default function WalletPage() {
   return (
     <>
       <PageHeader kicker={t('kicker')} title={t('title')} description={t('description')} />
-      <Tabs defaultValue={finance ? 'approvals' : 'transactions'}>
+      <Tabs defaultValue="requests">
         <TabsList className="mb-5">
+          <TabsTrigger value="requests" data-testid="tab-requests">{t('tabs.requests')}</TabsTrigger>
           {finance ? <TabsTrigger value="approvals">{t('tabs.approvals')}</TabsTrigger> : null}
           {finance ? <TabsTrigger value="adjust">{t('tabs.adjust')}</TabsTrigger> : null}
           <TabsTrigger value="transactions">{t('tabs.transactions')}</TabsTrigger>
         </TabsList>
+        <TabsContent value="requests">
+          <PaymentRequests />
+        </TabsContent>
         {finance ? (
           <TabsContent value="approvals">
             <Approvals />
