@@ -4,13 +4,11 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { generateSecret, generateURI } from 'otplib';
 import { type AdminRole, SETTING_DEFAULTS } from '@goalbet/shared';
 import { type Prisma } from '@goalbet/db';
 import { brandName } from './config/brand.js';
-import { loadEnv } from './config/env.js';
 import { CoreModule } from './common/core.module.js';
-import { encryptSecret, hashPassword, randomToken } from './common/auth/crypto.js';
+import { hashPassword, randomToken } from './common/auth/crypto.js';
 import { PrismaService } from './common/prisma.service.js';
 import { BoostService } from './modules/odds-management/boost.service.js';
 import { IngestService } from './modules/odds-management/ingest.service.js';
@@ -40,30 +38,28 @@ const PLAYER_PASSWORD = 'Parola1234';
  * next 7 days and the matches that are live right now.
  */
 async function main() {
-  const env = loadEnv();
   const app = await NestFactory.createApplicationContext(SeedModule, { logger: ['error', 'warn'] });
   const prisma = app.get(PrismaService);
   const ingest = app.get(IngestService);
   const lines: string[] = [`# ${brandName} seed credentials — generated ${new Date().toISOString()}`, ''];
 
-  lines.push('## Admins (http://localhost:3001) — email / password / TOTP secret');
+  // No authenticator is linked: each admin's first login shows a QR code to scan (F3.1 enrolment).
+  lines.push('## Admins (http://localhost:3001) — email / password. First login shows a QR code for the authenticator app.');
   for (const a of ADMINS) {
     const password = randomToken(9);
-    const secret = generateSecret();
     const data = {
       name: a.name,
       role: a.role,
       passwordHash: await hashPassword(password),
-      totpSecret: encryptSecret(secret, env.JWT_ADMIN_SECRET),
-      totpEnabled: true,
+      totpSecret: null,
+      totpEnabled: false,
       totpLastStep: null,
       failedLogins: 0,
       lockedUntil: null,
       status: 'ACTIVE' as const,
     };
     await prisma.adminUser.upsert({ where: { email: a.email }, create: { email: a.email, ...data }, update: data });
-    const uri = generateURI({ issuer: `${brandName} Admin`, label: a.email, secret });
-    lines.push(`${a.role.padEnd(12)} ${a.email}  ${password}  ${secret}`, `             ${uri}`);
+    lines.push(`${a.role.padEnd(12)} ${a.email}  ${password}`);
   }
 
   lines.push('', `## Players (http://localhost:3000) — password for all: ${PLAYER_PASSWORD}`);

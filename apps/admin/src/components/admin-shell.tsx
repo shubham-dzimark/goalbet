@@ -1,21 +1,34 @@
 'use client';
 
-import { BarChart3, Gauge, LogOut, ScrollText, Settings2, Ticket, Users, Wallet } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { BarChart3, Gauge, LogOut, ScrollText, Settings2, ShieldCheck, Ticket, Users, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type ReactNode, useEffect } from 'react';
-import { Logo, Skeleton, cn } from '@goalbet/ui';
+import { LogoMark, Skeleton, cn } from '@goalbet/ui';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
+import { useCan } from '@/lib/data';
 import { adminApi, useSession } from '@/lib/session';
 import { LanguageSwitcher } from './language-switcher';
+import { Toaster } from './ui/feedback';
 
-const NAV = [
-  { href: '/', key: 'dashboard', icon: Gauge },
-  { href: '/users', key: 'users', icon: Users },
-  { href: '/wallet', key: 'wallet', icon: Wallet },
-  { href: '/bets', key: 'bets', icon: Ticket },
-  { href: '/sportsbook', key: 'sportsbook', icon: Settings2 },
-  { href: '/reports', key: 'reports', icon: BarChart3 },
-  { href: '/audit', key: 'audit', icon: ScrollText },
+const GROUPS = [
+  { key: 'overview', items: [{ href: '/', key: 'dashboard', icon: Gauge }] },
+  {
+    key: 'operations',
+    items: [
+      { href: '/users', key: 'users', icon: Users },
+      { href: '/wallet', key: 'wallet', icon: Wallet },
+      { href: '/bets', key: 'bets', icon: Ticket },
+      { href: '/sportsbook', key: 'sportsbook', icon: Settings2 },
+    ],
+  },
+  {
+    key: 'insights',
+    items: [
+      { href: '/reports', key: 'reports', icon: BarChart3 },
+      { href: '/audit', key: 'audit', icon: ScrollText },
+    ],
+  },
 ] as const;
 
 /** Protected admin chrome (F4.5): redirects to login when there is no session or it timed out. */
@@ -24,15 +37,28 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const { status, admin } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const can = useCan();
 
   useEffect(() => {
     if (status === 'guest') router.replace('/login');
   }, [status, router]);
 
+  // credits waiting for a second admin (FINANCE): shown as a badge on Wallet
+  const { data: approvals } = useQuery({
+    queryKey: ['approvals'],
+    queryFn: () => adminApi<unknown[]>('/admin/approvals'),
+    enabled: status === 'authed' && can('FINANCE'),
+    refetchInterval: 30_000,
+  });
+
   if (status !== 'authed' || !admin) {
     return (
-      <div className="p-6">
-        <Skeleton className="h-10 w-64" />
+      <div className="flex min-h-dvh">
+        <div className="hidden w-64 border-r border-line bg-chrome lg:block" />
+        <div className="flex-1 space-y-4 p-6">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-32 w-full" />
+        </div>
       </div>
     );
   }
@@ -41,49 +67,96 @@ export function AdminShell({ children }: { children: ReactNode }) {
     await adminApi('/admin/auth/logout', { method: 'POST' }).catch(() => undefined);
     useSession.getState().clear();
   };
-
   const active = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
+  const badge = (key: string) => (key === 'wallet' && approvals && approvals.length > 0 ? approvals.length : null);
+  const initials = admin.name
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
-      <aside className="bg-chrome text-chrome-ink lg:sticky lg:top-0 lg:h-dvh lg:w-60 lg:shrink-0">
-        <div className="flex h-14 items-center justify-between px-4">
-          <Logo suffix="Admin" />
+      <aside className="z-30 border-b border-line bg-chrome/95 backdrop-blur lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-64 lg:shrink-0 lg:flex-col lg:border-b-0 lg:border-r">
+        <div className="flex h-16 items-center justify-between gap-2 px-5">
+          <Link href="/" className="flex items-center gap-2.5">
+            <LogoMark className="size-9" />
+            <span className="leading-none">
+              <span className="block font-display text-xl font-bold uppercase italic tracking-wide">GoalBet</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-brand">{t('nav.backOffice')}</span>
+            </span>
+          </Link>
           <LanguageSwitcher className="lg:hidden" />
         </div>
-        <nav aria-label={t('nav.menu')} className="no-scrollbar flex gap-1 overflow-x-auto px-2 pb-2 lg:flex-col lg:overflow-visible">
-          {NAV.map(({ href, key, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                'flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm font-semibold text-chrome-muted hover:bg-chrome-soft hover:text-chrome-ink',
-                active(href) && 'bg-chrome-soft text-chrome-ink',
-              )}
-            >
-              <Icon className="size-4" aria-hidden="true" />
-              {t(`nav.${key}`)}
-            </Link>
+
+        <nav aria-label={t('nav.menu')} className="no-scrollbar flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-1 lg:flex-col lg:gap-5 lg:overflow-y-auto lg:pt-2">
+          {GROUPS.map((g) => (
+            <div key={g.key} className="flex gap-1 lg:flex-col">
+              <p className="hidden px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-ink-faint lg:block">{t(`nav.groups.${g.key}`)}</p>
+              {g.items.map(({ href, key, icon: Icon }) => {
+                const on = active(href);
+                const count = badge(key);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    aria-current={on ? 'page' : undefined}
+                    className={cn(
+                      'group relative flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-muted transition-colors hover:bg-tint/[0.05] hover:text-ink',
+                      on && 'bg-brand-soft text-ink',
+                    )}
+                    data-testid={`nav-${key}`}
+                  >
+                    {on ? <span aria-hidden="true" className="absolute inset-y-2 left-0 hidden w-1 rounded-r-full bg-brand lg:block" /> : null}
+                    <Icon className={cn('size-[18px]', on ? 'text-brand' : 'text-ink-faint group-hover:text-ink-muted')} aria-hidden="true" />
+                    {t(`nav.${key}`)}
+                    {count ? (
+                      <span className="ml-auto grid min-w-5 place-items-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-boost-ink" aria-label={t('nav.pendingApprovals', { count })}>
+                        {count}
+                      </span>
+                    ) : null}
+                  </Link>
+                );
+              })}
+            </div>
           ))}
         </nav>
+
+        <div className="hidden border-t border-line p-4 lg:block">
+          <div className="flex items-center gap-3">
+            <span className="grid size-9 place-items-center rounded-full bg-brand text-sm font-bold text-brand-ink">{initials}</span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{admin.name}</p>
+              <p className="flex items-center gap-1 text-[11px] text-ink-muted">
+                <ShieldCheck className="size-3 text-brand" aria-hidden="true" />
+                {t(`roles.${admin.role}`)}
+              </p>
+            </div>
+            <button type="button" onClick={logout} aria-label={t('nav.logout')} className="rounded-lg p-2 text-ink-muted hover:bg-tint/10 hover:text-ink" data-testid="logout">
+              <LogOut className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+          <div className="mt-3 flex items-center justify-between">
+            <LanguageSwitcher />
+            <span className="truncate pl-2 text-[11px] text-ink-faint">{admin.email}</span>
+          </div>
+        </div>
       </aside>
+
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-end gap-3 border-b border-line bg-card px-4">
-          <span className="truncate text-sm text-ink-muted">
-            {t('nav.signedInAs', { email: admin.email })} · <strong className="text-ink">{t(`roles.${admin.role}`)}</strong>
+        <header className="flex h-12 items-center justify-end gap-2 border-b border-line px-4 lg:hidden">
+          <span className="truncate text-xs text-ink-muted">
+            {admin.email} · <strong className="text-ink">{t(`roles.${admin.role}`)}</strong>
           </span>
-          <LanguageSwitcher className="hidden lg:inline-flex" />
-          <button
-            type="button"
-            onClick={logout}
-            className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-semibold text-ink-muted hover:bg-card-alt hover:text-ink"
-          >
-            <LogOut className="size-4" aria-hidden="true" />
-            <span className="hidden sm:inline">{t('nav.logout')}</span>
+          <button type="button" onClick={logout} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-ink-muted hover:text-ink">
+            <LogOut className="size-3.5" aria-hidden="true" />
+            {t('nav.logout')}
           </button>
         </header>
-        <main className="flex-1 p-4 lg:p-6">{children}</main>
+        <main className="mx-auto w-full max-w-[1500px] flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
+      <Toaster />
     </div>
   );
 }

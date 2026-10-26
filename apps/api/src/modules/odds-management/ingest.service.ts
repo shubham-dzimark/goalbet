@@ -163,9 +163,11 @@ export class IngestService {
         continue;
       }
       if (existing.status === 'SETTLED') continue;
-      if (existing.status !== status) {
-        await this.prisma.market.update({ where: { id: existing.id }, data: { status } });
-        marketChanges.push({ marketId: existing.id, status });
+      // an operator suspension (F3.5) wins over the feed until the operator lifts it
+      const target: MarketStatus = existing.adminSuspended ? 'SUSPENDED' : status;
+      if (existing.status !== target) {
+        await this.prisma.market.update({ where: { id: existing.id }, data: { status: target } });
+        marketChanges.push({ marketId: existing.id, status: target });
       }
       const sels = new Map(existing.selections.map((s) => [s.outcome, s]));
       for (const ps of pm.selections) {

@@ -4,11 +4,34 @@
 | --- | --- | --- |
 | 1 | Monorepo, Docker, schema + migrations, seed, auth (F1.2, F1.3, F3.1), i18n (F0.3), tokens, MockProvider (F4.1), module skeleton (F4.2) | ✅ Done |
 | 2 | Homepage + browsing (F1.1, F1.4, F1.5, F1.9), bet slip (F1.12), normal bets (F1.10), validate/reject/create (F1.13–F1.15), wallet + My Bets (F1.7, F1.8) | ✅ Done |
-| 3 | Admin app (F3.2–F3.8) | ⏭ Next |
+| 3 | Admin app (F3.2–F3.8) | ✅ Done |
+| — | Redesign (Emerald Pitch, light/dark, 3D), real fixtures (API-Football free plan), local time zones, Vercel-ready API | ✅ Done |
 | 4 | Live (F1.6, F2.1, F2.2), WebSocket + Redis pub/sub, live delay, feed-stall safety | — |
 | 5 | Cash out (F2.3–F2.7), settlement + payout + credit (F2.8–F2.11), reconciliation | — |
 | 6 | Bet Builder (F1.11), sportsbook settings (F3.5), reports + exposure (F3.6) | — |
 | 7 | Responsive polish, responsible gambling, provider skeleton, all E2E, README | — |
+
+## Phase 3 — what was built
+
+- **Admin API** (all behind `AdminAuthGuard`; SUPER_ADMIN can do everything, OPERATOR runs users/bets/sportsbook, FINANCE runs money; every change audited with a reason):
+  - users: list/search, detail with stats, edit, suspend/activate (ends sessions), operator limits;
+  - wallet: credit/debit with approval threshold (from phase 2), global transaction log;
+  - bets: ticket search by view/status/type/code/email/date, ticket detail with wallet movements;
+  - sportsbook: leagues (on/off, top), market types, event suspension, single-market suspend/hide (held against the feed), limits & settings (wallet threshold is FINANCE-only);
+  - reports: users, stakes/payouts/GGR from the ledger, credits/debits, tickets by status, open exposure and exposure per match, daily series; dashboard;
+  - audit: filtered search, list of known actions.
+- **Admin app** redesigned in the Emerald Pitch style: grouped sidebar with a pending-approvals badge, dashboard, players list and player page (overview, wallet, bets, limits, history), wallet (approvals, add/remove credit, transaction log + CSV), bets (views + ticket panel), sportsbook (matches with a market panel, leagues, markets, limits), reports (presets, charts, exposure, CSV), audit (filters + before/after panel). Every action asks for a reason; actions are hidden for roles that can't use them. RO/EN.
+- **Admin access:** admins are seeded without an authenticator, so the first login shows a QR code; `pnpm --filter @goalbet/api admin:access [--email …] [--rotate-passwords]` unlinks authenticators (e.g. lost phone) and can rotate passwords.
+- **Fixes:** the odds feed no longer reopens a market an operator suspended; the settings cache is cleared between tests.
+
+**Tests:** 77 API integration (12 new in `admin-panel.test.ts`) · i18n parity (web + admin). All green. Admin screens checked in Chromium at 1600 px and 390 px.
+
+## How to try phase 3
+
+1. `pnpm dev`, open http://localhost:3001, sign in with an admin from `seed-credentials.txt` and scan the QR code on first login.
+2. Users → open a player → Add credit (above 5,000 RON it waits for a second admin under Wallet → Approvals), Suspend, Limits.
+3. Sportsbook → Matches → suspend a match, open it to suspend a single market; Leagues / Markets toggles; Limits.
+4. Bets, Reports (7/30/90 days, CSV) and Audit logs (every action above is there, with before/after).
 
 ## Phase 1 — what was built
 

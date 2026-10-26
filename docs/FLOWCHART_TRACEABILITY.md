@@ -54,14 +54,14 @@ _Last update: Phase 2 (pre-match betting)._
 
 | ID | Box | Status | Implementing files | Tests |
 | --- | --- | --- | --- | --- |
-| F3.1 | Admin login | Partial | `admin-auth.*`, `AdminAuthGuard` + `@Roles`, admin `login`, `admin-shell.tsx` | `admin-auth.test.ts` (6); role enforcement: `admin-wallet.test.ts › operators cannot move money`. Admin user management screens: phase 3. |
-| F3.2 | User management | Partial | `GET /admin/users?q=` | — (phase 3) |
-| F3.3 | Wallet management | Partial | `admin-wallet.service.ts` (credit/debit, required reason, threshold → second-admin approval), `admin-wallet.controller.ts`; admin UI in phase 3 | `admin-wallet.test.ts` (3) |
-| F3.4 | Bet management | Missing | — | — |
-| F3.5 | Sportsbook settings | Partial | `SettingsService`, `MarketTypeSetting`, competition/market `enabled` honoured by catalog + validation | `catalog.test.ts › hides disabled…`; `betting.test.ts › 2. market status…` |
-| F3.6 | Reports | Missing | — | — |
-| F3.7 | All modules → audit | Partial | auth, wallet (`WALLET_*`), betting (`BET_PLACED`/`BET_REJECTED`), approvals, limits, self-exclusion, settings, job failures, ledger reconciliation | audit assertions in `auth`, `admin-auth`, `admin-wallet`, `betting` tests |
-| F3.8 | Audit logs | Partial | `AuditLog` (append-only), `AuditService`; admin viewer in phase 3 | `ingest-and-schema.test.ts › … audit logs are append-only` |
+| F3.1 | Admin login | Done | `admin-auth.*`, `AdminAuthGuard` + `@Roles` (SUPER_ADMIN always allowed), admin `login` (first login: QR enrolment, then TOTP), `admin-shell.tsx`, `admin-access.ts` CLI (unlink authenticator, rotate passwords) | `admin-auth.test.ts` (6); role enforcement in `admin-wallet.test.ts` and `admin-panel.test.ts` |
+| F3.2 | User management | Done | `admin-users.service.ts`/`.controller.ts`: list + search, detail (stats, limits, self-exclusion, rejections), edit, suspend/activate (ends sessions), operator limits; admin `users/` + `users/[id]` (overview, wallet, bets, limits, history) | `admin-panel.test.ts › F3.2` (4) |
+| F3.3 | Wallet management | Done | `admin-wallet.service.ts` (credit/debit, required reason, threshold → second-admin approval), `admin-wallet.controller.ts` (+ global transaction log); admin `wallet/` (approvals, add/remove credit, transaction log + CSV), `wallet-adjust-dialog.tsx` | `admin-wallet.test.ts` (3); `admin-panel.test.ts › F3.3` |
+| F3.4 | Bet management | Done | `admin-bets.controller.ts` (views all/open/live/settled/cash outs, status, type, code/email, dates; detail with wallet movements); admin `bets/`, `tickets-table.tsx` (ticket panel) | `admin-panel.test.ts › F3.4` |
+| F3.5 | Sportsbook settings | Done | `admin-sportsbook.service.ts`/`.controller.ts`: leagues (enable, top), market types, events (suspend/resume, pushed to clients), single markets (suspend held against the feed via `adminSuspended`, hide), limits/settings (OPERATOR; `wallet.*` FINANCE); admin `sportsbook/` | `admin-panel.test.ts › F3.5` (3); `catalog.test.ts › hides disabled…` |
+| F3.6 | Reports | Done | `admin-reports.service.ts`: users, stakes/payouts/GGR from the ledger, credits/debits, tickets by status, open exposure, exposure per match, daily series; dashboard; admin `reports/` (presets, charts, CSV) and `/` dashboard | `admin-panel.test.ts › F3.6` |
+| F3.7 | All modules → audit | Done | auth, wallet (`WALLET_*`), betting (`BET_PLACED`/`BET_REJECTED`), approvals, limits, self-exclusion, settings, job failures, ledger reconciliation, and every admin action (`USER_*`, `COMPETITION_UPDATED`, `MARKET_TYPE_*`, `EVENT_SUSPENDED`/`EVENT_RESUMED`, `MARKET_UPDATED`, `ADMIN_2FA_*`) with a reason | audit assertions in `auth`, `admin-auth`, `admin-wallet`, `admin-panel`, `betting` tests |
+| F3.8 | Audit logs | Done | `AuditLog` (append-only), `AuditService`; `GET /admin/audit` (category, action, actor, entity, dates) + `/admin/audit/actions`; admin `audit/` with before/after panel, player history tab | `admin-panel.test.ts › F3.8` (2); `ingest-and-schema.test.ts › … audit logs are append-only` |
 
 ## F4 — Data & system architecture
 
@@ -71,7 +71,7 @@ _Last update: Phase 2 (pre-match betting)._
 | F4.2 | Backend / betting engine modules | Done | `apps/api/src/modules/*` (8 chart-named modules) | `ingest-and-schema.test.ts › F4.2…` |
 | F4.3 | Database | Done | `packages/db/prisma/schema.prisma` + migrations | `ingest-and-schema.test.ts › F4.3…` |
 | F4.4 | User frontend | Partial | `apps/web` (Next.js 16, responsive: 0 px horizontal overflow at 375 px verified) | `web/test/i18n-parity.test.ts`; Playwright viewports in phase 7 |
-| F4.5 | Admin frontend | Partial | `apps/admin` | `admin/test/i18n-parity.test.ts` |
+| F4.5 | Admin frontend | Done | `apps/admin` (Emerald Pitch back office: dashboard, users, wallet, bets, sportsbook, reports, audit; RO/EN; role-aware actions) | `admin/test/i18n-parity.test.ts`; scripted screenshots |
 
 ## F5 — Supported features
 

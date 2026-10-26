@@ -45,6 +45,9 @@ export async function resetDb(ctx: TestContext) {
     SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'`;
   await ctx.prisma.$executeRawUnsafe(`TRUNCATE ${tables.map((t) => `"${t.tablename}"`).join(', ')} RESTART IDENTITY CASCADE`);
   await ctx.redis.client.flushdb();
+  // settings are cached in memory for a few seconds; a reset must not leak them into the next test
+  const { SettingsService } = await import('../src/common/settings.service.js');
+  ctx.app.get(SettingsService).invalidate();
 }
 
 export const validRegistration = (n = randomInt(1_000_000)) => ({

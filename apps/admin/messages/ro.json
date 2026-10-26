@@ -12,7 +12,14 @@
     "audit": "Jurnal audit",
     "logout": "Deconectare",
     "menu": "Meniu",
-    "signedInAs": "Autentificat ca {email}"
+    "signedInAs": "Autentificat ca {email}",
+    "backOffice": "Back office",
+    "groups": {
+      "overview": "Privire de ansamblu",
+      "operations": "Operațiuni",
+      "insights": "Analiză"
+    },
+    "pendingApprovals": "{count} aprobări în așteptare"
   },
   "roles": {
     "SUPER_ADMIN": "Super admin",
@@ -37,7 +44,438 @@
   },
   "dashboard": {
     "title": "Panou",
-    "welcome": "Bun venit, {name}",
-    "phaseNote": "Modulele de administrare (utilizatori, portofel, pariuri, setări sportsbook, rapoarte și jurnal audit) se adaugă în etapa următoare."
+    "kicker": "Situația în timp real",
+    "morning": "Bună dimineața, {name}",
+    "afternoon": "Bună ziua, {name}",
+    "evening": "Bună seara, {name}",
+    "subtitle": "Ce se întâmplă acum pe platformă.",
+    "liveEvents": "Meciuri live",
+    "liveHint": "În desfășurare acum",
+    "openTickets": "Bilete deschise",
+    "exposure": "Expunere deschisă",
+    "exposureHint": "Plata posibilă a biletelor deschise",
+    "pendingApprovals": "Aprobări în așteptare",
+    "review": "Verifică acum →",
+    "noneWaiting": "Nimic în așteptare",
+    "todayStakes": "Mize azi",
+    "ticketsCount": "{count, plural, one {# bilet} few {# bilete} other {# de bilete}}",
+    "todayPayouts": "Plăți azi",
+    "todayGgr": "GGR azi",
+    "ggrHint": "Mize minus plăți",
+    "newUsers": "Jucători noi azi",
+    "last7Days": "Ultimele 7 zile",
+    "fullReport": "Raport complet",
+    "recentActivity": "Activitate recentă",
+    "allActivity": "Toată activitatea"
+  },
+  "table": {
+    "empty": "Nimic de afișat încă.",
+    "loadMore": "Încarcă mai multe"
+  },
+  "common2": {
+    "close": "Închide",
+    "cancel": "Anulează",
+    "save": "Salvează",
+    "confirm": "Confirmă",
+    "reason": "Motiv",
+    "reasonHint": "Se salvează în jurnalul de audit.",
+    "reasonRequired": "Te rugăm să scrii un motiv (minimum 3 caractere)."
+  },
+  "charts": {
+    "trendLabel": "Mize și plăți pe zi",
+    "stakes": "Mize",
+    "payouts": "Plăți",
+    "barsLabel": "Bilete după stare",
+    "tickets": "Bilete"
+  },
+  "users": {
+    "kicker": "Gestionare utilizatori",
+    "title": "Jucători",
+    "description": "Caută un jucător după nume, email sau telefon pentru a-l vedea, edita, credita sau suspenda.",
+    "search": "Caută nume, email sau telefon…",
+    "allStatuses": "Toate stările",
+    "noMatch": "Niciun jucător pentru „{q}”.",
+    "empty": "Încă nu există jucători.",
+    "status": {
+      "ACTIVE": "Activ",
+      "SUSPENDED": "Suspendat"
+    },
+    "cols": {
+      "player": "Jucător",
+      "phone": "Telefon",
+      "status": "Stare",
+      "balance": "Sold",
+      "openTickets": "Pariuri deschise",
+      "joined": "Înregistrat",
+      "lastLogin": "Ultima autentificare"
+    },
+    "back": "Toți jucătorii",
+    "balance": "Sold",
+    "addCredit": "Adaugă credit",
+    "removeCredit": "Retrage credit",
+    "edit": "Editează",
+    "suspend": "Suspendă",
+    "activate": "Activează",
+    "excludedUntil": "Autoexclus până la {date}. Pariurile sunt blocate.",
+    "excludedForever": "Autoexclus definitiv. Pariurile sunt blocate.",
+    "tabs": {
+      "overview": "Rezumat",
+      "wallet": "Portofel",
+      "bets": "Pariuri",
+      "limits": "Limite",
+      "history": "Istoric"
+    },
+    "stats": {
+      "tickets": "Bilete",
+      "wonLost": "{won} câștigate · {lost} pierdute",
+      "staked": "Total pariat",
+      "returned": "Total returnat",
+      "open": "Miză deschisă",
+      "openTickets": "{count, plural, one {# bilet deschis} few {# bilete deschise} other {# de bilete deschise}}"
+    },
+    "profile": "Profil",
+    "fields": {
+      "dob": "Data nașterii",
+      "locale": "Limbă",
+      "oddsPref": "Schimbări de cote",
+      "joined": "Înregistrat",
+      "lastLogin": "Ultima autentificare",
+      "name": "Nume complet",
+      "phone": "Telefon"
+    },
+    "oddsPref": {
+      "NONE": "Întreabă de fiecare dată",
+      "HIGHER": "Acceptă cote mai mari",
+      "ANY": "Acceptă orice schimbare"
+    },
+    "rejections": "Pariuri respinse recent",
+    "noRejections": "Niciun pariu respins.",
+    "activated": "Jucător activat",
+    "suspended": "Jucător suspendat și deconectat",
+    "suspendTitle": "Suspenzi pe {name}?",
+    "activateTitle": "Activezi pe {name}?",
+    "suspendHelp": "Jucătorul este deconectat peste tot și nu se poate autentifica sau paria până la reactivare. Pariurile deschise rămân neschimbate.",
+    "activateHelp": "Jucătorul se poate autentifica și paria din nou.",
+    "editTitle": "Editează jucătorul",
+    "saved": "Modificări salvate",
+    "limits": {
+      "current": "Limite curente",
+      "none": "Nicio limită setată.",
+      "types": {
+        "DAILY_STAKE": "Miză zilnică",
+        "WEEKLY_STAKE": "Miză săptămânală",
+        "MONTHLY_STAKE": "Miză lunară",
+        "MAX_STAKE_PER_BET": "Miză maximă pe pariu"
+      },
+      "source": {
+        "USER": "Setată de jucător",
+        "ADMIN": "Setată de operator"
+      },
+      "pending": "devine {amount} pe {date}",
+      "lift": "Ridică",
+      "setTitle": "Setează o limită de operator",
+      "type": "Limită",
+      "amount": "Sumă (RON)",
+      "help": "Se aplică imediat. Limitele jucătorului rămân valabile; se aplică cea mai strictă.",
+      "invalid": "Introdu o sumă mai mare decât 0.",
+      "apply": "Aplică limita",
+      "liftTitle": "Ridici această limită de operator?",
+      "confirmTitle": "Aplici această limită?",
+      "removed": "Limită ridicată",
+      "set": "Limită aplicată"
+    }
+  },
+  "wallet": {
+    "kicker": "Gestionare portofel",
+    "title": "Portofel",
+    "description": "Adaugă sau retrage credit RON cu motiv, aprobă sumele mari și urmărește fiecare mișcare.",
+    "tabs": {
+      "approvals": "Aprobări",
+      "adjust": "Adaugă / retrage credit",
+      "transactions": "Jurnal tranzacții"
+    },
+    "approvals": {
+      "approved": "Aprobat și aplicat",
+      "rejected": "Cerere respinsă",
+      "emptyTitle": "Nicio aprobare în așteptare",
+      "emptyHelp": "Creditările și debitările peste pragul de aprobare apar aici pentru un al doilea administrator.",
+      "requestedBy": "Cerut de {email}",
+      "ownRequest": "Cererea ta: trebuie aprobată de alt administrator",
+      "reject": "Respinge",
+      "approve": "Aprobă",
+      "rejectTitle": "Respingi această cerere?"
+    },
+    "adjust": {
+      "title": "Adaugă sau retrage credit",
+      "description": "{name} · {email}",
+      "type": "Operațiune",
+      "credit": "Adaugă credit",
+      "debit": "Retrage credit",
+      "amount": "Sumă",
+      "amountInvalid": "Introdu o sumă mai mare decât 0 (ex. 50 sau 12,50).",
+      "balanceAfter": "Sold {from} → {to}",
+      "balanceNow": "Sold curent {balance}",
+      "negative": "Soldul nu poate scădea sub zero; debitarea va fi refuzată.",
+      "approvalNote": "Sumele peste pragul de aprobare așteaptă un al doilea administrator înainte de aplicare.",
+      "submitCredit": "Adaugă credit",
+      "submitDebit": "Retrage credit",
+      "applied": "Gata. Sold nou {balance}",
+      "queued": "Peste prag: trimis spre aprobare unui al doilea administrator",
+      "pickTitle": "Alege un jucător",
+      "pickSearch": "Nume, email sau telefon…",
+      "pickHint": "Scrie cel puțin 2 caractere pentru căutare.",
+      "noPlayers": "Niciun jucător găsit.",
+      "choose": "Alege"
+    },
+    "tx": {
+      "time": "Data",
+      "player": "Jucător",
+      "type": "Tip",
+      "reason": "Motiv",
+      "ticket": "Bilet",
+      "amount": "Sumă",
+      "balanceAfter": "Sold după",
+      "empty": "Nicio tranzacție găsită.",
+      "allTypes": "Toate tipurile",
+      "from": "De la",
+      "to": "Până la",
+      "export": "Export CSV"
+    }
+  },
+  "bets": {
+    "kicker": "Gestionare pariuri",
+    "title": "Pariuri",
+    "description": "Toate biletele: pariuri live și deschise, rezultate decontate și cash out.",
+    "views": {
+      "label": "Vizualizare bilete",
+      "all": "Toate",
+      "open": "Deschise",
+      "live": "Live",
+      "settled": "Decontate",
+      "cashout": "Cash out"
+    },
+    "search": "Cod bilet sau email jucător…",
+    "anyResult": "Orice rezultat",
+    "type": "Tip",
+    "allTypes": "Toate tipurile",
+    "from": "De la",
+    "to": "Până la",
+    "cols": {
+      "ticket": "Bilet",
+      "player": "Jucător",
+      "selection": "Selecție",
+      "stake": "Miză",
+      "odds": "Cotă",
+      "return": "Câștig",
+      "status": "Stare"
+    },
+    "multi": "{count} meciuri",
+    "liveBet": "Live",
+    "empty": "Niciun bilet pentru aceste filtre.",
+    "ticket": "Bilet",
+    "player": "Jucător",
+    "stake": "Miză",
+    "odds": "Cotă totală",
+    "potential": "Câștig posibil",
+    "payout": "Plătit",
+    "cashedOut": "Încasat (cash out)",
+    "settledAt": "Decontat",
+    "rejectReason": "Respins pentru că",
+    "voidReason": "Anulat pentru că",
+    "legs": "{count, plural, one {# selecție} few {# selecții} other {# de selecții}}",
+    "movements": "Mișcări în portofel"
+  },
+  "sportsbook": {
+    "kicker": "Setări sportsbook",
+    "title": "Sportsbook",
+    "description": "Activează sau dezactivează ligi și piețe, suspendă meciuri și setează limitele de pariere.",
+    "tabs": {
+      "events": "Meciuri",
+      "leagues": "Ligi",
+      "markets": "Piețe",
+      "limits": "Limite"
+    },
+    "leagues": {
+      "help": "O ligă dezactivată dispare de pe site și nu mai primește pariuri. ★ marchează o ligă de top.",
+      "inactive": "Nu e în flux",
+      "cols": {
+        "league": "Ligă",
+        "live": "Live",
+        "upcoming": "Următoare",
+        "top": "Top",
+        "enabled": "Activă"
+      },
+      "topOn": "{name} este acum ligă de top",
+      "topOff": "{name} nu mai este ligă de top",
+      "enabled": "{name} activată",
+      "disabled": "{name} dezactivată"
+    },
+    "markets": {
+      "help": "Dezactivarea unui tip de piață o ascunde peste tot și refuză pariuri noi pe ea.",
+      "open": "{count, plural, =0 {Nicio piață deschisă} one {# piață deschisă} few {# piețe deschise} other {# de piețe deschise}}",
+      "enabled": "{name} activată",
+      "disabled": "{name} dezactivată"
+    },
+    "events": {
+      "cols": {
+        "match": "Meci",
+        "when": "Start / scor",
+        "status": "Stare",
+        "markets": "Piețe",
+        "tickets": "Pariuri deschise",
+        "suspended": "Suspendat"
+      },
+      "feed": "Flux",
+      "resume": "Reia",
+      "suspend": "Suspendă",
+      "search": "Caută o echipă…",
+      "league": "Ligă",
+      "allLeagues": "Toate ligile",
+      "bettable": "Live și următoare",
+      "statuses": {
+        "LIVE": "Live",
+        "SCHEDULED": "Următoare",
+        "FINISHED": "Terminate",
+        "CANCELLED": "Anulate"
+      },
+      "suspendedOnly": "Doar suspendate",
+      "empty": "Niciun meci găsit.",
+      "resumeTitle": "Reiei {match}?",
+      "suspendTitle": "Suspenzi {match}?",
+      "resumeHelp": "Pariurile sunt din nou acceptate pe toate piețele deschise ale meciului.",
+      "suspendHelp": "Nu se mai acceptă pariuri noi pe acest meci până îl reiei. Pariurile plasate nu sunt afectate.",
+      "resumed": "Meci reluat",
+      "suspendedToast": "Meci suspendat"
+    },
+    "eventMarkets": {
+      "none": "Încă nu există piețe pentru acest meci.",
+      "byOperator": "Suspendată de operator",
+      "byFeed": "Suspendată de flux",
+      "settled": "Decontată",
+      "hidden": "Ascunsă",
+      "resume": "Reia",
+      "suspend": "Suspendă",
+      "hide": "Ascunde",
+      "show": "Afișează",
+      "suspendHelp": "Piața rămâne vizibilă, dar blocată. Actualizările din flux nu o redeschid.",
+      "resumeHelp": "Piața se redeschide (dacă fluxul nu o are suspendată).",
+      "hideHelp": "Piața dispare de pe site și nu mai primește pariuri.",
+      "showHelp": "Piața este din nou afișată pe site.",
+      "updated": "Piață actualizată"
+    },
+    "limits": {
+      "groups": {
+        "betting": "Limite de pariere",
+        "cashout": "Cash out",
+        "builder": "Bet Builder",
+        "wallet": "Portofel (financiar)",
+        "feed": "Flux de cote"
+      },
+      "keys": {
+        "betting_minStakeBani": "Miză minimă",
+        "betting_maxStakeBani": "Miză maximă",
+        "betting_maxPayoutBani": "Plată maximă",
+        "betting_maxAccaLegs": "Selecții maxime pe bilet combinat",
+        "betting_liveDelayMs": "Întârziere pariuri live",
+        "cashout_enabled": "Cash out disponibil",
+        "cashout_marginBps": "Marjă cash out",
+        "builder_factorBps": "Factor de preț Bet Builder",
+        "wallet_approvalThresholdBani": "Aprobare de al doilea administrator peste",
+        "feed_stallSeconds": "Suspendă piețele live după o pauză a fluxului de"
+      },
+      "help": {
+        "betting_minStakeBani": "Cea mai mică miză pe bilet",
+        "betting_maxStakeBani": "Cea mai mare miză pe bilet",
+        "betting_maxPayoutBani": "Plafon pentru câștigul unui bilet",
+        "betting_maxAccaLegs": "Între 2 și 30",
+        "betting_liveDelayMs": "Pariurile live sunt reverificate după această pauză",
+        "cashout_enabled": "Pornește sau oprește oferta de cash out pentru toți",
+        "cashout_marginBps": "Reținută de casă la un cash out",
+        "builder_factorBps": "Aplicat prețurilor combinate din același meci",
+        "wallet_approvalThresholdBani": "Creditările și debitările mai mari cer al doilea administrator",
+        "feed_stallSeconds": "Protejează împotriva cotelor live neactualizate"
+      },
+      "updated": "modificat {date}",
+      "saved": "{name} salvat",
+      "invalid": "Introdu un număr valid.",
+      "save": "Salvează"
+    }
+  },
+  "reports": {
+    "kicker": "Rapoarte",
+    "title": "Rapoarte",
+    "description": "Jucători, mize, plăți și risc pentru o perioadă.",
+    "range": "{from} – {to}. Sumele provin din registrul portofelelor.",
+    "export": "Export CSV",
+    "period": "Perioadă",
+    "presets": {
+      "7": "7 zile",
+      "30": "30 de zile",
+      "90": "90 de zile",
+      "custom": "Personalizat"
+    },
+    "from": "De la",
+    "to": "Până la",
+    "kpi": {
+      "stakes": "Total mize",
+      "tickets": "{count, plural, one {# bilet} few {# bilete} other {# de bilete}}",
+      "payouts": "Total plăți",
+      "ggr": "Venit brut din jocuri (GGR)",
+      "margin": "{pct}% din mize",
+      "ggrHint": "Mize minus plăți",
+      "avgStake": "Miză medie",
+      "users": "Total jucători",
+      "usersHint": "{new} noi · {active} au pariat · {suspended} suspendați",
+      "exposure": "Expunere deschisă",
+      "exposureHint": "{count} bilete deschise · {stake} pariați",
+      "credits": "Credit adăugat",
+      "debits": "Credit retras"
+    },
+    "trend": "Mize vs plăți",
+    "byStatus": "Bilete după rezultat",
+    "noTickets": "Niciun bilet în această perioadă.",
+    "exposure": {
+      "title": "Cea mai mare expunere deschisă",
+      "match": "Meci",
+      "status": "Stare",
+      "tickets": "Bilete deschise",
+      "potential": "Plată posibilă",
+      "empty": "Niciun bilet deschis."
+    },
+    "transactionLog": "Jurnal tranzacții"
+  },
+  "audit": {
+    "kicker": "Jurnal de audit",
+    "title": "Jurnal de audit",
+    "description": "Fiecare acțiune de administrator, modificare de portofel, eveniment de pariere și de sistem. Înregistrările nu pot fi modificate sau șterse.",
+    "empty": "Nicio înregistrare găsită.",
+    "all": "Toate",
+    "search": "Email administrator, id entitate sau acțiune…",
+    "allActions": "Toate acțiunile",
+    "allActors": "Oricine",
+    "from": "De la",
+    "to": "Până la",
+    "cols": {
+      "time": "Când",
+      "category": "Categorie",
+      "action": "Acțiune",
+      "actor": "Cine",
+      "entity": "Subiect"
+    },
+    "categories": {
+      "ADMIN": "Admin",
+      "WALLET": "Portofel",
+      "BETTING": "Pariere",
+      "SYSTEM": "Sistem"
+    },
+    "actorTypes": {
+      "USER": "Jucător",
+      "ADMIN": "Administrator",
+      "SYSTEM": "Sistem"
+    },
+    "ip": "Adresă IP",
+    "before": "Înainte",
+    "after": "După",
+    "meta": "Detalii"
   }
 }

@@ -12,7 +12,14 @@
     "audit": "Audit logs",
     "logout": "Log out",
     "menu": "Menu",
-    "signedInAs": "Signed in as {email}"
+    "signedInAs": "Signed in as {email}",
+    "backOffice": "Back office",
+    "groups": {
+      "overview": "Overview",
+      "operations": "Operations",
+      "insights": "Insights"
+    },
+    "pendingApprovals": "{count} pending approvals"
   },
   "roles": {
     "SUPER_ADMIN": "Super admin",
@@ -37,7 +44,438 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome, {name}",
-    "phaseNote": "Management modules (users, wallet, bets, sportsbook settings, reports and audit logs) are added in the next phase."
+    "kicker": "Live overview",
+    "morning": "Good morning, {name}",
+    "afternoon": "Good afternoon, {name}",
+    "evening": "Good evening, {name}",
+    "subtitle": "What is happening on the sportsbook right now.",
+    "liveEvents": "Live matches",
+    "liveHint": "In play right now",
+    "openTickets": "Open tickets",
+    "exposure": "Open exposure",
+    "exposureHint": "Potential payout of open tickets",
+    "pendingApprovals": "Pending approvals",
+    "review": "Review now →",
+    "noneWaiting": "Nothing waiting",
+    "todayStakes": "Stakes today",
+    "ticketsCount": "{count, plural, one {# ticket} other {# tickets}}",
+    "todayPayouts": "Payouts today",
+    "todayGgr": "GGR today",
+    "ggrHint": "Stakes minus payouts",
+    "newUsers": "New players today",
+    "last7Days": "Last 7 days",
+    "fullReport": "Full report",
+    "recentActivity": "Recent activity",
+    "allActivity": "All activity"
+  },
+  "table": {
+    "empty": "Nothing to show yet.",
+    "loadMore": "Load more"
+  },
+  "common2": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save",
+    "confirm": "Confirm",
+    "reason": "Reason",
+    "reasonHint": "Recorded in the audit log.",
+    "reasonRequired": "Please give a reason (at least 3 characters)."
+  },
+  "charts": {
+    "trendLabel": "Stakes and payouts per day",
+    "stakes": "Stakes",
+    "payouts": "Payouts",
+    "barsLabel": "Tickets by status",
+    "tickets": "Tickets"
+  },
+  "users": {
+    "kicker": "User management",
+    "title": "Players",
+    "description": "Find a player by name, email or phone to view, edit, credit or suspend them.",
+    "search": "Search name, email or phone…",
+    "allStatuses": "All statuses",
+    "noMatch": "No player matches “{q}”.",
+    "empty": "No players yet.",
+    "status": {
+      "ACTIVE": "Active",
+      "SUSPENDED": "Suspended"
+    },
+    "cols": {
+      "player": "Player",
+      "phone": "Phone",
+      "status": "Status",
+      "balance": "Balance",
+      "openTickets": "Open bets",
+      "joined": "Joined",
+      "lastLogin": "Last login"
+    },
+    "back": "All players",
+    "balance": "Balance",
+    "addCredit": "Add credit",
+    "removeCredit": "Remove credit",
+    "edit": "Edit",
+    "suspend": "Suspend",
+    "activate": "Activate",
+    "excludedUntil": "Self-excluded until {date}. Betting is blocked.",
+    "excludedForever": "Self-excluded permanently. Betting is blocked.",
+    "tabs": {
+      "overview": "Overview",
+      "wallet": "Wallet",
+      "bets": "Bets",
+      "limits": "Limits",
+      "history": "History"
+    },
+    "stats": {
+      "tickets": "Tickets",
+      "wonLost": "{won} won · {lost} lost",
+      "staked": "Total staked",
+      "returned": "Total returned",
+      "open": "Open stake",
+      "openTickets": "{count, plural, one {# open ticket} other {# open tickets}}"
+    },
+    "profile": "Profile",
+    "fields": {
+      "dob": "Date of birth",
+      "locale": "Language",
+      "oddsPref": "Odds changes",
+      "joined": "Registered",
+      "lastLogin": "Last login",
+      "name": "Full name",
+      "phone": "Phone"
+    },
+    "oddsPref": {
+      "NONE": "Ask every time",
+      "HIGHER": "Accept higher odds",
+      "ANY": "Accept any change"
+    },
+    "rejections": "Recent rejected bets",
+    "noRejections": "No rejected bets.",
+    "activated": "Player activated",
+    "suspended": "Player suspended and logged out",
+    "suspendTitle": "Suspend {name}?",
+    "activateTitle": "Activate {name}?",
+    "suspendHelp": "The player is logged out everywhere and cannot log in or bet until activated. Open bets stay as they are.",
+    "activateHelp": "The player can log in and bet again.",
+    "editTitle": "Edit player",
+    "saved": "Changes saved",
+    "limits": {
+      "current": "Current limits",
+      "none": "No limits set.",
+      "types": {
+        "DAILY_STAKE": "Daily stake",
+        "WEEKLY_STAKE": "Weekly stake",
+        "MONTHLY_STAKE": "Monthly stake",
+        "MAX_STAKE_PER_BET": "Max stake per bet"
+      },
+      "source": {
+        "USER": "Set by the player",
+        "ADMIN": "Set by an operator"
+      },
+      "pending": "changes to {amount} on {date}",
+      "lift": "Lift",
+      "setTitle": "Set an operator limit",
+      "type": "Limit",
+      "amount": "Amount (RON)",
+      "help": "Applies at once. The player’s own limits still apply; the strictest wins.",
+      "invalid": "Enter an amount greater than 0.",
+      "apply": "Apply limit",
+      "liftTitle": "Lift this operator limit?",
+      "confirmTitle": "Apply this limit?",
+      "removed": "Limit lifted",
+      "set": "Limit applied"
+    }
+  },
+  "wallet": {
+    "kicker": "Wallet management",
+    "title": "Wallet",
+    "description": "Add or remove RON credit with a reason, approve large amounts and follow every movement.",
+    "tabs": {
+      "approvals": "Approvals",
+      "adjust": "Add / remove credit",
+      "transactions": "Transaction log"
+    },
+    "approvals": {
+      "approved": "Approved and applied",
+      "rejected": "Request rejected",
+      "emptyTitle": "No approvals waiting",
+      "emptyHelp": "Credits and debits above the approval threshold appear here for a second admin.",
+      "requestedBy": "Requested by {email}",
+      "ownRequest": "Your request: another admin must approve it",
+      "reject": "Reject",
+      "approve": "Approve",
+      "rejectTitle": "Reject this request?"
+    },
+    "adjust": {
+      "title": "Add or remove credit",
+      "description": "{name} · {email}",
+      "type": "Operation",
+      "credit": "Add credit",
+      "debit": "Remove credit",
+      "amount": "Amount",
+      "amountInvalid": "Enter an amount greater than 0 (e.g. 50 or 12,50).",
+      "balanceAfter": "Balance {from} → {to}",
+      "balanceNow": "Current balance {balance}",
+      "negative": "The balance cannot go below zero; this debit will be refused.",
+      "approvalNote": "Amounts above the approval threshold wait for a second admin before they are applied.",
+      "submitCredit": "Add credit",
+      "submitDebit": "Remove credit",
+      "applied": "Done. New balance {balance}",
+      "queued": "Above the threshold: sent for a second admin’s approval",
+      "pickTitle": "Choose a player",
+      "pickSearch": "Name, email or phone…",
+      "pickHint": "Type at least 2 characters to search.",
+      "noPlayers": "No players found.",
+      "choose": "Choose"
+    },
+    "tx": {
+      "time": "Date",
+      "player": "Player",
+      "type": "Type",
+      "reason": "Reason",
+      "ticket": "Ticket",
+      "amount": "Amount",
+      "balanceAfter": "Balance after",
+      "empty": "No transactions match.",
+      "allTypes": "All types",
+      "from": "From",
+      "to": "To",
+      "export": "Export CSV"
+    }
+  },
+  "bets": {
+    "kicker": "Bet management",
+    "title": "Bets",
+    "description": "Every ticket: live and open bets, settled results and cash outs.",
+    "views": {
+      "label": "Ticket view",
+      "all": "All",
+      "open": "Open",
+      "live": "Live",
+      "settled": "Settled",
+      "cashout": "Cash outs"
+    },
+    "search": "Ticket code or player email…",
+    "anyResult": "Any result",
+    "type": "Type",
+    "allTypes": "All types",
+    "from": "From",
+    "to": "To",
+    "cols": {
+      "ticket": "Ticket",
+      "player": "Player",
+      "selection": "Selection",
+      "stake": "Stake",
+      "odds": "Odds",
+      "return": "Return",
+      "status": "Status"
+    },
+    "multi": "{count} matches",
+    "liveBet": "Live",
+    "empty": "No tickets match these filters.",
+    "ticket": "Ticket",
+    "player": "Player",
+    "stake": "Stake",
+    "odds": "Total odds",
+    "potential": "Potential win",
+    "payout": "Paid out",
+    "cashedOut": "Cashed out",
+    "settledAt": "Settled",
+    "rejectReason": "Rejected because",
+    "voidReason": "Void because",
+    "legs": "{count, plural, one {# selection} other {# selections}}",
+    "movements": "Wallet movements"
+  },
+  "sportsbook": {
+    "kicker": "Sportsbook settings",
+    "title": "Sportsbook",
+    "description": "Turn leagues and markets on or off, suspend matches and set the betting limits.",
+    "tabs": {
+      "events": "Matches",
+      "leagues": "Leagues",
+      "markets": "Markets",
+      "limits": "Limits"
+    },
+    "leagues": {
+      "help": "A disabled league disappears from the site and takes no bets. ★ marks a top league.",
+      "inactive": "Not in feed",
+      "cols": {
+        "league": "League",
+        "live": "Live",
+        "upcoming": "Upcoming",
+        "top": "Top",
+        "enabled": "On"
+      },
+      "topOn": "{name} is now a top league",
+      "topOff": "{name} is no longer a top league",
+      "enabled": "{name} enabled",
+      "disabled": "{name} disabled"
+    },
+    "markets": {
+      "help": "Switching a market type off hides it everywhere and refuses new bets on it.",
+      "open": "{count, plural, =0 {No open markets} one {# open market} other {# open markets}}",
+      "enabled": "{name} enabled",
+      "disabled": "{name} disabled"
+    },
+    "events": {
+      "cols": {
+        "match": "Match",
+        "when": "Kick-off / score",
+        "status": "Status",
+        "markets": "Markets",
+        "tickets": "Open bets",
+        "suspended": "Suspended"
+      },
+      "feed": "Feed",
+      "resume": "Resume",
+      "suspend": "Suspend",
+      "search": "Search a team…",
+      "league": "League",
+      "allLeagues": "All leagues",
+      "bettable": "Live & upcoming",
+      "statuses": {
+        "LIVE": "Live",
+        "SCHEDULED": "Upcoming",
+        "FINISHED": "Finished",
+        "CANCELLED": "Cancelled"
+      },
+      "suspendedOnly": "Suspended only",
+      "empty": "No matches found.",
+      "resumeTitle": "Resume {match}?",
+      "suspendTitle": "Suspend {match}?",
+      "resumeHelp": "Bets are accepted again on every open market of this match.",
+      "suspendHelp": "No new bets are accepted on this match until you resume it. Placed bets are not affected.",
+      "resumed": "Match resumed",
+      "suspendedToast": "Match suspended"
+    },
+    "eventMarkets": {
+      "none": "No markets for this match yet.",
+      "byOperator": "Suspended by operator",
+      "byFeed": "Suspended by feed",
+      "settled": "Settled",
+      "hidden": "Hidden",
+      "resume": "Resume",
+      "suspend": "Suspend",
+      "hide": "Hide",
+      "show": "Show",
+      "suspendHelp": "The market stays visible but locked. Feed updates will not reopen it.",
+      "resumeHelp": "The market reopens (unless the feed has it suspended).",
+      "hideHelp": "The market disappears from the site and takes no bets.",
+      "showHelp": "The market is shown on the site again.",
+      "updated": "Market updated"
+    },
+    "limits": {
+      "groups": {
+        "betting": "Betting limits",
+        "cashout": "Cash out",
+        "builder": "Bet Builder",
+        "wallet": "Wallet (finance)",
+        "feed": "Odds feed"
+      },
+      "keys": {
+        "betting_minStakeBani": "Minimum stake",
+        "betting_maxStakeBani": "Maximum stake",
+        "betting_maxPayoutBani": "Maximum payout",
+        "betting_maxAccaLegs": "Max selections per accumulator",
+        "betting_liveDelayMs": "Live bet delay",
+        "cashout_enabled": "Cash out available",
+        "cashout_marginBps": "Cash out margin",
+        "builder_factorBps": "Bet Builder price factor",
+        "wallet_approvalThresholdBani": "Second-admin approval above",
+        "feed_stallSeconds": "Suspend live markets after feed silence of"
+      },
+      "help": {
+        "betting_minStakeBani": "Smallest stake per ticket",
+        "betting_maxStakeBani": "Largest stake per ticket",
+        "betting_maxPayoutBani": "Cap on what one ticket can win",
+        "betting_maxAccaLegs": "Between 2 and 30",
+        "betting_liveDelayMs": "Live bets are re-checked after this wait",
+        "cashout_enabled": "Turn the cash out offer on or off for everyone",
+        "cashout_marginBps": "Kept by the house on a cash out",
+        "builder_factorBps": "Applied to combined same-match prices",
+        "wallet_approvalThresholdBani": "Larger credits and debits need a second admin",
+        "feed_stallSeconds": "Protects against stale live odds"
+      },
+      "updated": "changed {date}",
+      "saved": "{name} saved",
+      "invalid": "Enter a valid number.",
+      "save": "Save"
+    }
+  },
+  "reports": {
+    "kicker": "Reports",
+    "title": "Reports",
+    "description": "Players, stakes, payouts and risk for a period.",
+    "range": "{from} – {to}. Money figures come from the wallet ledger.",
+    "export": "Export CSV",
+    "period": "Period",
+    "presets": {
+      "7": "7 days",
+      "30": "30 days",
+      "90": "90 days",
+      "custom": "Custom"
+    },
+    "from": "From",
+    "to": "To",
+    "kpi": {
+      "stakes": "Total stakes",
+      "tickets": "{count, plural, one {# ticket} other {# tickets}}",
+      "payouts": "Total payouts",
+      "ggr": "Gross gaming revenue",
+      "margin": "{pct}% of stakes",
+      "ggrHint": "Stakes minus payouts",
+      "avgStake": "Average stake",
+      "users": "Total players",
+      "usersHint": "{new} new · {active} betting · {suspended} suspended",
+      "exposure": "Open exposure",
+      "exposureHint": "{count} open tickets · {stake} staked",
+      "credits": "Credit added",
+      "debits": "Credit removed"
+    },
+    "trend": "Stakes vs payouts",
+    "byStatus": "Tickets by result",
+    "noTickets": "No tickets in this period.",
+    "exposure": {
+      "title": "Highest open exposure",
+      "match": "Match",
+      "status": "Status",
+      "tickets": "Open tickets",
+      "potential": "Potential payout",
+      "empty": "No open tickets."
+    },
+    "transactionLog": "Transaction log"
+  },
+  "audit": {
+    "kicker": "Audit logs",
+    "title": "Audit logs",
+    "description": "Every admin action, wallet change, betting event and system event. Entries can never be edited or deleted.",
+    "empty": "No entries match.",
+    "all": "All",
+    "search": "Admin email, entity id or action…",
+    "allActions": "All actions",
+    "allActors": "Anyone",
+    "from": "From",
+    "to": "To",
+    "cols": {
+      "time": "When",
+      "category": "Category",
+      "action": "Action",
+      "actor": "Who",
+      "entity": "Subject"
+    },
+    "categories": {
+      "ADMIN": "Admin",
+      "WALLET": "Wallet",
+      "BETTING": "Betting",
+      "SYSTEM": "System"
+    },
+    "actorTypes": {
+      "USER": "Player",
+      "ADMIN": "Admin",
+      "SYSTEM": "System"
+    },
+    "ip": "IP address",
+    "before": "Before",
+    "after": "After",
+    "meta": "Details"
   }
 }

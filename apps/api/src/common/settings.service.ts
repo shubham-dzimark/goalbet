@@ -19,7 +19,12 @@ export class SettingsService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.redis.subscribe(Channels.SETTINGS_CHANGED, () => (this.cache = null));
+    await this.redis.subscribe(Channels.SETTINGS_CHANGED, () => this.invalidate());
+  }
+
+  /** Drops the local cache; the next read goes to the database. */
+  invalidate() {
+    this.cache = null;
   }
 
   async all(): Promise<Settings> {

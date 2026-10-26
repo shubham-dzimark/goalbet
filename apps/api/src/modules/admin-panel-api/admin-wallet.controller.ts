@@ -1,17 +1,19 @@
-import { Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
-import { adminWalletAdjustSchema, walletQuerySchema } from '@goalbet/shared';
+import { type WalletTxType } from '@goalbet/db';
+import { type AdminApprovalRow, type AdminTransactionRow, adminTransactionQuerySchema, adminWalletAdjustSchema, walletQuerySchema } from '@goalbet/shared';
 import { AdminAuthGuard, type AuthedAdmin, CurrentAdmin, Roles } from '../../common/auth/guards.js';
 import { PrismaService } from '../../common/prisma.service.js';
 import { ReqMeta, type RequestMeta } from '../../common/request-meta.js';
 import { ZBody, ZQuery } from '../../common/zod.js';
 import { AdminWalletService } from '../wallet-ledger/admin-wallet.service.js';
 import { WalletService } from '../wallet-ledger/wallet.service.js';
+import { actorOf } from './admin-actor.js';
 
-const actorOf = (a: AuthedAdmin, meta: RequestMeta) => ({ type: 'ADMIN' as const, id: a.id, label: a.email, ...meta });
+const day = (d: string) => new Date(`${d}T00:00:00Z`);
 
-/** F3.3 wallet management (backend; the admin screens arrive in phase 3). */
+/** F3.3 wallet management: add/remove RON credit with a reason, approvals, wallet history. */
 @ApiTags('admin-wallet')
 @ApiBearerAuth()
 @UseGuards(AdminAuthGuard)
@@ -23,28 +25,7 @@ export class AdminWalletController {
     private readonly prisma: PrismaService,
   ) {}
 
-  /** Find players by email, phone or name. */
-  @Get('users')
-  async users(@Query('q') q = '') {
-    const term = q.trim();
-    const contains = { contains: term, mode: 'insensitive' as const };
-    const users = await this.prisma.user.findMany({
-      where: term ? { OR: [{ email: contains }, { phone: contains }, { name: contains }] } : {},
-      include: { wallet: { select: { balanceBani: true } } },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-    });
-    return users.map((u) => ({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-      phone: u.phone,
-      status: u.status,
-      balanceBani: u.wallet?.balanceBani ?? 0,
-      createdAt: u.createdAt.toISOString(),
-    }));
-  }
-
+  /** Add (ADMIN_CREDIT) or remove (ADMIN_DEBIT) RON; above the threshold it waits for a second admin. */
   @Post('users/:id/wallet')
   @Roles('FINANCE')
   @HttpCode(200)
@@ -54,7 +35,7 @@ export class AdminWalletController {
     @ZBody(adminWalletAdjustSchema) body: z.output<typeof adminWalletAdjustSchema>,
     @ReqMeta() meta: RequestMeta,
   ) {
-    return this.adminWallet.adjust(actorOf(admin, meta), userId, body);
+    return this.adminWallet.adjust({ ...actorOf(admin, meta), id: admin.id }, userId, body);
   }
 
   @Get('users/:id/wallet/transactions')
@@ -62,17 +43,61 @@ export class AdminWalletController {
     return this.wallet.history(userId, q);
   }
 
+  /** Transaction log across every wallet (also the Reports "transaction logs"). */
+  @Get('wallet/transactions')
+  async transactions(@ZQuery(adminTransactionQuerySchema) q: z.output<typeof adminTransactionQuerySchema>) {
+    const rows = await this.prisma.walletTransaction.findMany({
+      where: {
+        ...(q.type ? { type: q.type as WalletTxType } : {}),
+        ...(q.userId ? { wallet: { userId: q.userId } } : {}),
+        ...(q.from || q.to
+          ? { createdAt: { ...(q.from ? { gte: day(q.from) } : {}), ...(q.to ? { lt: new Date(day(q.to).getTime() + 86_400_000) } : {}) } }
+          : {}),
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: q.limit + 1,
+      ...(q.cursor ? { cursor: { id: q.cursor }, skip: 1 } : {}),
+      include: {
+        wallet: { select: { user: { select: { id: true, name: true, email: true } } } },
+        ticket: { select: { code: true } },
+        admin: { select: { id: true, email: true } },
+      },
+    });
+    const items: AdminTransactionRow[] = rows.slice(0, q.limit).map((t) => ({
+      id: t.id,
+      type: t.type,
+      amountBani: t.amountBani,
+      balanceAfterBani: t.balanceAfterBani,
+      reason: t.reason,
+      createdAt: t.createdAt.toISOString(),
+      user: t.wallet.user,
+      ticketCode: t.ticket?.code ?? null,
+      admin: t.admin,
+    }));
+    return { items, nextCursor: rows.length > q.limit ? (items.at(-1)?.id ?? null) : null };
+  }
+
   @Get('approvals')
   @Roles('FINANCE')
-  approvals() {
-    return this.adminWallet.pending();
+  async approvals(): Promise<AdminApprovalRow[]> {
+    const rows = await this.adminWallet.pending();
+    return rows.map((a) => ({
+      id: a.id,
+      type: a.type,
+      amountBani: a.amountBani,
+      reason: a.reason,
+      status: a.status,
+      createdAt: a.createdAt.toISOString(),
+      user: a.user,
+      requestedBy: { id: a.requestedBy.id, email: a.requestedBy.email },
+    }));
   }
 
   @Post('approvals/:id/approve')
   @Roles('FINANCE')
   @HttpCode(200)
   approve(@CurrentAdmin() admin: AuthedAdmin, @Param('id', ParseUUIDPipe) id: string, @ReqMeta() meta: RequestMeta) {
-    return this.adminWallet.approve(actorOf(admin, meta), id);
+    return this.adminWallet.approve({ ...actorOf(admin, meta), id: admin.id }, id);
   }
 
   @Post('approvals/:id/reject')
@@ -84,6 +109,6 @@ export class AdminWalletController {
     @ZBody(z.object({ note: z.string().trim().min(3, { message: 'validation.reason' }).max(300) })) body: { note: string },
     @ReqMeta() meta: RequestMeta,
   ) {
-    return this.adminWallet.reject(actorOf(admin, meta), id, body.note);
+    return this.adminWallet.reject({ ...actorOf(admin, meta), id: admin.id }, id, body.note);
   }
 }

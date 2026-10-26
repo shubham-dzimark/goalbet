@@ -66,3 +66,13 @@ Choices not dictated by the brief, with the reason. Newest last.
 42. **Team crests are generated** (shape, colours, stripes derived from the team name), so no club logos are used.
 43. **Two ways to run background sync** (`JOBS_MODE`): `worker` (default) runs apps/worker with BullMQ on an always-on host; `on-request` is for serverless hosts (Vercel) with no worker: catalogue visits start any stale task in the background (`waitUntil`), using a Redis `SET NX PX` key as both freshness marker and lock (live 15 s, pre-match 2 min, fixtures 10 min), plus a daily Vercel Cron (`/cron/refresh`, bearer `CRON_SECRET`). Both modes share `SyncTasksService`. The serverless API entry is `apps/api/api/index.js` → `dist/serverless.js`.
 44. **Local demo:** run the production build (`pnpm build`, then each app's `start`) and share it through a Cloudflare quick tunnel. On Windows, Next.js skips the `standalone` output (copying pnpm symlinks needs admin rights); Docker builds keep it.
+
+## Phase 3
+
+45. **Admin roles:** SUPER_ADMIN can do everything; OPERATOR edits/suspends players, sets operator limits and runs the sportsbook (leagues, markets, events, betting limits); FINANCE moves money and owns the `wallet.*` settings (approval threshold). Every admin can view everything. The admin app hides actions a role cannot use; the API enforces it.
+46. **Every operator change carries a written reason** (min. 3 characters), stored in the audit entry's `meta`, so the audit log explains *why*, not only what.
+47. **Operator suspension beats the feed:** a market suspended by an operator gets `adminSuspended = true`, and the ingest keeps it SUSPENDED whatever the provider sends until the operator resumes it. Event suspension uses `Event.suspended`, which the feed never writes (the feed uses `feedSuspended`). Both are pushed to clients on the event-updates channel.
+48. **Operator limits** (`UserLimit.source = ADMIN`) apply at once, with no cooling-off, and stack with the player's own limits (the strictest wins). Suspending a player ends all their sessions immediately.
+49. **Report money figures come from the wallet ledger** (stakes = STAKE, payouts = WIN + CASHOUT + REFUND + VOID_REVERSAL, credits/debits = ADMIN_*), not from ticket fields, so reports always agree with balances. Exposure = potential win of open tickets; per match, each open ticket is counted once.
+50. **The admin match list** shows the current provider's leagues only and treats a SCHEDULED match as upcoming until 2 h after kick-off, so data left over from a previous provider does not clutter it.
+51. **First admin login enrols 2FA by QR** (seeded admins have no authenticator); `admin:access` resets enrolment and can rotate passwords, printing nothing secret.

@@ -21,6 +21,7 @@ export {
   DialogClose,
   DialogContent,
   SheetContent,
+  SidePanelContent,
   Tabs,
   TabsList,
   TabsTrigger,

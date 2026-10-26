@@ -1,0 +1,121 @@
+import { z } from 'zod';
+import { AUDIT_CATEGORIES, MARKET_TYPES, TicketStatus, USER_LIMIT_TYPES, WALLET_TX_TYPES } from '../enums.js';
+import { SETTING_KEYS } from '../settings.js';
+import { phoneSchema } from './auth.js';
+
+/** Request schemas for the admin panel (F3.2–F3.8). Shared by the API and the admin app. */
+
+const cursorPage = {
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(30),
+};
+const dateRange = {
+  from: z.iso.date().optional(),
+  to: z.iso.date().optional(),
+};
+const reason = z.string().trim().min(3, { message: 'validation.reason' }).max(300);
+const bani = z.number().int().positive({ message: 'validation.amount' });
+
+// ── F3.2 users ──
+export const adminUserListQuerySchema = z.object({
+  q: z.string().trim().max(100).optional(),
+  status: z.enum(['ACTIVE', 'SUSPENDED']).optional(),
+  ...cursorPage,
+});
+
+export const adminUserUpdateSchema = z
+  .object({
+    name: z.string().trim().min(2, { message: 'validation.name' }).max(80).optional(),
+    phone: phoneSchema.optional(),
+    locale: z.enum(['ro', 'en']).optional(),
+  })
+  .refine((v) => Object.keys(v).length > 0, { message: 'validation.required' });
+
+export const adminUserStatusSchema = z.object({
+  status: z.enum(['ACTIVE', 'SUSPENDED']),
+  reason,
+});
+
+/** Operator-set limit (source ADMIN); null removes it. Applies at once, stacks with the player's own. */
+export const adminUserLimitSchema = z.object({
+  type: z.enum(USER_LIMIT_TYPES as [string, ...string[]]),
+  amountBani: bani.nullable(),
+  reason,
+});
+
+// ── F3.3 wallet ──
+export const adminTransactionQuerySchema = z.object({
+  type: z.enum(WALLET_TX_TYPES as [string, ...string[]]).optional(),
+  userId: z.uuid().optional(),
+  ...dateRange,
+  ...cursorPage,
+});
+
+// ── F3.4 bets ──
+export const adminTicketQuerySchema = z.object({
+  /** quick tabs from the flow chart: all · live · open · settled · cash outs */
+  view: z.enum(['all', 'open', 'live', 'settled', 'cashout']).default('all'),
+  status: z.enum(Object.values(TicketStatus) as [string, ...string[]]).optional(),
+  type: z.enum(['SINGLE', 'ACCA']).optional(),
+  /** ticket code or player email */
+  q: z.string().trim().max(100).optional(),
+  userId: z.uuid().optional(),
+  ...dateRange,
+  ...cursorPage,
+});
+
+// ── F3.5 sportsbook ──
+export const adminCompetitionUpdateSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    isTop: z.boolean().optional(),
+    sortOrder: z.number().int().min(0).max(9999).optional(),
+  })
+  .refine((v) => Object.keys(v).length > 0, { message: 'validation.required' });
+
+export const adminMarketTypeUpdateSchema = z.object({
+  type: z.enum(MARKET_TYPES as [string, ...string[]]),
+  enabled: z.boolean(),
+});
+
+export const adminEventQuerySchema = z.object({
+  competitionId: z.uuid().optional(),
+  status: z.enum(['SCHEDULED', 'LIVE', 'FINISHED', 'CANCELLED']).optional(),
+  q: z.string().trim().max(100).optional(),
+  suspendedOnly: z.coerce.boolean().optional(),
+  ...cursorPage,
+});
+
+export const adminEventSuspendSchema = z.object({
+  suspended: z.boolean(),
+  reason,
+});
+
+export const adminMarketUpdateSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    suspended: z.boolean().optional(),
+    reason,
+  })
+  .refine((v) => v.enabled !== undefined || v.suspended !== undefined, { message: 'validation.required' });
+
+export const adminSettingUpdateSchema = z.object({
+  key: z.enum(SETTING_KEYS as [string, ...string[]]),
+  value: z.union([z.number().int().min(0), z.boolean()]),
+});
+
+// ── F3.6 reports ──
+export const adminReportQuerySchema = z.object({ ...dateRange });
+
+// ── F3.8 audit ──
+export const adminAuditQuerySchema = z.object({
+  category: z.enum(AUDIT_CATEGORIES as [string, ...string[]]).optional(),
+  action: z.string().trim().max(60).optional(),
+  actorType: z.enum(['USER', 'ADMIN', 'SYSTEM']).optional(),
+  /** actor label (e.g. admin email) or entity id */
+  q: z.string().trim().max(100).optional(),
+  entityType: z.string().trim().max(40).optional(),
+  entityId: z.string().trim().max(60).optional(),
+  ...dateRange,
+  ...cursorPage,
+});

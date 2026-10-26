@@ -10,6 +10,8 @@ export * from './errors.js';
 export * from './settings.js';
 export * from './schemas/auth.js';
 export * from './schemas/betting.js';
+export * from './schemas/admin.js';
+export * from './admin.js';
 export * from './catalog.js';
 export * from './i18n-keys.js';
 export * from './realtime.js';
