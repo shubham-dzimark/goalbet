@@ -1,54 +1,184 @@
 /*
- * GoalBet design tokens — the single place to rebrand colours and fonts.
+ * GoalBet design tokens — "Emerald Pitch". The single place to rebrand colours and fonts.
  * (Brand name and logo live next to this file in brand.ts.)
- * Tailwind 4 picks up everything in @theme as utilities: bg-brand, text-ink-muted, font-display, …
+ * Palette: deep navy · emerald · gold · live red · white. Keep it to these.
+ * Tailwind 4 turns everything in @theme into utilities: bg-brand, text-ink-muted, font-display, …
  */
-@theme {
-  /* Brand */
-  --color-brand: #0e9f6e;
-  --color-brand-strong: #087a54;
-  --color-brand-soft: #d9f6ea;
-  --color-brand-ink: #ffffff;
+/*
+ * Themes. The @theme block below generates the Tailwind utilities (with the dark values); the
+ * blocks here set the live values. Dark is the default; `data-theme="light"` on <html> switches
+ * the page, and `data-theme="dark"` on any element keeps that section dark (hero, match header).
+ */
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+  /* RGB channels for glows/shadows in arbitrary values: rgb(var(--brand-rgb) / 0.4) */
+  --brand-rgb: 22 199 132;
+  --gold-rgb: 245 185 66;
+  --live-rgb: 255 79 94;
+  --navy-rgb: 8 17 31;
+  --tint-rgb: 255 255 255;
 
-  /* Chrome (header, nav, sidebar headers) */
-  --color-chrome: #0b1f45;
-  --color-chrome-strong: #071631;
-  --color-chrome-soft: #16306a;
-  --color-chrome-ink: #e8eefb;
-  --color-chrome-muted: #93a4c8;
+  --color-brand: #16c784;
+  --color-brand-strong: #0ea371;
+  --color-brand-soft: rgb(22 199 132 / 0.12);
+  --color-brand-ink: #03140c;
+  --color-accent: #f5b942;
+  --color-accent-soft: rgb(245 185 66 / 0.12);
+  --color-chrome: #0c1828;
+  --color-chrome-strong: #060d18;
+  --color-chrome-soft: #16253c;
+  --color-chrome-ink: #f2f6fb;
+  --color-chrome-muted: #93a3ba;
+  --color-tint: #ffffff;
+  --color-surface: #08111f;
+  --color-card: rgb(255 255 255 / 0.04);
+  --color-card-alt: rgb(255 255 255 / 0.025);
+  --color-card-solid: #101c30;
+  --color-line: rgb(255 255 255 / 0.07);
+  --color-line-strong: rgb(255 255 255 / 0.13);
+  --color-ink: #f2f6fb;
+  --color-ink-muted: #93a3ba;
+  --color-ink-faint: #5d6e86;
+  --color-odds: rgb(255 255 255 / 0.055);
+  --color-odds-hover: rgb(255 255 255 / 0.1);
+  --color-odds-active: #16c784;
+  --color-odds-active-ink: #03140c;
+  --color-odds-up: #16c784;
+  --color-odds-down: #ff4f5e;
+  --color-live: #ff4f5e;
+  --color-boost: #f5b942;
+  --color-boost-ink: #241600;
+  --color-success: #16c784;
+  --color-warning: #f5b942;
+  --color-danger: #ff4f5e;
+  --color-info: #7fb4ff;
+  --shadow-glow: 0 0 0 1px rgb(22 199 132 / 0.35), 0 10px 32px -10px rgb(22 199 132 / 0.5);
+  --shadow-float: 0 28px 60px -24px rgb(0 0 0 / 0.75);
 
-  /* Surfaces */
-  --color-surface: #eef1f6;
+  --glass-from: rgb(255 255 255 / 0.055);
+  --glass-to: rgb(255 255 255 / 0.02);
+  --glass-shadow: none;
+  --glow-mid: #7ee8b5;
+  --page-glow: 0.13;
+  --picker-invert: 1;
+}
+
+/* Daylight: cool paper background, white cards, the same emerald/gold/red deepened for contrast on white */
+[data-theme='light'] {
+  color-scheme: light;
+  --brand-rgb: 14 163 110;
+  --gold-rgb: 196 128 0;
+  --live-rgb: 226 58 76;
+  --navy-rgb: 8 17 31;
+  --tint-rgb: 8 17 31;
+
+  --color-brand: #0ea36e;
+  --color-brand-strong: #0b8a5c;
+  --color-brand-soft: rgb(14 163 110 / 0.1);
+  --color-brand-ink: #03140c;
+  --color-accent: #c48000;
+  --color-accent-soft: rgb(196 128 0 / 0.1);
+  --color-chrome: #ffffff;
+  --color-chrome-strong: #eef2f7;
+  --color-chrome-soft: #e2e8f0;
+  --color-chrome-ink: #0b1626;
+  --color-chrome-muted: #4b5b71;
+  --color-tint: #08111f;
+  --color-surface: #f2f5f9;
   --color-card: #ffffff;
-  --color-card-alt: #f6f8fb;
-  --color-line: #dfe4ee;
-  --color-ink: #0e1a2b;
-  --color-ink-muted: #5b6b82;
-  --color-ink-faint: #8c99ad;
+  --color-card-alt: rgb(8 17 31 / 0.025);
+  --color-card-solid: #ffffff;
+  --color-line: rgb(8 17 31 / 0.08);
+  --color-line-strong: rgb(8 17 31 / 0.15);
+  --color-ink: #0b1626;
+  --color-ink-muted: #4b5b71;
+  --color-ink-faint: #7a889c;
+  --color-odds: rgb(8 17 31 / 0.045);
+  --color-odds-hover: rgb(8 17 31 / 0.085);
+  --color-odds-active: #0ea36e;
+  --color-odds-active-ink: #03140c;
+  --color-odds-up: #0b9a63;
+  --color-odds-down: #e23a4c;
+  --color-live: #e23a4c;
+  --color-boost: #e6a10f;
+  --color-boost-ink: #241600;
+  --color-success: #0b9a63;
+  --color-warning: #b87700;
+  --color-danger: #d9344a;
+  --color-info: #2f6fd6;
+  --shadow-glow: 0 0 0 1px rgb(14 163 110 / 0.35), 0 10px 28px -12px rgb(14 163 110 / 0.45);
+  --shadow-float: 0 24px 48px -22px rgb(15 30 55 / 0.28);
+
+  --glass-from: rgb(255 255 255 / 0.96);
+  --glass-to: rgb(255 255 255 / 0.82);
+  --glass-shadow: 0 1px 2px rgb(15 30 55 / 0.05), 0 8px 24px -14px rgb(15 30 55 / 0.18);
+  --glow-mid: #34b98a;
+  --page-glow: 0.09;
+  --picker-invert: 0;
+}
+
+/* a forced-theme section must also reset the inherited text colour */
+[data-theme] {
+  color: var(--color-ink);
+}
+
+@theme {
+  /* Brand — emerald: primary actions, selections, active states */
+  --color-brand: #16c784;
+  --color-brand-strong: #0ea371;
+  --color-brand-soft: rgb(22 199 132 / 0.12);
+  --color-brand-ink: #03140c;
+
+  /* Accent — gold: boosts, countdowns, highlights */
+  --color-accent: #f5b942;
+  --color-accent-soft: rgb(245 185 66 / 0.12);
+
+  /* Chrome: deepest layers (hero backdrops, bottom bar) */
+  --color-chrome: #0c1828;
+  --color-chrome-strong: #060d18;
+  --color-chrome-soft: #16253c;
+  --color-chrome-ink: #f2f6fb;
+  --color-chrome-muted: #93a3ba;
+
+  /* Surfaces. `tint` = foreground overlay colour: bg-tint/[0.05] is a faint white wash in dark, navy in light */
+  --color-tint: #ffffff;
+  --color-surface: #08111f;
+  --color-card: rgb(255 255 255 / 0.04);
+  --color-card-alt: rgb(255 255 255 / 0.025);
+  --color-card-solid: #101c30;
+  --color-line: rgb(255 255 255 / 0.07);
+  --color-line-strong: rgb(255 255 255 / 0.13);
+  --color-ink: #f2f6fb;
+  --color-ink-muted: #93a3ba;
+  --color-ink-faint: #5d6e86;
 
   /* Odds buttons */
-  --color-odds: #f1f4f9;
-  --color-odds-hover: #e3e9f3;
-  --color-odds-active: #0b1f45;
-  --color-odds-active-ink: #ffffff;
-  --color-odds-up: #0e9f6e;
-  --color-odds-down: #e8590c;
+  --color-odds: rgb(255 255 255 / 0.055);
+  --color-odds-hover: rgb(255 255 255 / 0.1);
+  --color-odds-active: #16c784;
+  --color-odds-active-ink: #03140c;
+  --color-odds-up: #16c784;
+  --color-odds-down: #ff4f5e;
 
   /* Status */
-  --color-live: #0e9f6e;
-  --color-boost: #f5b301;
-  --color-boost-ink: #3d2c00;
-  --color-success: #0e9f6e;
-  --color-warning: #d97706;
-  --color-danger: #c2410c;
-  --color-info: #2563eb;
+  --color-live: #ff4f5e;
+  --color-boost: #f5b942;
+  --color-boost-ink: #241600;
+  --color-success: #16c784;
+  --color-warning: #f5b942;
+  --color-danger: #ff4f5e;
+  --color-info: #7fb4ff;
 
-  /* Type: self-hosted via @fontsource (imported in each app's root layout) — change both here and there. */
+  /* Type: self-hosted via @fontsource (packages/ui/src/brand/fonts.ts) — change both together. */
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Barlow Condensed', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
 
-  --radius-card: 0.75rem;
-  --radius-control: 0.5rem;
+  --radius-card: 1.125rem;
+  --radius-control: 0.75rem;
+
+  --shadow-glow: 0 0 0 1px rgb(22 199 132 / 0.35), 0 10px 32px -10px rgb(22 199 132 / 0.5);
+  --shadow-float: 0 28px 60px -24px rgb(0 0 0 / 0.75);
 }
 
 @layer base {
@@ -60,17 +190,124 @@
     color: var(--color-ink);
     font-family: var(--font-sans);
   }
+  /* Soft emerald + gold floodlight pools over the page colour. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(56rem 36rem at 12% -12%, rgb(var(--brand-rgb) / var(--page-glow)), transparent 62%),
+      radial-gradient(44rem 30rem at 92% -8%, rgb(var(--gold-rgb) / 0.07), transparent 60%),
+      radial-gradient(60rem 30rem at 50% 115%, rgb(var(--brand-rgb) / 0.06), transparent 70%),
+      var(--color-surface);
+  }
+  ::selection {
+    background: rgb(var(--brand-rgb) / 0.35);
+  }
   :focus-visible {
     outline: 2px solid var(--color-brand);
     outline-offset: 2px;
   }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--tint-rgb) / 0.16) transparent;
+  }
+  input[type='date']::-webkit-calendar-picker-indicator {
+    filter: invert(var(--picker-invert));
+    opacity: 0.6;
+  }
 }
 
-@keyframes gb-flash-up {
-  0% { background-color: color-mix(in srgb, var(--color-odds-up) 35%, transparent); }
-  100% { background-color: transparent; }
+@layer components {
+  /* Frosted panel */
+  .glass {
+    background: linear-gradient(180deg, var(--glass-from), var(--glass-to));
+    border: 1px solid var(--color-line);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  /* Emerald → gold headline accent */
+  .text-glow {
+    background: linear-gradient(95deg, var(--color-brand) 10%, var(--glow-mid) 50%, var(--color-accent) 95%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Animated gold/emerald border (boosted odds, highlights) */
+  .ring-animated {
+    position: relative;
+    isolation: isolate;
+  }
+  .ring-animated::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(from var(--gb-angle, 0deg), var(--color-accent), transparent 30%, var(--color-brand) 50%, transparent 80%, var(--color-accent));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: gb-spin 6s linear infinite;
+  }
+  /* Spotlight sweep that follows the pointer (set --mx/--my with JS) */
+  /* Pointer-following glow (useTilt sets --mx/--my); an overlay so it never replaces the card background */
+  .spotlight-hover {
+    position: relative;
+  }
+  .spotlight-hover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(18rem 18rem at var(--mx, 50%) var(--my, -20%), rgb(var(--brand-rgb) / 0.13), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .spotlight-hover:hover::after {
+    opacity: 1;
+  }
 }
-@keyframes gb-flash-down {
-  0% { background-color: color-mix(in srgb, var(--color-odds-down) 35%, transparent); }
-  100% { background-color: transparent; }
+
+@property --gb-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes gb-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes gb-spin {
+  to {
+    --gb-angle: 360deg;
+  }
+}
+@keyframes gb-pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgb(var(--live-rgb) / 0.55); }
+  100% { box-shadow: 0 0 0 10px rgb(var(--live-rgb) / 0); }
+}
+@keyframes gb-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes gb-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring-animated::before {
+    animation: none;
+  }
 }

@@ -1,16 +1,28 @@
 'use client';
 
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { Info, Wallet } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { ArrowDownLeft, ArrowUpRight, Banknote, Info, type LucideIcon, RotateCcw, Ticket, Trophy } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import { type FormEvent, useState } from 'react';
-import { type Page, WALLET_TX_TYPES, type WalletTransactionDto } from '@goalbet/shared';
-import { Alert, Button, Card, CardContent, EmptyState, Input, NativeSelect, Skeleton, cn } from '@goalbet/ui';
+import { type Page, WALLET_TX_TYPES, type WalletTransactionDto, type WalletTxType, formatRon } from '@goalbet/shared';
+import { Button, EmptyState, Input, Skeleton, cn } from '@goalbet/ui';
+import { AnimatedNumber } from '@/components/fx/animated-number';
+import { Reveal } from '@/components/fx/reveal';
 import { PageTitle } from '@/components/sport/event-list';
 import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/api';
 import { useFormat } from '@/lib/format';
 import { useRequireAuth } from '@/lib/use-require-auth';
+
+const TX_ICON: Record<WalletTxType, { icon: LucideIcon; tone: string }> = {
+  ADMIN_CREDIT: { icon: ArrowDownLeft, tone: 'bg-brand/15 text-brand' },
+  ADMIN_DEBIT: { icon: ArrowUpRight, tone: 'bg-danger/15 text-danger' },
+  STAKE: { icon: Ticket, tone: 'bg-tint/10 text-ink' },
+  WIN: { icon: Trophy, tone: 'bg-brand/15 text-brand' },
+  CASHOUT: { icon: Banknote, tone: 'bg-boost/15 text-boost' },
+  REFUND: { icon: RotateCcw, tone: 'bg-accent/15 text-accent' },
+  VOID_REVERSAL: { icon: RotateCcw, tone: 'bg-danger/15 text-danger' },
+};
 
 interface Filters {
   type: string;
@@ -22,6 +34,7 @@ interface Filters {
 export default function WalletPage() {
   const t = useTranslations();
   const f = useFormat();
+  const locale = useLocale() as 'ro' | 'en';
   const authed = useRequireAuth();
   const [draft, setDraft] = useState<Filters>({ type: '', from: '', to: '' });
   const [filters, setFilters] = useState<Filters>(draft);
@@ -36,106 +49,129 @@ export default function WalletPage() {
     enabled: authed,
   });
   const rows = list.data?.pages.flatMap((p) => p.items) ?? [];
+  const sum = (types: WalletTxType[]) => rows.filter((r) => types.includes(r.type)).reduce((a, r) => a + Math.abs(r.amountBani), 0);
 
+  const setType = (type: string) => {
+    const next = { ...draft, type };
+    setDraft(next);
+    setFilters(next);
+  };
   const apply = (e: FormEvent) => {
     e.preventDefault();
     setFilters(draft);
   };
 
   return (
-    <div className="space-y-4">
-      <PageTitle>{t('wallet.title')}</PageTitle>
-      <Card>
-        <CardContent className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="flex size-12 items-center justify-center rounded-full bg-brand-soft text-brand-strong">
-              <Wallet className="size-6" aria-hidden="true" />
-            </span>
-            <div>
-              <p className="text-xs uppercase text-ink-muted">{t('wallet.balance')}</p>
-              <p className="font-display text-3xl font-bold tabular-nums" data-testid="wallet-balance">
-                {balance.data ? f.ron(balance.data.balanceBani) : '—'}
-              </p>
-            </div>
-          </div>
-          <Alert tone="info" className="flex max-w-md items-start gap-2">
-            <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            {t('wallet.adminNote')}
-          </Alert>
-        </CardContent>
-      </Card>
+    <div className="space-y-6">
+      <PageTitle sub={t('account.title')}>{t('wallet.title')}</PageTitle>
 
-      <Card>
-        <div className="border-b border-line px-4 py-3">
-          <h2 className="font-display text-lg font-bold uppercase">{t('wallet.history')}</h2>
-          <form onSubmit={apply} className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-[1fr_1fr_1fr_auto_auto]">
-            <NativeSelect aria-label={t('wallet.type')} value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} className="col-span-2 sm:col-span-1">
-              <option value="">{t('wallet.allTypes')}</option>
-              {WALLET_TX_TYPES.map((ty) => (
-                <option key={ty} value={ty}>
-                  {t(`txType.${ty}`)}
-                </option>
-              ))}
-            </NativeSelect>
-            <Input type="date" aria-label={t('wallet.from')} value={draft.from} onChange={(e) => setDraft({ ...draft, from: e.target.value })} />
-            <Input type="date" aria-label={t('wallet.to')} value={draft.to} onChange={(e) => setDraft({ ...draft, to: e.target.value })} />
-            <Button type="submit" variant="secondary">
+      <section className="relative overflow-hidden rounded-[28px] border border-line-strong bg-chrome-strong p-6 sm:p-8">
+        <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(34rem_18rem_at_100%_0%,rgb(var(--brand-rgb)/0.18),transparent_60%),radial-gradient(30rem_16rem_at_0%_100%,rgb(var(--gold-rgb)/0.12),transparent_60%)]" />
+        <div className="relative flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-ink-muted">{t('wallet.balance')}</p>
+            {balance.data ? (
+              <AnimatedNumber
+                value={balance.data.balanceBani}
+                format={(n) => formatRon(n, locale)}
+                className="mt-1 block font-display text-5xl font-extrabold tabular-nums tracking-tight sm:text-6xl"
+                testId="wallet-balance"
+                duration={1.2}
+              />
+            ) : (
+              <Skeleton className="mt-2 h-14 w-64" />
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-3 text-sm">
+            {[
+              { label: t('txType.ADMIN_CREDIT'), value: sum(['ADMIN_CREDIT', 'REFUND']), tone: 'text-brand' },
+              { label: t('txType.STAKE'), value: sum(['STAKE']), tone: 'text-ink' },
+              { label: t('txType.WIN'), value: sum(['WIN', 'CASHOUT']), tone: 'text-boost' },
+            ].map((s) => (
+              <div key={s.label} className="rounded-2xl bg-tint/[0.05] px-4 py-3 ring-1 ring-line">
+                <p className="text-[11px] uppercase tracking-wide text-ink-faint">{s.label}</p>
+                <p className={cn('font-display text-lg font-bold tabular-nums', s.tone)}>{f.ron(s.value)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <p className="relative mt-5 flex items-start gap-2 text-sm text-ink-muted">
+          <Info className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
+          {t('wallet.adminNote')}
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-2xl font-bold uppercase italic">{t('wallet.history')}</h2>
+          <form onSubmit={apply} className="flex flex-wrap items-center gap-2">
+            <Input type="date" aria-label={t('wallet.from')} value={draft.from} onChange={(e) => setDraft({ ...draft, from: e.target.value })} className="h-10 w-40" />
+            <Input type="date" aria-label={t('wallet.to')} value={draft.to} onChange={(e) => setDraft({ ...draft, to: e.target.value })} className="h-10 w-40" />
+            <Button type="submit" variant="secondary" size="sm" className="h-10">
               {t('wallet.apply')}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                const empty = { type: '', from: '', to: '' };
-                setDraft(empty);
-                setFilters(empty);
-              }}
-            >
-              {t('wallet.reset')}
             </Button>
           </form>
         </div>
+        <div className="no-scrollbar flex gap-2 overflow-x-auto" role="tablist" aria-label={t('wallet.type')}>
+          {['', ...WALLET_TX_TYPES].map((ty) => (
+            <button
+              key={ty || 'all'}
+              type="button"
+              role="tab"
+              aria-selected={filters.type === ty}
+              onClick={() => setType(ty)}
+              className={cn(
+                'shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold ring-1 transition-colors',
+                filters.type === ty ? 'bg-ink text-surface ring-ink' : 'bg-tint/[0.04] text-ink-muted ring-line hover:text-ink',
+              )}
+            >
+              {ty ? t(`txType.${ty}`) : t('wallet.allTypes')}
+            </button>
+          ))}
+        </div>
+
         {!authed || list.isPending ? (
-          <Skeleton className="m-4 h-40" />
+          <Skeleton className="h-60 rounded-3xl" />
         ) : rows.length === 0 ? (
-          <EmptyState title={t('wallet.empty')} />
+          <div className="glass rounded-[var(--radius-card)]">
+            <EmptyState title={t('wallet.empty')} />
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-sm" data-testid="wallet-table">
-              <thead className="bg-card-alt text-left text-xs uppercase text-ink-muted">
-                <tr>
-                  <th className="px-4 py-2 font-semibold">{t('wallet.date')}</th>
-                  <th className="px-4 py-2 font-semibold">{t('wallet.type')}</th>
-                  <th className="px-4 py-2 font-semibold">{t('wallet.reason')}</th>
-                  <th className="px-4 py-2 text-right font-semibold">{t('wallet.amount')}</th>
-                  <th className="px-4 py-2 text-right font-semibold">{t('wallet.balanceAfter')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {rows.map((r) => (
-                  <tr key={r.id} data-testid="wallet-row" data-type={r.type}>
-                    <td className="whitespace-nowrap px-4 py-2 text-ink-muted">{f.dateTime(r.createdAt)}</td>
-                    <td className="px-4 py-2 font-semibold">{t(`txType.${r.type}`)}</td>
-                    <td className="px-4 py-2 text-ink-muted">
-                      {r.ticketId ? (
-                        <Link href={`/my-bets/${r.ticketId}`} className="font-mono text-brand hover:underline">
-                          {r.ticketCode}
-                        </Link>
-                      ) : (
-                        r.reason
-                      )}
-                    </td>
-                    <td className={cn('whitespace-nowrap px-4 py-2 text-right font-bold tabular-nums', r.amountBani > 0 ? 'text-success' : 'text-ink')}>
-                      {r.amountBani > 0 ? '+' : ''}
-                      {f.ron(r.amountBani)}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2 text-right tabular-nums">{f.ron(r.balanceAfterBani)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="glass rounded-[var(--radius-card)] p-2" data-testid="wallet-table">
+            <Reveal className="divide-y divide-line" deps={[qs, rows.length]} stagger={0.025}>
+              {rows.map((r) => {
+                const { icon: Icon, tone } = TX_ICON[r.type];
+                return (
+                  <div key={r.id} className="flex items-center gap-3 px-3 py-3" data-testid="wallet-row" data-type={r.type}>
+                    <span className={cn('grid size-10 shrink-0 place-items-center rounded-xl', tone)}>
+                      <Icon className="size-4" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold">{t(`txType.${r.type}`)}</p>
+                      <p className="truncate text-xs text-ink-faint">
+                        {f.dateTime(r.createdAt)} ·{' '}
+                        {r.ticketId ? (
+                          <Link href={`/my-bets/${r.ticketId}`} className="font-mono text-accent hover:underline">
+                            {r.ticketCode}
+                          </Link>
+                        ) : (
+                          r.reason
+                        )}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className={cn('font-display text-lg font-bold tabular-nums', r.amountBani > 0 ? 'text-brand' : 'text-ink')}>
+                        {r.amountBani > 0 ? '+' : ''}
+                        {f.ron(r.amountBani)}
+                      </p>
+                      <p className="text-[11px] tabular-nums text-ink-faint">{f.ron(r.balanceAfterBani)}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </Reveal>
             {list.hasNextPage ? (
-              <div className="p-3">
+              <div className="p-2">
                 <Button variant="outline" className="w-full" onClick={() => list.fetchNextPage()} loading={list.isFetchingNextPage}>
                   {t('wallet.loadMore')}
                 </Button>
@@ -143,7 +179,7 @@ export default function WalletPage() {
             ) : null}
           </div>
         )}
-      </Card>
+      </section>
     </div>
   );
 }

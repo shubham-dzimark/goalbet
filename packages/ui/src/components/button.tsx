@@ -4,15 +4,15 @@ import * as React from 'react';
 import { cn } from '../lib/cn';
 
 export const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-control)] text-sm font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-control)] text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
-        primary: 'bg-brand text-brand-ink hover:bg-brand-strong',
-        secondary: 'bg-chrome text-chrome-ink hover:bg-chrome-soft',
-        outline: 'border border-line bg-card text-ink hover:bg-card-alt',
-        ghost: 'text-ink hover:bg-card-alt',
-        chrome: 'text-chrome-ink hover:bg-chrome-soft',
+        primary: 'bg-brand text-brand-ink shadow-[0_8px_24px_-8px_rgb(var(--brand-rgb)/0.6)] hover:bg-brand-strong hover:shadow-[0_10px_30px_-6px_rgb(var(--brand-rgb)/0.7)]',
+        secondary: 'bg-tint/10 text-ink hover:bg-tint/15',
+        outline: 'border border-line-strong bg-transparent text-ink hover:border-brand/60 hover:bg-tint/5',
+        ghost: 'text-ink-muted hover:bg-tint/6 hover:text-ink',
+        chrome: 'text-chrome-ink hover:bg-tint/10',
         danger: 'bg-danger text-white hover:opacity-90',
         link: 'text-brand underline-offset-4 hover:underline',
       },

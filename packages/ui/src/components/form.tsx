@@ -8,8 +8,8 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
     <input
       ref={ref}
       className={cn(
-        'h-10 w-full rounded-[var(--radius-control)] border border-line bg-card px-3 text-sm text-ink placeholder:text-ink-faint',
-        'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 disabled:opacity-60',
+        'h-11 w-full rounded-[var(--radius-control)] border border-line bg-tint/[0.04] px-3.5 text-sm text-ink placeholder:text-ink-faint transition-colors',
+        'focus:border-brand/70 focus:bg-tint/[0.06] focus:outline-none focus:ring-4 focus:ring-brand/10 disabled:opacity-50',
         'aria-[invalid=true]:border-danger',
         className,
       )}
@@ -32,7 +32,7 @@ export const NativeSelect = React.forwardRef<HTMLSelectElement, React.SelectHTML
     <select
       ref={ref}
       className={cn(
-        'h-10 w-full rounded-[var(--radius-control)] border border-line bg-card px-3 text-sm text-ink focus:border-brand focus:outline-none',
+        'h-11 w-full rounded-[var(--radius-control)] border border-line bg-card-solid px-3 text-sm text-ink focus:border-brand/70 focus:outline-none',
         className,
       )}
       {...props}
@@ -48,7 +48,7 @@ export const Checkbox = React.forwardRef<
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
-      'peer size-5 shrink-0 rounded border border-line bg-card data-[state=checked]:border-brand data-[state=checked]:bg-brand data-[state=checked]:text-white',
+      'peer size-5 shrink-0 rounded-md border border-line-strong bg-tint/5 data-[state=checked]:border-brand data-[state=checked]:bg-brand data-[state=checked]:text-brand-ink',
       className,
     )}
     {...props}

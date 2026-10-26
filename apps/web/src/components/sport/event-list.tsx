@@ -1,65 +1,92 @@
 'use client';
 
+import { ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type EventSummaryDto } from '@goalbet/shared';
-import { Card, EmptyState } from '@goalbet/ui';
+import { EmptyState } from '@goalbet/ui';
+import { Flag } from '@/components/fx/flag';
+import { Reveal } from '@/components/fx/reveal';
 import { Link } from '@/i18n/navigation';
 import { useFormat } from '@/lib/format';
-import { EventRow } from './event-row';
+import { MatchRow } from './match-card';
 
-/** Matches grouped by date (pre-match, F1.5) or by competition (live, F1.6). */
-export function EventList({ events, groupBy, empty }: { events: EventSummaryDto[]; groupBy: 'day' | 'competition'; empty?: string }) {
-  const t = useTranslations();
-  const f = useFormat();
-  if (events.length === 0) {
-    return (
-      <Card>
-        <EmptyState title={empty ?? t('sport.noMatches')} />
-      </Card>
-    );
-  }
-  const groups = new Map<string, { title: React.ReactNode; events: EventSummaryDto[] }>();
-  for (const e of events) {
-    const key = groupBy === 'day' ? f.dayKey(e.startTime) : e.competition.id;
-    const title =
-      groupBy === 'day' ? (
-        f.day(e.startTime)
-      ) : (
-        <Link href={`/sport/${e.competition.id}`} className="hover:underline">
-          <span className="text-ink-faint">{e.competition.country} · </span>
-          {e.competition.name}
-        </Link>
-      );
-    const g = groups.get(key) ?? { title, events: [] as EventSummaryDto[] };
-    g.events.push(e);
-    groups.set(key, g);
-  }
+/** Big italic page title with an accent kicker. */
+export function PageTitle({ children, sub, right }: { children: React.ReactNode; sub?: React.ReactNode; right?: React.ReactNode }) {
   return (
-    <div className="space-y-4">
-      {[...groups.entries()].map(([key, g]) => (
-        <Card key={key} className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-line bg-card-alt px-3 py-2">
-            <h3 className="text-sm font-bold">{g.title}</h3>
-            <div className="hidden w-[240px] grid-cols-3 text-center text-xs font-bold text-ink-muted sm:mr-12 sm:grid">
-              <span>1</span>
-              <span>X</span>
-              <span>2</span>
-            </div>
-          </div>
-          {g.events.map((e) => (
-            <EventRow key={e.id} event={e} />
-          ))}
-        </Card>
-      ))}
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        {sub ? <p className="mb-1 text-xs font-bold uppercase tracking-[0.2em] text-brand">{sub}</p> : null}
+        <h1 className="font-display text-4xl font-extrabold uppercase italic leading-none tracking-tight sm:text-5xl">{children}</h1>
+      </div>
+      {right}
     </div>
   );
 }
 
-export function PageTitle({ children, sub }: { children: React.ReactNode; sub?: React.ReactNode }) {
+/** Matches grouped by competition (live, search) or by day (competition page), as glass panels. */
+export function EventList({
+  events,
+  groupBy,
+  empty,
+  selectedId,
+  onSelect,
+}: {
+  events: EventSummaryDto[];
+  groupBy: 'day' | 'competition';
+  empty?: string;
+  selectedId?: string | null;
+  onSelect?: (e: EventSummaryDto) => void;
+}) {
+  const t = useTranslations();
+  const f = useFormat();
+  if (events.length === 0) {
+    return (
+      <div className="glass rounded-[var(--radius-card)]">
+        <EmptyState title={empty ?? t('sport.noMatches')} />
+      </div>
+    );
+  }
+  const groups = new Map<string, { head: React.ReactNode; href?: string; events: EventSummaryDto[] }>();
+  for (const e of events) {
+    const key = groupBy === 'day' ? f.dayKey(e.startTime) : e.competition.id;
+    const g =
+      groups.get(key) ??
+      (groupBy === 'day'
+        ? { head: <span className="font-display text-lg font-bold uppercase italic">{f.day(e.startTime)}</span>, events: [] as EventSummaryDto[] }
+        : {
+            head: (
+              <span className="flex items-center gap-2.5">
+                <Flag code={e.competition.countryCode} />
+                <span className="font-display text-lg font-bold uppercase italic">{e.competition.name}</span>
+                <span className="text-xs text-ink-faint">{t(`countries.${e.competition.countryCode}`)}</span>
+              </span>
+            ),
+            href: `/sport/${e.competition.id}`,
+            events: [] as EventSummaryDto[],
+          });
+    g.events.push(e);
+    groups.set(key, g);
+  }
   return (
-    <div className="mb-4">
-      {sub ? <p className="text-xs font-semibold uppercase text-ink-faint">{sub}</p> : null}
-      <h1 className="font-display text-3xl font-bold uppercase tracking-wide">{children}</h1>
-    </div>
+    <Reveal className="space-y-4" deps={[events.length, groupBy]}>
+      {[...groups.entries()].map(([key, g]) => (
+        <section key={key} className="glass rounded-[var(--radius-card)] p-2">
+          <div className="flex items-center justify-between px-3 py-2">
+            {g.head}
+            {g.href ? (
+              <Link href={g.href} className="flex items-center text-xs font-semibold text-ink-muted hover:text-brand">
+                {g.events.length}
+                <ChevronRight className="size-4" aria-hidden="true" />
+              </Link>
+            ) : null}
+          </div>
+          <div className="space-y-0.5">
+            {g.events.map((e) => (
+              <MatchRow key={e.id} event={e} active={selectedId === e.id} {...(onSelect ? { onSelect: () => onSelect(e) } : {})} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </Reveal>
   );
 }

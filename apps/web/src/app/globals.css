@@ -4,6 +4,13 @@
 /* Tailwind scans the shared UI package too */
 @source '../../../../packages/ui/src';
 
+/* Theme switch: the new theme is revealed by a clip-path circle (lib/theme.ts), no cross-fade */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
 @layer utilities {
   .no-scrollbar {
     scrollbar-width: none;

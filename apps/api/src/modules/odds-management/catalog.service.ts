@@ -37,7 +37,7 @@ export class CatalogService {
   /** Events that can still be bet on: upcoming (kick-off in the future) or live. */
   private openEvents(extra: Prisma.EventWhereInput = {}): Prisma.EventWhereInput {
     return {
-      competition: { enabled: true },
+      competition: { enabled: true, active: true },
       OR: [{ status: 'LIVE' }, { status: 'SCHEDULED', startTime: { gt: new Date() } }],
       ...extra,
     };
@@ -63,7 +63,7 @@ export class CatalogService {
   }
 
   async liveCount() {
-    return this.prisma.event.count({ where: { status: 'LIVE', competition: { enabled: true } } });
+    return this.prisma.event.count({ where: { status: 'LIVE', competition: { enabled: true, active: true } } });
   }
 
   /** F1.1 homepage feed. */
@@ -117,7 +117,7 @@ export class CatalogService {
 
   async topCompetitions() {
     const comps = await this.prisma.competition.findMany({
-      where: { enabled: true, isTop: true },
+      where: { enabled: true, active: true, isTop: true },
       orderBy: { sortOrder: 'asc' },
       include: { _count: { select: { events: { where: this.openEvents() } } } },
     });
@@ -127,7 +127,7 @@ export class CatalogService {
   /** F1.5 — country → competition navigation with counts. */
   async countries(): Promise<CountryGroupDto[]> {
     const comps = await this.prisma.competition.findMany({
-      where: { enabled: true },
+      where: { enabled: true, active: true },
       orderBy: [{ sortOrder: 'asc' }],
       include: {
         _count: { select: { events: { where: this.openEvents() } } },
@@ -145,7 +145,7 @@ export class CatalogService {
 
   /** F1.5 — a competition's matches for the next 7 days, grouped by date on the client. */
   async competition(id: string) {
-    const comp = await this.prisma.competition.findFirst({ where: { id, enabled: true } });
+    const comp = await this.prisma.competition.findFirst({ where: { id, enabled: true, active: true } });
     if (!comp) throw new DomainError('NOT_FOUND');
     const events = await this.summaries(
       { competitionId: id, startTime: { lt: new Date(Date.now() + 7 * 24 * HOUR) } },
@@ -156,7 +156,7 @@ export class CatalogService {
   }
 
   /** Upcoming matches starting within the next `hours` (all competitions). */
-  async upcoming(hours: number, take = 100): Promise<EventSummaryDto[]> {
+  async upcoming(hours: number, take = 300): Promise<EventSummaryDto[]> {
     return this.summaries(
       { status: 'SCHEDULED', startTime: { lt: new Date(Date.now() + hours * HOUR) } },
       [{ startTime: 'asc' }],
@@ -173,7 +173,7 @@ export class CatalogService {
   async event(id: string): Promise<EventDetailDto> {
     const visible = await this.visibleMarkets();
     const e = await this.prisma.event.findFirst({
-      where: { id, competition: { enabled: true } },
+      where: { id, competition: { enabled: true, active: true } },
       include: {
         competition: true,
         markets: { where: visible, include: marketInclude, orderBy: { sortOrder: 'asc' } },
@@ -189,7 +189,7 @@ export class CatalogService {
     if (term.length < 2) return { competitions: [], events: [] };
     const contains = { contains: term, mode: 'insensitive' as const };
     const [competitions, events] = await Promise.all([
-      this.prisma.competition.findMany({ where: { enabled: true, OR: [{ name: contains }, { country: contains }] }, take: 10 }),
+      this.prisma.competition.findMany({ where: { enabled: true, active: true, OR: [{ name: contains }, { country: contains }] }, take: 10 }),
       this.summaries({ OR: [{ homeTeam: contains }, { awayTeam: contains }, { competition: { name: contains } }] }, [{ startTime: 'asc' }], 30),
     ]);
     return { competitions: competitions.map(toCompetition), events };
@@ -200,14 +200,14 @@ export class CatalogService {
     const disabled = new Set(await this.disabledMarketTypes());
     const rows = await this.prisma.selection.findMany({
       where: { id: { in: ids.slice(0, 50) } },
-      include: { boost: true, market: { include: { event: { include: { competition: { select: { enabled: true } } } } } } },
+      include: { boost: true, market: { include: { event: { include: { competition: { select: { enabled: true, active: true } } } } } } },
     });
     const now = Date.now();
     return rows.map((s) => {
       const { market } = s;
       const { event } = market;
       const eventOpen =
-        event.competition.enabled && (event.status === 'LIVE' || (event.status === 'SCHEDULED' && event.startTime.getTime() > now));
+        event.competition.enabled && event.competition.active && (event.status === 'LIVE' || (event.status === 'SCHEDULED' && event.startTime.getTime() > now));
       return {
         id: s.id,
         oddsMilli: toSelection(s).oddsMilli,

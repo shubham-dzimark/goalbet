@@ -4,10 +4,28 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ban, ChevronRight, Receipt, ShieldCheck, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Suspense, type FormEvent, useEffect, useState } from 'react';
-import { USER_LIMIT_TYPES, type UserLimitType, type WalletTransactionDto, parseRonToBani } from '@goalbet/shared';
-import { Alert, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, NativeSelect, Skeleton, cn } from '@goalbet/ui';
+import {
+  USER_LIMIT_TYPES,
+  type UserLimitType,
+  type WalletTransactionDto,
+  parseRonToBani,
+} from '@goalbet/shared';
+import {
+  Alert,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Field,
+  Input,
+  NativeSelect,
+  Skeleton,
+  cn,
+} from '@goalbet/ui';
 import { LanguageSwitcher } from '@/components/language-switcher';
-import { PageTitle } from '@/components/sport/event-list';
+import { Segmented } from '@/components/fx/segmented';
+import { TabPanel } from '@/components/fx/tab-panel';
 import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/api';
 import { type SessionUser, useAuth } from '@/lib/auth-store';
@@ -36,7 +54,7 @@ interface Dashboard {
 
 function Stat({ label, value, testId }: { label: string; value: string; testId?: string }) {
   return (
-    <div className="rounded-lg bg-card-alt p-3">
+    <div className="rounded-2xl bg-tint/[0.05] p-4 ring-1 ring-line">
       <p className="text-xs uppercase text-ink-muted">{label}</p>
       <p className="font-display text-2xl font-bold tabular-nums" data-testid={testId}>
         {value}
@@ -90,7 +108,9 @@ function ProfileCard({ user }: { user: SessionUser }) {
             <Button type="submit" loading={save.isPending}>
               {t('account.save')}
             </Button>
-            {msg ? <span className={cn('text-sm', msg.ok ? 'text-success' : 'text-danger')}>{fe(msg.text)}</span> : null}
+            {msg ? (
+              <span className={cn('text-sm', msg.ok ? 'text-success' : 'text-danger')}>{fe(msg.text)}</span>
+            ) : null}
           </div>
         </form>
       </CardContent>
@@ -178,8 +198,12 @@ function LimitsCard({ limits }: { limits: LimitRow[] }) {
                 <p className="text-sm font-semibold">{t(`account.limitTypes.${type}`)}</p>
                 <p className="text-xs text-ink-muted" data-testid={`limit-${type}`}>
                   {l?.amountBani ? f.ron(l.amountBani) : t('account.noLimit')}
-                  {l?.pendingAmountBani ? ` · ${t('account.pendingLimit', { amount: f.ron(l.pendingAmountBani), date: f.dateTime(l.effectiveAt) })}` : ''}
-                  {l?.pendingRemoval ? ` · ${t('account.pendingRemoval', { date: f.dateTime(l.effectiveAt) })}` : ''}
+                  {l?.pendingAmountBani
+                    ? ` · ${t('account.pendingLimit', { amount: f.ron(l.pendingAmountBani), date: f.dateTime(l.effectiveAt) })}`
+                    : ''}
+                  {l?.pendingRemoval
+                    ? ` · ${t('account.pendingRemoval', { date: f.dateTime(l.effectiveAt) })}`
+                    : ''}
                 </p>
               </div>
               <Input
@@ -192,7 +216,13 @@ function LimitsCard({ limits }: { limits: LimitRow[] }) {
               <Button type="submit" variant="secondary" size="md">
                 {t('account.set')}
               </Button>
-              <Button type="button" variant="ghost" size="md" disabled={!l?.amountBani} onClick={() => void set(type, null)}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="md"
+                disabled={!l?.amountBani}
+                onClick={() => void set(type, null)}
+              >
                 {t('account.remove')}
               </Button>
             </form>
@@ -210,7 +240,11 @@ function ExclusionCard({ exclusion }: { exclusion: Dashboard['selfExclusion'] })
   const [days, setDays] = useState<string>('7');
   const [confirm, setConfirm] = useState(false);
   const run = useMutation({
-    mutationFn: () => api('/me/self-exclusion', { method: 'POST', body: { days: days === 'permanent' ? null : Number(days) } }),
+    mutationFn: () =>
+      api('/me/self-exclusion', {
+        method: 'POST',
+        body: { days: days === 'permanent' ? null : Number(days) },
+      }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['dashboard'] }),
   });
   return (
@@ -224,7 +258,9 @@ function ExclusionCard({ exclusion }: { exclusion: Dashboard['selfExclusion'] })
       <CardContent className="space-y-3">
         {exclusion ? (
           <Alert tone="warning" data-testid="exclusion-active">
-            {exclusion.endsAt ? t('excludedUntil', { date: f.dateTime(exclusion.endsAt) }) : t('excludedForever')}
+            {exclusion.endsAt
+              ? t('excludedUntil', { date: f.dateTime(exclusion.endsAt) })
+              : t('excludedForever')}
           </Alert>
         ) : (
           <>
@@ -264,73 +300,152 @@ function ExclusionCard({ exclusion }: { exclusion: Dashboard['selfExclusion'] })
   );
 }
 
-/** F1.4 — account dashboard: RON balance, open tickets, recent activity, profile, language, limits, self-exclusion. */
+type AccountTab = 'overview' | 'profile' | 'preferences' | 'limits' | 'exclusion';
+
+/** F1.4 — account: profile header, then Overview / Profile / Preferences / Limits / Self-exclusion tabs. */
 export default function AccountPage() {
   const t = useTranslations();
   const f = useFormat();
   const authed = useRequireAuth();
-  const { data } = useQuery({ queryKey: ['dashboard'], queryFn: () => api<Dashboard>('/me/dashboard'), enabled: authed, refetchInterval: 20_000 });
+  const [tab, setTab] = useState<AccountTab>('overview');
+  const { data } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: () => api<Dashboard>('/me/dashboard'),
+    enabled: authed,
+    refetchInterval: 20_000,
+  });
   useEffect(() => {
     if (data) useAuth.getState().setUser(data.user);
   }, [data]);
 
-  if (!data) return <Skeleton className="h-64" />;
+  if (!data) return <Skeleton className="h-64 rounded-3xl" />;
   const user = useAuth.getState().user ?? data.user;
+  const initials = user.name
+    .split(' ')
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   return (
-    <div className="space-y-4">
-      <PageTitle sub={t('account.title')}>{t('account.welcome', { name: user.name.split(' ')[0] ?? user.name })}</PageTitle>
-      <Card>
-        <CardContent className="grid gap-3 sm:grid-cols-4">
-          <Stat label={t('account.balance')} value={f.ron(user.balanceBani)} testId="account-balance" />
-          <Stat label={t('account.openTickets')} value={String(data.openTickets)} />
-          <Stat label={t('account.openStake')} value={f.ron(data.openStakeBani)} />
-          <Stat label={t('account.openWin')} value={f.ron(data.openPotentialWinBani)} />
-        </CardContent>
-      </Card>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('account.recent')}</CardTitle>
-            <Link href="/account/wallet" className="text-sm font-semibold text-brand">
-              {t('account.viewAll')}
-            </Link>
-          </CardHeader>
-          <ul className="divide-y divide-line">
-            {data.recentTransactions.length === 0 ? <li className="p-4 text-sm text-ink-muted">{t('wallet.empty')}</li> : null}
-            {data.recentTransactions.map((r) => (
-              <li key={r.id} className="flex items-center justify-between px-4 py-2 text-sm">
-                <span>
-                  <span className="font-semibold">{t(`txType.${r.type}`)}</span>
-                  <span className="block text-xs text-ink-faint">{f.dateTime(r.createdAt)}</span>
-                </span>
-                <span className={cn('font-bold tabular-nums', r.amountBani > 0 && 'text-success')}>
-                  {r.amountBani > 0 ? '+' : ''}
-                  {f.ron(r.amountBani)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-        <div className="grid gap-3">
-          {[
-            { href: '/my-bets', icon: Receipt, label: t('account.myBets') },
-            { href: '/account/wallet', icon: Wallet, label: t('account.wallet') },
-          ].map(({ href, icon: Icon, label }) => (
-            <Link key={href} href={href} className="flex items-center justify-between rounded-[var(--radius-card)] border border-line bg-card p-4 font-semibold hover:border-brand">
-              <span className="flex items-center gap-3">
-                <Icon className="size-5 text-brand" aria-hidden="true" />
-                {label}
-              </span>
-              <ChevronRight className="size-4 text-ink-muted" aria-hidden="true" />
-            </Link>
-          ))}
+    <div className="space-y-5">
+      <section className="relative overflow-hidden rounded-[28px] border border-line-strong bg-chrome-strong p-6 sm:p-8">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[radial-gradient(34rem_16rem_at_0%_0%,rgb(var(--brand-rgb)/0.16),transparent_60%)]"
+        />
+        <div className="relative flex flex-wrap items-center gap-5">
+          <span className="grid size-20 place-items-center rounded-3xl bg-gradient-to-br from-brand to-accent font-display text-3xl font-extrabold text-brand-ink shadow-[0_0_40px_rgb(var(--brand-rgb)/0.35)]">
+            {initials}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand">{t('account.title')}</p>
+            <h1 className="truncate font-display text-4xl font-extrabold uppercase italic leading-tight">
+              {user.name}
+            </h1>
+            <p className="truncate text-sm text-ink-muted">{user.email}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[11px] uppercase tracking-wide text-ink-faint">{t('account.balance')}</p>
+            <p
+              className="font-display text-4xl font-bold tabular-nums text-brand"
+              data-testid="account-balance"
+            >
+              {f.ron(user.balanceBani)}
+            </p>
+          </div>
         </div>
-      </div>
-      <ProfileCard user={user} />
-      <PreferencesCard user={user} />
-      <LimitsCard limits={data.limits} />
-      <ExclusionCard exclusion={data.selfExclusion} />
+        {data.selfExclusion ? (
+          <Alert tone="warning" className="relative mt-4" data-testid="exclusion-active">
+            {data.selfExclusion.endsAt
+              ? t('account.excludedUntil', { date: f.dateTime(data.selfExclusion.endsAt) })
+              : t('account.excludedForever')}
+          </Alert>
+        ) : null}
+      </section>
+
+      <Segmented
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: 'overview', label: t('account.tabs.overview') },
+          { value: 'profile', label: t('account.profile') },
+          { value: 'preferences', label: t('account.preferences') },
+          { value: 'limits', label: t('account.limits') },
+          { value: 'exclusion', label: t('account.exclusion') },
+        ]}
+      />
+
+      <TabPanel tab={tab}>
+        {tab === 'overview' ? (
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Stat label={t('account.openTickets')} value={String(data.openTickets)} />
+              <Stat label={t('account.openStake')} value={f.ron(data.openStakeBani)} />
+              <Stat label={t('account.openWin')} value={f.ron(data.openPotentialWinBani)} />
+            </div>
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('account.recent')}</CardTitle>
+                  <Link href="/account/wallet" className="text-sm font-semibold text-brand">
+                    {t('account.viewAll')}
+                  </Link>
+                </CardHeader>
+                <ul className="divide-y divide-line">
+                  {data.recentTransactions.length === 0 ? (
+                    <li className="p-4 text-sm text-ink-muted">{t('wallet.empty')}</li>
+                  ) : null}
+                  {data.recentTransactions.map((r) => (
+                    <li key={r.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                      <span>
+                        <span className="font-semibold">{t(`txType.${r.type}`)}</span>
+                        <span className="block text-xs text-ink-faint">{f.dateTime(r.createdAt)}</span>
+                      </span>
+                      <span
+                        className={cn(
+                          'font-display text-lg font-bold tabular-nums',
+                          r.amountBani > 0 && 'text-brand',
+                        )}
+                      >
+                        {r.amountBani > 0 ? '+' : ''}
+                        {f.ron(r.amountBani)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+              <div className="grid content-start gap-3">
+                {[
+                  { href: '/my-bets', icon: Receipt, label: t('account.myBets') },
+                  { href: '/account/wallet', icon: Wallet, label: t('account.wallet') },
+                ].map(({ href, icon: Icon, label }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="glass group flex items-center justify-between rounded-[var(--radius-card)] p-4 font-semibold transition-all hover:-translate-y-0.5 hover:border-brand/40"
+                  >
+                    <span className="flex items-center gap-3">
+                      <span className="grid size-10 place-items-center rounded-xl bg-brand/10 text-brand">
+                        <Icon className="size-5" aria-hidden="true" />
+                      </span>
+                      {label}
+                    </span>
+                    <ChevronRight
+                      className="size-4 text-ink-muted transition-transform group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
+        {tab === 'profile' ? <ProfileCard user={user} /> : null}
+        {tab === 'preferences' ? <PreferencesCard user={user} /> : null}
+        {tab === 'limits' ? <LimitsCard limits={data.limits} /> : null}
+        {tab === 'exclusion' ? <ExclusionCard exclusion={data.selfExclusion} /> : null}
+      </TabPanel>
     </div>
   );
 }

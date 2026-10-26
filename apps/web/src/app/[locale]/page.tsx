@@ -1,5 +1,5 @@
 import { setRequestLocale } from 'next-intl/server';
-import { type HomeFeedDto } from '@goalbet/shared';
+import { type EventSummaryDto, type HomeFeedDto } from '@goalbet/shared';
 import { HomeView } from '@/components/sport/home-view';
 import { serverGet } from '@/lib/server-api';
 
@@ -7,6 +7,9 @@ import { serverGet } from '@/lib/server-api';
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const initial = await serverGet<HomeFeedDto>('/catalog/home');
-  return <HomeView initial={initial} />;
+  const [initial, upcoming] = await Promise.all([
+    serverGet<HomeFeedDto>('/catalog/home'),
+    serverGet<EventSummaryDto[]>('/catalog/upcoming?hours=168'),
+  ]);
+  return <HomeView initial={initial} upcoming={upcoming} />;
 }

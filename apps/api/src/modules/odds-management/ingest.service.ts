@@ -42,9 +42,15 @@ export class IngestService {
         where: { providerRef: c.ref },
         create: { providerRef: c.ref, name: c.name, country: c.country, countryCode: c.countryCode, isTop: c.isTop, sortOrder: c.sortOrder },
         // enabled / isTop stay under admin control once created
-        update: { name: c.name, country: c.country, countryCode: c.countryCode, sortOrder: c.sortOrder },
+        update: { name: c.name, country: c.country, countryCode: c.countryCode, sortOrder: c.sortOrder, active: true },
       });
     }
+    // Competitions of another provider (e.g. after switching mock → api-football) leave the catalogue.
+    const deactivated = await this.prisma.competition.updateMany({
+      where: { active: true, providerRef: { notIn: comps.map((c) => c.ref) } },
+      data: { active: false },
+    });
+    if (deactivated.count > 0) this.logger.log(`deactivated ${deactivated.count} competitions not supplied by ${this.provider.name}`);
     return comps.length;
   }
 

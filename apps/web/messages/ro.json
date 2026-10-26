@@ -17,7 +17,10 @@
     "register": "Înregistrare",
     "balance": "Sold",
     "logout": "Deconectare",
-    "skipToContent": "Sari la conținut"
+    "skipToContent": "Sari la conținut",
+    "timeZone": "Ore afișate în fusul {zone}",
+    "themeLight": "Treci la tema luminoasă",
+    "themeDark": "Treci la tema întunecată"
   },
   "auth": {
     "loginTitle": "Autentificare",
@@ -55,7 +58,11 @@
     "competitions": "Competiții",
     "allLive": "Vezi toate live",
     "comingSoon": "Se încarcă cotele…",
-    "matchesCount": "{count, plural, one {# meci} few {# meciuri} other {# de meciuri}}"
+    "matchesCount": "{count, plural, one {# meci} few {# meciuri} other {# de meciuri}}",
+    "spotlight": "Live acum",
+    "nextUp": "Următorul meci mare",
+    "board": "Program meciuri",
+    "allLeagues": "Toate ligile"
   },
   "footer": {
     "responsible": "Jocurile de noroc pot crea dependență. Joacă responsabil.",
@@ -85,7 +92,8 @@
     "competitionsFound": "Competiții",
     "matchesFound": "Meciuri",
     "liveNow": "Live acum",
-    "noLive": "Nu sunt meciuri live acum. Revino curând!"
+    "noLive": "Nu sunt meciuri live acum. Revino curând!",
+    "kicker": "Ligi A–Z"
   },
   "match": {
     "all": "Toate",
@@ -141,7 +149,8 @@
     "was": "era {odds}",
     "open": "Bilet",
     "selections": "{count, plural, one {# selecție} few {# selecții} other {# de selecții}}",
-    "liveDelay": "Pariu live — se confirmă…"
+    "liveDelay": "Pariu live — se confirmă…",
+    "newBet": "Pariu nou"
   },
   "bets": {
     "title": "Pariurile mele",
@@ -160,7 +169,9 @@
     "details": "Detalii bilet",
     "loginRequired": "Autentifică-te pentru a vedea pariurile.",
     "loadMore": "Încarcă mai multe",
-    "back": "Înapoi la pariuri"
+    "back": "Înapoi la pariuri",
+    "kicker": "Biletele tale",
+    "browse": "Vezi meciurile"
   },
   "wallet": {
     "title": "Portofel",
@@ -218,6 +229,57 @@
     "excludedUntil": "Ești autoexclus până la {date}.",
     "excludedForever": "Ești autoexclus permanent.",
     "myBets": "Pariurile mele",
-    "wallet": "Portofel"
+    "wallet": "Portofel",
+    "tabs": {
+      "overview": "Prezentare"
+    }
+  },
+  "fx": {
+    "kickoff": "Start!",
+    "inDays": "în {days} zile",
+    "previous": "Anterior",
+    "next": "Următorul",
+    "kickoffIn": "Începe în"
+  },
+  "countries": {
+    "RO": "România",
+    "GB": "Anglia",
+    "ES": "Spania",
+    "IT": "Italia",
+    "DE": "Germania",
+    "FR": "Franța",
+    "EU": "Europa",
+    "WW": "Internațional"
+  },
+  "search": {
+    "title": "Căutare",
+    "placeholder": "Caută echipe sau competiții…",
+    "hint": "Scrie cel puțin 2 caractere pentru a căuta.",
+    "empty": "Nu am găsit echipe sau competiții.",
+    "close": "Închide căutarea"
+  },
+  "live": {
+    "kicker": "{count, plural, one {# meci în desfășurare} few {# meciuri în desfășurare} other {# de meciuri în desfășurare}}",
+    "allMarkets": "Toate cele {count} piețe"
+  },
+  "authHero": {
+    "kicker": "Fotbal · RON · Live",
+    "line1": "Fiecare meci.",
+    "line2": "Fiecare moment.",
+    "point1": "Scoruri și cote live care se mișcă odată cu jocul",
+    "point2": "Cote mărite la cele mai mari meciuri",
+    "point3": "Cont securizat, cu limite de pariere pe care le controlezi"
+  },
+  "hero": {
+    "kicker": "{count, plural, =0 {Începe curând} one {# meci live acum} few {# meciuri live acum} other {# de meciuri live acum}}",
+    "line1": "Fotbal.",
+    "line2": "Fiecare clipă.",
+    "subtitle": "Cote live care se mișcă odată cu meciul, cote mărite și cash out, totul în RON.",
+    "ctaLive": "Pariază live",
+    "ctaToday": "Meciurile de azi",
+    "statLive": "Live acum",
+    "statToday": "Azi",
+    "statCompetitions": "Ligi",
+    "statBoosted": "Cote mărite"
   }
 }

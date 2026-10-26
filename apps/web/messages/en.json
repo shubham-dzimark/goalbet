@@ -17,7 +17,10 @@
     "register": "Register",
     "balance": "Balance",
     "logout": "Log out",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "timeZone": "Times shown in {zone}",
+    "themeLight": "Switch to light theme",
+    "themeDark": "Switch to dark theme"
   },
   "auth": {
     "loginTitle": "Log in",
@@ -55,7 +58,11 @@
     "competitions": "Competitions",
     "allLive": "See all live",
     "comingSoon": "Odds are loading…",
-    "matchesCount": "{count, plural, one {# match} other {# matches}}"
+    "matchesCount": "{count, plural, one {# match} other {# matches}}",
+    "spotlight": "Live spotlight",
+    "nextUp": "Next big match",
+    "board": "Match board",
+    "allLeagues": "All leagues"
   },
   "footer": {
     "responsible": "Gambling can be addictive. Play responsibly.",
@@ -85,7 +92,8 @@
     "competitionsFound": "Competitions",
     "matchesFound": "Matches",
     "liveNow": "Live now",
-    "noLive": "No live matches right now. Check back soon!"
+    "noLive": "No live matches right now. Check back soon!",
+    "kicker": "Leagues A–Z"
   },
   "match": {
     "all": "All",
@@ -141,7 +149,8 @@
     "was": "was {odds}",
     "open": "Bet slip",
     "selections": "{count, plural, one {# selection} other {# selections}}",
-    "liveDelay": "Live bet — confirming…"
+    "liveDelay": "Live bet — confirming…",
+    "newBet": "New bet"
   },
   "bets": {
     "title": "My bets",
@@ -160,7 +169,9 @@
     "details": "Ticket details",
     "loginRequired": "Log in to see your bets.",
     "loadMore": "Load more",
-    "back": "Back to my bets"
+    "back": "Back to my bets",
+    "kicker": "Your tickets",
+    "browse": "Browse matches"
   },
   "wallet": {
     "title": "Wallet",
@@ -218,6 +229,57 @@
     "excludedUntil": "You are self-excluded until {date}.",
     "excludedForever": "You are permanently self-excluded.",
     "myBets": "My bets",
-    "wallet": "Wallet"
+    "wallet": "Wallet",
+    "tabs": {
+      "overview": "Overview"
+    }
+  },
+  "fx": {
+    "kickoff": "Kick-off!",
+    "inDays": "in {days} days",
+    "previous": "Previous",
+    "next": "Next",
+    "kickoffIn": "Kick-off in"
+  },
+  "countries": {
+    "RO": "Romania",
+    "GB": "England",
+    "ES": "Spain",
+    "IT": "Italy",
+    "DE": "Germany",
+    "FR": "France",
+    "EU": "Europe",
+    "WW": "World"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search teams or competitions…",
+    "hint": "Type at least 2 characters to search.",
+    "empty": "No teams or competitions found.",
+    "close": "Close search"
+  },
+  "live": {
+    "kicker": "{count, plural, one {# match in play} other {# matches in play}}",
+    "allMarkets": "All {count} markets"
+  },
+  "authHero": {
+    "kicker": "Football · RON · Live",
+    "line1": "Every match.",
+    "line2": "Every moment.",
+    "point1": "Live scores and odds that move with the game",
+    "point2": "Boosted odds on the biggest matches",
+    "point3": "Secure account with betting limits you control"
+  },
+  "hero": {
+    "kicker": "{count, plural, =0 {Kick-off soon} one {# match live now} other {# matches live now}}",
+    "line1": "Football.",
+    "line2": "Every moment.",
+    "subtitle": "Live odds that move with the match, boosted prices and cash out, all in RON.",
+    "ctaLive": "Bet live",
+    "ctaToday": "Today's matches",
+    "statLive": "Live now",
+    "statToday": "Today",
+    "statCompetitions": "Leagues",
+    "statBoosted": "Boosts"
   }
 }

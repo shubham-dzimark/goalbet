@@ -24,6 +24,14 @@ const envSchema = z.object({
   ODDS_PROVIDER: z.enum(['mock', 'api-football']).default('mock'),
   API_FOOTBALL_KEY: z.string().optional(),
   API_FOOTBALL_BASE_URL: z.string().default('https://v3.football.api-sports.io'),
+  /** Comma-separated API-Football league ids (default: the 7 competitions from the brief). */
+  API_FOOTBALL_LEAGUES: z
+    .string()
+    .default('283,39,140,135,78,61,2')
+    .transform((s) => s.split(',').map((x) => Number(x.trim())).filter((n) => Number.isInteger(n) && n > 0)),
+  /** Our own cap per UTC day (free plan: 100). */
+  API_FOOTBALL_DAILY_BUDGET: z.coerce.number().int().min(1).default(90),
+  API_FOOTBALL_PER_MINUTE: z.coerce.number().int().min(1).default(8),
   /** Dev/test-only endpoints to drive the mock provider (never in production). */
   MOCK_CONTROL_ENABLED: bool.default(false),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),

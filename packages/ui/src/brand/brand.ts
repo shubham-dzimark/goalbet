@@ -4,6 +4,8 @@
  */
 export const brand = {
   name: 'GoalBet',
+  /** Wordmark split: second part is drawn in the accent colour. */
+  wordmark: ['Goal', 'Bet'],
   shortName: 'GB',
   /** Self-hosted font families (see fonts.ts + tokens.css). */
   fonts: { sans: 'Inter Variable', display: 'Barlow Condensed' },

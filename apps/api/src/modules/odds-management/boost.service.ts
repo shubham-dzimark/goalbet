@@ -24,7 +24,7 @@ export class BoostService {
       where: {
         status: 'SCHEDULED',
         startTime: { gt: new Date(now.getTime() + HOUR), lt: new Date(now.getTime() + 48 * HOUR) },
-        competition: { enabled: true, isTop: true },
+        competition: { enabled: true, active: true, isTop: true },
         markets: { some: { type: 'MATCH_RESULT', period: 'FT', status: 'OPEN', selections: { none: { boost: { isNot: null } } } } },
       },
       include: { markets: { where: { type: 'MATCH_RESULT', period: 'FT' }, include: { selections: true } } },

@@ -334,7 +334,10 @@ model Competition {
   name        String
   country     String
   countryCode String
+  /// Admin switch (F3.5).
   enabled     Boolean  @default(true)
+  /// Provider-managed: false when the active odds provider no longer supplies this competition.
+  active      Boolean  @default(true)
   isTop       Boolean  @default(false)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
@@ -397,6 +400,8 @@ model Market {
   status     MarketStatus @default(OPEN)
   /// Disabled by an admin for this event (F3.5).
   enabled    Boolean      @default(true)
+  /// Suspended by an admin (F3.5); the provider ingest never touches this flag.
+  adminSuspended Boolean  @default(false)
   sortOrder  Int          @default(0)
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt

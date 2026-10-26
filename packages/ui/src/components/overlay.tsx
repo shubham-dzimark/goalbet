@@ -23,10 +23,10 @@ export function DialogContent({
 }) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-chrome-strong/60 backdrop-blur-[2px]" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
       <DialogPrimitive.Content
         className={cn(
-          'fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-[var(--radius-card)] bg-card p-5 shadow-xl',
+          'fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-[var(--radius-card)] border border-line-strong bg-card-solid p-5 shadow-[var(--shadow-float)]',
           className,
         )}
         {...props}
@@ -39,7 +39,7 @@ export function DialogContent({
         )}
         <div className="mt-4">{children}</div>
         <DialogPrimitive.Close
-          className="absolute right-3 top-3 rounded-md p-1 text-ink-muted hover:bg-card-alt"
+          className="absolute right-3 top-3 rounded-md p-1 text-ink-muted hover:bg-tint/10"
           aria-label={closeLabel}
         >
           <X className="size-5" />
@@ -58,15 +58,15 @@ export function SheetContent({
 }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { title: React.ReactNode }) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-chrome-strong/60" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
       <DialogPrimitive.Content
         className={cn(
-          'fixed inset-x-0 bottom-0 z-50 flex max-h-[90dvh] flex-col rounded-t-2xl bg-card shadow-2xl',
+          'fixed inset-x-0 bottom-0 z-50 flex max-h-[90dvh] flex-col rounded-t-3xl border-t border-line-strong bg-card-solid shadow-[var(--shadow-float)]',
           className,
         )}
         {...props}
       >
-        <div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-line" aria-hidden="true" />
+        <div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-tint/20" aria-hidden="true" />
         <DialogPrimitive.Title className="sr-only">{title}</DialogPrimitive.Title>
         <DialogPrimitive.Description className="sr-only">{title}</DialogPrimitive.Description>
         {children}
@@ -90,7 +90,7 @@ export function TabsTrigger({ className, ...props }: React.ComponentPropsWithout
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        '-mb-px shrink-0 border-b-2 border-transparent px-3 py-2.5 text-sm font-semibold text-ink-muted hover:text-ink',
+        '-mb-px shrink-0 border-b-2 border-transparent px-3 py-2.5 text-sm font-semibold text-ink-muted transition-colors hover:text-ink',
         'data-[state=active]:border-brand data-[state=active]:text-ink',
         className,
       )}

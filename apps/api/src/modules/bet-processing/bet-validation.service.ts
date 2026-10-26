@@ -103,7 +103,7 @@ export class BetValidationService {
       const { event } = market;
       if (seenEvents.has(event.id)) throw new DomainError('DUPLICATE_EVENT', { eventId: event.id });
       seenEvents.add(event.id);
-      if (!event.competition.enabled) throw new DomainError('LEAGUE_DISABLED', { selectionId: s.id });
+      if (!event.competition.enabled || !event.competition.active) throw new DomainError('LEAGUE_DISABLED', { selectionId: s.id });
       const open = event.status === 'LIVE' || (event.status === 'SCHEDULED' && event.startTime.getTime() > now);
       if (!open) throw new DomainError('EVENT_NOT_AVAILABLE', { selectionId: s.id, eventId: event.id });
       if (event.suspended || event.feedSuspended) throw new DomainError('EVENT_SUSPENDED', { selectionId: s.id, eventId: event.id });

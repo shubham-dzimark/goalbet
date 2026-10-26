@@ -3,7 +3,7 @@ import * as React from 'react';
 import { cn } from '../lib/cn';
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('rounded-[var(--radius-card)] border border-line bg-card shadow-xs', className)} {...props} />;
+  return <div className={cn('glass rounded-[var(--radius-card)]', className)} {...props} />;
 }
 
 export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
@@ -11,25 +11,25 @@ export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDiv
 }
 
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h2 className={cn('font-display text-lg font-bold uppercase tracking-wide', className)} {...props} />;
+  return <h2 className={cn('font-display text-lg font-bold uppercase italic tracking-wide', className)} {...props} />;
 }
 
 export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return <div className={cn('p-4', className)} {...props} />;
 }
 
-const badgeVariants = cva('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase', {
+const badgeVariants = cva('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide', {
   variants: {
     tone: {
-      neutral: 'bg-card-alt text-ink-muted',
-      brand: 'bg-brand-soft text-brand-strong',
+      neutral: 'bg-tint/8 text-ink-muted',
+      brand: 'bg-brand-soft text-brand',
       live: 'bg-live text-white',
       boost: 'bg-boost text-boost-ink',
-      success: 'bg-brand-soft text-success',
-      warning: 'bg-amber-100 text-warning',
-      danger: 'bg-orange-100 text-danger',
-      info: 'bg-blue-100 text-info',
-      chrome: 'bg-chrome-soft text-chrome-ink',
+      success: 'bg-success/15 text-success',
+      warning: 'bg-warning/15 text-warning',
+      danger: 'bg-danger/15 text-danger',
+      info: 'bg-info/15 text-info',
+      chrome: 'bg-tint/10 text-chrome-ink',
     },
   },
   defaultVariants: { tone: 'neutral' },
@@ -45,15 +45,23 @@ export function Badge({
 
 export function LiveDot({ className }: { className?: string }) {
   return (
-    <span className={cn('relative inline-flex size-2', className)} aria-hidden="true">
-      <span className="absolute inline-flex size-full animate-ping rounded-full bg-live opacity-60" />
-      <span className="relative inline-flex size-2 rounded-full bg-live" />
-    </span>
+    <span
+      className={cn('relative inline-flex size-2 rounded-full bg-live [animation:gb-pulse-ring_1.4s_ease-out_infinite]', className)}
+      aria-hidden="true"
+    />
   );
 }
 
 export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('animate-pulse rounded-md bg-line/70', className)} {...props} />;
+  return (
+    <div
+      className={cn(
+        'rounded-lg bg-[linear-gradient(90deg,rgb(255_255_255/0.04),rgb(255_255_255/0.09),rgb(255_255_255/0.04))] bg-[length:200%_100%] [animation:gb-shimmer_1.6s_linear_infinite]',
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 export function Separator({ className }: { className?: string }) {
@@ -66,17 +74,17 @@ export function Alert({
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & { tone?: 'danger' | 'warning' | 'success' | 'info' }) {
   const tones = {
-    danger: 'border-orange-200 bg-orange-50 text-danger',
-    warning: 'border-amber-200 bg-amber-50 text-warning',
-    success: 'border-emerald-200 bg-emerald-50 text-success',
-    info: 'border-blue-200 bg-blue-50 text-info',
+    danger: 'border-danger/30 bg-danger/10 text-danger',
+    warning: 'border-warning/30 bg-warning/10 text-warning',
+    success: 'border-success/30 bg-success/10 text-success',
+    info: 'border-info/30 bg-info/10 text-info',
   } as const;
-  return <div role="alert" className={cn('rounded-lg border px-3 py-2 text-sm', tones[tone], className)} {...props} />;
+  return <div role="alert" className={cn('rounded-xl border px-3 py-2 text-sm', tones[tone], className)} {...props} />;
 }
 
 export function EmptyState({ icon, title, children }: { icon?: React.ReactNode; title: React.ReactNode; children?: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-2 px-4 py-10 text-center text-ink-muted">
+    <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-ink-muted">
       {icon}
       <p className="font-semibold text-ink">{title}</p>
       {children}
