@@ -48,6 +48,8 @@ export async function resetDb(ctx: TestContext) {
   // settings are cached in memory for a few seconds; a reset must not leak them into the next test
   const { SettingsService } = await import('../src/common/settings.service.js');
   ctx.app.get(SettingsService).invalidate();
+  const { ProviderConfigService } = await import('../src/modules/api-integration/provider-config.service.js');
+  ctx.app.get(ProviderConfigService).invalidate();
 }
 
 export const validRegistration = (n = randomInt(1_000_000)) => ({

@@ -12,6 +12,8 @@ export const Channels = {
   WALLET_UPDATES: 'gb:wallet-updates',
   /** Deposit / withdrawal request status changes: payload PaymentMessage */
   PAYMENT_UPDATES: 'gb:payment-updates',
+  /** Data provider / API key changed by an admin: payload { at } */
+  PROVIDER_CHANGED: 'gb:provider-changed',
   /** Settings changed by an admin: payload { key } */
   SETTINGS_CHANGED: 'gb:settings-changed',
 } as const;

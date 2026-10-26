@@ -22,7 +22,8 @@
     },
     "pendingApprovals": "{count} aprobări în așteptare",
     "account": "Contul meu",
-    "admins": "Administratori"
+    "admins": "Administratori",
+    "dataProvider": "Furnizor de date"
   },
   "roles": {
     "SUPER_ADMIN": "Super admin",
@@ -681,6 +682,79 @@
       "suspended": "Administrator suspendat și deconectat",
       "activated": "Administrator activat",
       "totpReset": "Autentificare resetată: QR la următoarea autentificare"
+    }
+  },
+  "dataProvider": {
+    "kicker": "Sistem",
+    "title": "Furnizor de date",
+    "description": "De unde vin meciurile, scorurile live și rezultatele, cheia API și câte apeluri poate folosi site-ul.",
+    "forbiddenTitle": "Doar pentru Super admini",
+    "forbiddenHelp": "Cere unui Super admin să schimbe furnizorul de date sau cheia API.",
+    "sync": "Încarcă meciurile acum",
+    "syncStarted": "Se încarcă ligile și meciurile în fundal…",
+    "saved": "Salvat. Site-ul se actualizează în câteva secunde, fără repornire.",
+    "providers": {
+      "api-football": "API-Football",
+      "api-football_help": "Meciuri, scoruri live și rezultate reale (api-sports.io)",
+      "mock": "Date demo",
+      "mock_help": "Meciuri simulate, mereu unele live; fără apeluri API"
+    },
+    "stats": {
+      "provider": "Furnizor activ",
+      "fromPanel": "Setat din acest panou · {date}",
+      "fromEnv": "Din setările serverului (.env) până la salvarea aici",
+      "key": "Cheie API",
+      "noKey": "Nesetată",
+      "feed": "Vechimea datelor live",
+      "age": "{s} s",
+      "feedOk": "Mai noi decât limita de {limit} s",
+      "feedStale": "Mai vechi de {limit} s: meciurile live sunt suspendate",
+      "usage": "Apeluri API azi",
+      "providerLeft": "{n} rămase azi în abonament",
+      "noCalls": "Niciun apel azi",
+      "mockNoCalls": "Datele demo nu folosesc apeluri API"
+    },
+    "form": {
+      "title": "Setări",
+      "provider": "Furnizor",
+      "key": "Cheie API-Football",
+      "keyPlaceholder": "Lipește cheia din dashboard.api-football.com",
+      "keyHelp": "Stocată criptat; se afișează doar ultimele 4 caractere.",
+      "replace": "Înlocuiește",
+      "remove": "Șterge",
+      "undo": "Păstrează actuala",
+      "willRemove": "Va fi ștearsă",
+      "show": "Arată cheia",
+      "hide": "Ascunde cheia",
+      "test": "Testează cheia",
+      "dailyBudget": "Apeluri pe zi",
+      "dailyBudgetHelp": "Păstrează câteva sub limita abonamentului (gratuit: 100).",
+      "perMinute": "Apeluri pe minut",
+      "perMinuteHelp": "Abonament gratuit: 10.",
+      "save": "Salvează setările"
+    },
+    "errors": {
+      "key": "Lipește o cheie API validă (minimum 10 caractere).",
+      "removeWhileActive": "Treci pe Date demo înainte de a șterge cheia, sau înlocuiește-o.",
+      "leagues": "Alege cel puțin o ligă.",
+      "budget": "Apelurile pe zi trebuie să fie cel puțin 10, iar pe minut cel puțin 1."
+    },
+    "test": {
+      "ok": "Cheia funcționează · abonament {plan} · {used} din {limit} apeluri folosite azi",
+      "until": "Abonament până la {date}",
+      "inactive": "Abonamentul nu este activ.",
+      "failed": "Cheie respinsă: {error}",
+      "noKey": "nicio cheie setată"
+    },
+    "leagues": {
+      "title": "Ligi",
+      "help": "Ce competiții se încarcă din API-Football. Mai puține ligi înseamnă mai puține apeluri.",
+      "note": "Ligile debifate aici dispar de pe site la următoarea sincronizare; o ligă poate fi ascunsă temporar și din Sportsbook → Ligi."
+    },
+    "confirm": {
+      "title": "Salvezi setările furnizorului de date?",
+      "help": "API-ul și worker-ul preiau schimbarea în câteva secunde.",
+      "switch": "Site-ul trece de la {from} la {to}. Meciurile de la {from} se ascund după următoarea sincronizare (folosește „Încarcă meciurile acum”)."
     }
   }
 }

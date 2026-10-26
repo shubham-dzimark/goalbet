@@ -67,7 +67,7 @@ _Last update: Phase 2 (pre-match betting)._
 
 | ID | Box | Status | Implementing files | Tests |
 | --- | --- | --- | --- | --- |
-| F4.1 | Sports data / odds provider | Done | `odds-provider.ts` (+ `liveDataTime` for cached feeds), `mock/*`, `api-football/*`, `mock-control.controller.ts`; feed-stall safety: worker `feed-watchdog` (5 s) → `IngestService.checkFeed` suspends live matches when live data is older than `feed.stallSeconds`, fresh data lifts it; `FEED_STALLED` / `FEED_RECOVERED` audited | `mock-provider.test.ts` (7), `ingest-and-schema.test.ts`, `realtime.test.ts › F4.1` (2) |
+| F4.1 | Sports data / odds provider | Done | provider + API key chosen in Admin → Data provider (`provider-config.service.ts`, `provider-router.ts`, admin `data-provider/`; env fallback, no restart); `odds-provider.ts` (+ `liveDataTime` for cached feeds), `mock/*`, `api-football/*`, `mock-control.controller.ts`; feed-stall safety: worker `feed-watchdog` (5 s) → `IngestService.checkFeed` suspends live matches when live data is older than `feed.stallSeconds`, fresh data lifts it; `FEED_STALLED` / `FEED_RECOVERED` audited | `mock-provider.test.ts` (7), `ingest-and-schema.test.ts`, `realtime.test.ts › F4.1` (2), `data-provider.test.ts` (5) |
 | F4.2 | Backend / betting engine modules | Done | `apps/api/src/modules/*` (8 chart-named modules) | `ingest-and-schema.test.ts › F4.2…` |
 | F4.3 | Database | Done | `packages/db/prisma/schema.prisma` + migrations | `ingest-and-schema.test.ts › F4.3…` |
 | F4.4 | User frontend | Partial | `apps/web` (Next.js 16, responsive: 0 px horizontal overflow at 375 px verified) | `web/test/i18n-parity.test.ts`; Playwright viewports in phase 7 |

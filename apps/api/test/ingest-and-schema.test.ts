@@ -37,7 +37,8 @@ describe('F4.1 / F4.3 provider ingest into the database', () => {
     await ingest.syncFixtures(new Date(now - 4 * 3600_000), new Date(now + 3600_000));
     await ingest.syncLive();
     const { ODDS_PROVIDER } = await import('../src/modules/api-integration/odds-provider.js');
-    const mock = ctx.app.get(ODDS_PROVIDER) as import('../src/modules/api-integration/mock/mock.provider.js').MockProvider;
+    // the engine sees a ProviderRouter; the test controls live on the active mock behind it
+    const mock = (await (ctx.app.get(ODDS_PROVIDER) as import('../src/modules/api-integration/provider-router.js').ProviderRouter).mock())!;
     // An event stays LIVE in the DB after full time until settlement confirms it (and late in a
     // match most prices are decided), so pick an in-play event that has open selections.
     const inPlay = (await mock.getLiveStates()).filter((s) => s.status === 'LIVE').map((s) => s.ref);
@@ -58,7 +59,8 @@ describe('F2.8 match ends', () => {
     await ingest.syncFixtures(new Date(now - 4 * 3600_000), new Date(now + 3600_000));
     await ingest.syncLive();
     const { ODDS_PROVIDER } = await import('../src/modules/api-integration/odds-provider.js');
-    const mock = ctx.app.get(ODDS_PROVIDER) as import('../src/modules/api-integration/mock/mock.provider.js').MockProvider;
+    // the engine sees a ProviderRouter; the test controls live on the active mock behind it
+    const mock = (await (ctx.app.get(ODDS_PROVIDER) as import('../src/modules/api-integration/provider-router.js').ProviderRouter).mock())!;
     const inPlay = (await mock.getLiveStates()).filter((s) => s.status === 'LIVE').map((s) => s.ref);
     const ev = await ctx.prisma.event.findFirstOrThrow({ where: { providerRef: { in: inPlay } } });
 

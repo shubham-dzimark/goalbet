@@ -674,3 +674,21 @@ model PaymentRequest {
   @@index([status, createdAt])
   @@index([userId, createdAt])
 }
+
+/// Sports data provider chosen in the admin panel (single row, id "default"). Until it exists the
+/// API and worker use the ODDS_PROVIDER / API_FOOTBALL_* env vars.
+model DataProviderConfig {
+  id          String   @id @default("default")
+  /// "mock" | "api-football"
+  provider    String
+  /// AES-256-GCM sealed API key; never returned to the browser
+  apiKeyEnc   String?
+  /// last 4 characters, for display
+  apiKeyHint  String?  @db.VarChar(8)
+  /// API-Football league ids to load
+  leagues     Int[]
+  dailyBudget Int      @default(90)
+  perMinute   Int      @default(8)
+  updatedById String?  @db.Uuid
+  updatedAt   DateTime @updatedAt
+}

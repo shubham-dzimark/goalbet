@@ -218,3 +218,27 @@ export interface AdminTotpSetup {
   qrDataUrl: string;
   secret: string;
 }
+
+export interface AdminDataProviderStatus {
+  provider: 'mock' | 'api-football';
+  /** "admin" once saved in the panel; "env" while the server's env vars are used */
+  source: 'admin' | 'env';
+  apiKey: { set: boolean; hint: string | null };
+  leagues: { id: number; name: string; country: string; countryCode: string; selected: boolean }[];
+  dailyBudget: number;
+  perMinute: number;
+  updatedAt: string | null;
+  /** API-Football calls today (our own budget counter) and what the provider reports left */
+  usage: { today: number; budget: number; providerRemaining: number | null } | null;
+  feed: { lastLiveDataAt: string | null; ageSeconds: number | null; stallSeconds: number };
+}
+
+export interface AdminDataProviderTest {
+  ok: boolean;
+  plan?: string;
+  active?: boolean;
+  subscriptionEnd?: string | null;
+  requestsToday?: number;
+  limitDay?: number;
+  error?: string;
+}

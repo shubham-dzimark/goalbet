@@ -146,3 +146,19 @@ export const adminUpdateSchema = z
 
 export const adminStatusSchema = z.object({ status: z.enum(['ACTIVE', 'SUSPENDED']), reason });
 export const adminReasonSchema = z.object({ reason });
+
+// ── data provider (Super admin) ──
+export const adminDataProviderUpdateSchema = z.object({
+  provider: z.enum(['mock', 'api-football']),
+  /** new key; null removes the stored one; omit to keep it */
+  apiKey: z.string().trim().min(10, { message: 'validation.required' }).max(200).nullable().optional(),
+  leagues: z.array(z.number().int().positive()).min(1, { message: 'validation.required' }).max(30),
+  dailyBudget: z.number().int().min(10).max(1_000_000),
+  perMinute: z.number().int().min(1).max(1_000),
+  reason,
+});
+
+export const adminDataProviderTestSchema = z.object({
+  /** test this key instead of the stored one (not saved) */
+  apiKey: z.string().trim().min(10).max(200).optional(),
+});

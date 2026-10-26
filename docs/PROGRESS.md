@@ -8,9 +8,18 @@
 | — | Redesign (Emerald Pitch, light/dark, 3D), real fixtures (API-Football free plan), local time zones, Vercel-ready API | ✅ Done |
 | 4 | Live (F1.6, F2.1, F2.2), WebSocket + Redis pub/sub, live delay, feed-stall safety | ✅ Done |
 | — | Player deposit & withdrawal requests (admin-approved), held funds, Finance queue | ✅ Done |
+| — | Data provider & API key managed in the admin panel (no restart) | ✅ Done |
 | 5 | Cash out (F2.3–F2.7), settlement + payout + credit (F2.8–F2.11), reconciliation (incl. held funds = pending withdrawals); cash out and payouts respect held money | — |
 | 6 | Bet Builder (F1.11), sportsbook settings (F3.5), reports + exposure (F3.6) incl. deposits/withdrawals by day and method and queue age; player deposit limits (daily/weekly/monthly) | — |
 | 7 | Responsive polish, responsible gambling, provider skeleton, all E2E (incl. deposit/withdrawal flows), README with the licence / KYC / AML notes for real money | — |
+
+## Data provider settings — what was built
+
+- **Admin → System → Data provider** (Super admin): choose *API-Football* or *Demo data*, set or replace the API key (stored AES-256-GCM encrypted, only the last 4 characters ever shown, never logged), pick the leagues, set the call budget per day / minute, *Test key* (API-Football `/status`: plan, calls used, subscription end — free, no quota used) and *Load fixtures now*. Live-data age and today's calls are shown.
+- **No restart:** the engine talks to a `ProviderRouter`; the API and worker re-read the config within 15 s, or at once on a Redis notice, and rebuild the provider. Until an admin saves, the `ODDS_PROVIDER` / `API_FOOTBALL_*` env vars are used (and stay the fallback key).
+- Every change is audited with a reason (key shown only as "replaced (…b198)").
+
+**Tests:** 89 API integration (5 new in `data-provider.test.ts`, API-Football mocked) · i18n parity.
 
 ## Deposit & withdrawal requests — what was built
 

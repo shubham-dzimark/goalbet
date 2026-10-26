@@ -22,7 +22,8 @@
     },
     "pendingApprovals": "{count} pending approvals",
     "account": "My account",
-    "admins": "Admin users"
+    "admins": "Admin users",
+    "dataProvider": "Data provider"
   },
   "roles": {
     "SUPER_ADMIN": "Super admin",
@@ -681,6 +682,79 @@
       "suspended": "Admin suspended and signed out",
       "activated": "Admin activated",
       "totpReset": "Two-factor reset: QR at next login"
+    }
+  },
+  "dataProvider": {
+    "kicker": "System",
+    "title": "Data provider",
+    "description": "Where matches, live scores and results come from, the API key and how many calls the site may use.",
+    "forbiddenTitle": "Super admins only",
+    "forbiddenHelp": "Ask a Super admin to change the data provider or its API key.",
+    "sync": "Load fixtures now",
+    "syncStarted": "Loading leagues and fixtures in the background…",
+    "saved": "Saved. The site switches within a few seconds; no restart needed.",
+    "providers": {
+      "api-football": "API-Football",
+      "api-football_help": "Real fixtures, live scores and results (api-sports.io)",
+      "mock": "Demo data",
+      "mock_help": "Simulated matches, always some live; no API calls"
+    },
+    "stats": {
+      "provider": "Active provider",
+      "fromPanel": "Set in this panel · {date}",
+      "fromEnv": "From the server settings (.env) until saved here",
+      "key": "API key",
+      "noKey": "Not set",
+      "feed": "Live data age",
+      "age": "{s} s",
+      "feedOk": "Fresher than the {limit} s limit",
+      "feedStale": "Older than {limit} s: live matches are suspended",
+      "usage": "API calls today",
+      "providerLeft": "{n} left on the plan today",
+      "noCalls": "No calls yet today",
+      "mockNoCalls": "Demo data uses no API calls"
+    },
+    "form": {
+      "title": "Settings",
+      "provider": "Provider",
+      "key": "API-Football key",
+      "keyPlaceholder": "Paste the key from dashboard.api-football.com",
+      "keyHelp": "Stored encrypted; only the last 4 characters are ever shown.",
+      "replace": "Replace",
+      "remove": "Remove",
+      "undo": "Keep current",
+      "willRemove": "Will be removed",
+      "show": "Show key",
+      "hide": "Hide key",
+      "test": "Test key",
+      "dailyBudget": "Calls per day",
+      "dailyBudgetHelp": "Keep a few below the plan limit (free plan: 100).",
+      "perMinute": "Calls per minute",
+      "perMinuteHelp": "Free plan: 10.",
+      "save": "Save settings"
+    },
+    "errors": {
+      "key": "Paste a valid API key (at least 10 characters).",
+      "removeWhileActive": "Switch to Demo data before removing the key, or replace it.",
+      "leagues": "Choose at least one league.",
+      "budget": "Calls per day must be at least 10 and calls per minute at least 1."
+    },
+    "test": {
+      "ok": "Key works · plan {plan} · {used} of {limit} calls used today",
+      "until": "Subscription until {date}",
+      "inactive": "The subscription is not active.",
+      "failed": "Key refused: {error}",
+      "noKey": "no key set"
+    },
+    "leagues": {
+      "title": "Leagues",
+      "help": "Which competitions to load from API-Football. Fewer leagues use fewer calls.",
+      "note": "Leagues switched off here disappear from the site at the next sync; you can still hide one temporarily under Sportsbook → Leagues."
+    },
+    "confirm": {
+      "title": "Save data provider settings?",
+      "help": "The API and the worker pick up the change within seconds.",
+      "switch": "The site switches from {from} to {to}. Matches from {from} are hidden after the next sync (use “Load fixtures now”)."
     }
   }
 }

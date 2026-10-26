@@ -93,3 +93,10 @@ Choices not dictated by the brief, with the reason. Newest last.
 60. **Same four-eyes rule as manual credits:** above `wallet.approvalThresholdBani` a second, different Finance/Super admin must approve.
 61. **Limits:** per-request min/max for deposits and withdrawals (settings, Finance-owned), one waiting withdrawal and three waiting deposits per player. Self-excluded players can't deposit but can withdraw (it's their money).
 62. **Reference codes** (`D-`/`W-` + 6 characters without 0/O/1/I) identify a payment on a bank statement or at a shop counter. Players see a masked IBAN; Finance sees it in full. Bank details for deposits come from env vars (`PAYMENT_BANK_*`).
+
+## Data provider settings
+
+63. **The provider and API key are admin data, not deployment config.** One `DataProviderConfig` row (CHECK id = 'default'); the key is sealed with AES-256-GCM using a key derived from `JWT_ADMIN_SECRET` (separate derivation from the 2FA secrets), only its last 4 characters are stored in clear for display, it is never returned by the API or written to the audit log. Rotating `JWT_ADMIN_SECRET` makes the stored key unreadable — the env key is then used and the panel asks for the key again.
+64. **`ProviderRouter` implements `OddsProvider`** and forwards to the configured provider, rebuilt when the config version changes (15 s cache + Redis `gb:provider-changed`), so switching needs no restart in the API or the worker. Env vars remain the fallback until an admin saves and as a fallback key.
+65. **Super admin only** for viewing and changing it (it controls costs and the whole sportsbook's data). *Test key* uses API-Football's free `/status` endpoint and never saves.
+
