@@ -48,6 +48,32 @@ export async function seedEvent(
   return { competitionId, event, market, home: home!, draw: draw!, away: away! };
 }
 
+/** Goals markets for Bet Builder tests: Over/Under 2.5 (1.90 / 1.90) and BTTS (1.80 / 2.00). */
+export async function seedGoalMarkets(ctx: TestContext, eventId: string) {
+  const ou = await ctx.prisma.market.create({
+    data: {
+      eventId,
+      key: 'TOTAL_GOALS|FT|250||',
+      type: 'TOTAL_GOALS',
+      period: 'FT',
+      line: '2.50',
+      selections: { create: [{ outcome: 'OVER', odds: '1.900', sortOrder: 0 }, { outcome: 'UNDER', odds: '1.900', sortOrder: 1 }] },
+    },
+    include: { selections: { orderBy: { sortOrder: 'asc' } } },
+  });
+  const btts = await ctx.prisma.market.create({
+    data: {
+      eventId,
+      key: 'BTTS|FT|||',
+      type: 'BTTS',
+      period: 'FT',
+      selections: { create: [{ outcome: 'YES', odds: '1.800', sortOrder: 0 }, { outcome: 'NO', odds: '2.000', sortOrder: 1 }] },
+    },
+    include: { selections: { orderBy: { sortOrder: 'asc' } } },
+  });
+  return { over: ou.selections[0]!, under: ou.selections[1]!, bttsYes: btts.selections[0]!, bttsNo: btts.selections[1]! };
+}
+
 /** Credit a player directly through the ledger (bypasses admin approval, for setup only). */
 export async function fund(ctx: TestContext, userId: string, bani: number) {
   const { WalletService } = await import('../src/modules/wallet-ledger/wallet.service.js');

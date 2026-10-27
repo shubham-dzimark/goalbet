@@ -144,7 +144,6 @@
     "acceptOdds": "Accept new odds",
     "conflict": "Only one selection per match is allowed in an accumulator.",
     "needTwo": "Add selections from at least 2 matches.",
-    "builderSoon": "Bet Builder combines several markets from the same match into one bet. It opens in a later release.",
     "placed": "Bet placed! Ticket {code}",
     "placedMany": "{count} bets placed",
     "unavailable": "Unavailable",
@@ -152,7 +151,21 @@
     "open": "Bet slip",
     "selections": "{count, plural, one {# selection} other {# selections}}",
     "liveDelay": "Live bet — confirming…",
-    "newBet": "New bet"
+    "newBet": "New bet",
+    "builderOdds": "Bet Builder odds",
+    "builderOneMatch": "A Bet Builder combines selections from one match. Keep the selections of a single match.",
+    "builderNeedTwo": "Add at least 2 selections from the same match.",
+    "builderPicks": "{count} selections, one bet",
+    "builderHint": "All must win. Priced together (separately {product}), because results on one match are linked.",
+    "useBuilder": "Combine them in a Bet Builder",
+    "builderReason": {
+      "TOO_FEW": "Add at least 2 selections from the same match.",
+      "TOO_MANY": "A Bet Builder can have at most 12 selections.",
+      "SAME_MARKET": "Pick only one outcome per market.",
+      "UNSUPPORTED_MARKET": "One of these markets can't be used in a Bet Builder.",
+      "CONTRADICTION": "These selections can't all win together.",
+      "ONE_MATCH": "A Bet Builder combines selections from one match."
+    }
   },
   "bets": {
     "title": "My bets",
@@ -221,13 +234,16 @@
     "saved": "Saved",
     "preferences": "Preferences",
     "language": "Language",
-    "limits": "Betting limits",
-    "limitsHint": "Lower limits apply at once. Higher limits and removals take effect after 24 hours.",
+    "limits": "Betting & deposit limits",
+    "limitsHint": "Stake limits count your bets; deposit limits count your deposit requests (waiting or paid). Lower limits apply at once. Higher limits and removals take effect after 24 hours.",
     "limitTypes": {
       "DAILY_STAKE": "Daily stake limit",
       "WEEKLY_STAKE": "Weekly stake limit",
       "MONTHLY_STAKE": "Monthly stake limit",
-      "MAX_STAKE_PER_BET": "Maximum stake per bet"
+      "MAX_STAKE_PER_BET": "Maximum stake per bet",
+      "DAILY_DEPOSIT": "Daily deposit limit",
+      "WEEKLY_DEPOSIT": "Weekly deposit limit",
+      "MONTHLY_DEPOSIT": "Monthly deposit limit"
     },
     "noLimit": "No limit",
     "amountRon": "Amount (RON)",

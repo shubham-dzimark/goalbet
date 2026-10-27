@@ -145,6 +145,9 @@ export const UserLimitType = {
   WEEKLY_STAKE: 'WEEKLY_STAKE',
   MONTHLY_STAKE: 'MONTHLY_STAKE',
   MAX_STAKE_PER_BET: 'MAX_STAKE_PER_BET',
+  DAILY_DEPOSIT: 'DAILY_DEPOSIT',
+  WEEKLY_DEPOSIT: 'WEEKLY_DEPOSIT',
+  MONTHLY_DEPOSIT: 'MONTHLY_DEPOSIT',
 } as const;
 export type UserLimitType = (typeof UserLimitType)[keyof typeof UserLimitType];
 export const USER_LIMIT_TYPES = values(UserLimitType);

@@ -43,6 +43,10 @@ enum UserLimitType {
   WEEKLY_STAKE
   MONTHLY_STAKE
   MAX_STAKE_PER_BET
+  /// deposit limits (responsible gambling): deposit requests in the window, waiting or paid
+  DAILY_DEPOSIT
+  WEEKLY_DEPOSIT
+  MONTHLY_DEPOSIT
 }
 
 enum LimitSource {

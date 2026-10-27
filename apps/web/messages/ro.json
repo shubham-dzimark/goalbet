@@ -144,7 +144,6 @@
     "acceptOdds": "Acceptă noile cote",
     "conflict": "Un bilet combinat poate avea o singură selecție pe meci.",
     "needTwo": "Adaugă selecții din cel puțin 2 meciuri.",
-    "builderSoon": "Bet Builder combină mai multe piețe din același meci într-un singur pariu. Va fi disponibil într-o versiune viitoare.",
     "placed": "Pariu plasat! Bilet {code}",
     "placedMany": "{count} pariuri plasate",
     "unavailable": "Indisponibil",
@@ -152,7 +151,21 @@
     "open": "Bilet",
     "selections": "{count, plural, one {# selecție} few {# selecții} other {# de selecții}}",
     "liveDelay": "Pariu live — se confirmă…",
-    "newBet": "Pariu nou"
+    "newBet": "Pariu nou",
+    "builderOdds": "Cotă Bet Builder",
+    "builderOneMatch": "Bet Builder combină selecții de la un singur meci. Păstrează selecțiile unui singur meci.",
+    "builderNeedTwo": "Adaugă cel puțin 2 selecții de la același meci.",
+    "builderPicks": "{count} selecții, un singur pariu",
+    "builderHint": "Toate trebuie să câștige. Cotă calculată împreună (separat {product}), pentru că rezultatele aceluiași meci sunt legate.",
+    "useBuilder": "Combină-le într-un Bet Builder",
+    "builderReason": {
+      "TOO_FEW": "Adaugă cel puțin 2 selecții de la același meci.",
+      "TOO_MANY": "Un Bet Builder poate avea cel mult 12 selecții.",
+      "SAME_MARKET": "Alege un singur rezultat pe piață.",
+      "UNSUPPORTED_MARKET": "Una dintre aceste piețe nu poate fi folosită în Bet Builder.",
+      "CONTRADICTION": "Aceste selecții nu pot câștiga toate împreună.",
+      "ONE_MATCH": "Bet Builder combină selecții de la un singur meci."
+    }
   },
   "bets": {
     "title": "Pariurile mele",
@@ -221,13 +234,16 @@
     "saved": "Salvat",
     "preferences": "Preferințe",
     "language": "Limbă",
-    "limits": "Limite de pariere",
-    "limitsHint": "Limitele mai mici se aplică imediat. Limitele mai mari și eliminările intră în vigoare după 24 de ore.",
+    "limits": "Limite de pariere și depunere",
+    "limitsHint": "Limitele de miză se aplică pariurilor; limitele de depunere se aplică cererilor de depunere (în așteptare sau plătite). Limitele mai mici se aplică imediat. Limitele mai mari și eliminările intră în vigoare după 24 de ore.",
     "limitTypes": {
       "DAILY_STAKE": "Limită zilnică de miză",
       "WEEKLY_STAKE": "Limită săptămânală de miză",
       "MONTHLY_STAKE": "Limită lunară de miză",
-      "MAX_STAKE_PER_BET": "Miză maximă pe pariu"
+      "MAX_STAKE_PER_BET": "Miză maximă pe pariu",
+      "DAILY_DEPOSIT": "Limită zilnică de depunere",
+      "WEEKLY_DEPOSIT": "Limită săptămânală de depunere",
+      "MONTHLY_DEPOSIT": "Limită lunară de depunere"
     },
     "noLimit": "Fără limită",
     "amountRon": "Sumă (RON)",

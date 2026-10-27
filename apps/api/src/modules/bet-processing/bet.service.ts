@@ -9,7 +9,7 @@ import { IdempotencyService } from '../../common/idempotency.service.js';
 import { PrismaService } from '../../common/prisma.service.js';
 import { SettingsService } from '../../common/settings.service.js';
 import { WalletService } from '../wallet-ledger/wallet.service.js';
-import { BetValidationService, type ValidatedBet } from './bet-validation.service.js';
+import { BetValidationService, type ValidatedBet, legSelections } from './bet-validation.service.js';
 import { ticketInclude, toTicketDto } from './ticket.mapper.js';
 
 type Input = Required<Pick<PlaceBetInput, 'type' | 'stakeBani' | 'legs'>> & {
@@ -81,7 +81,7 @@ export class BetService {
             stakeBani: bet.stakeBani,
             totalOddsMilli: bet.totalOddsMilli,
             potentialWinBani: bet.potentialWinBani,
-            legs: bet.legs.map((l) => ({ selectionId: l.selection.id, oddsMilli: l.oddsMilli })),
+            legs: bet.legs.map((l) => ({ kind: l.kind, selectionIds: legSelections(l).map((x) => x.id), oddsMilli: l.oddsMilli })),
           },
         },
         tx,
@@ -116,7 +116,12 @@ export class BetService {
                 kind: l.kind,
                 oddsAtPlacement: oddsToDecimalString(l.oddsMilli),
                 sortOrder: i,
-                selections: { create: [{ selectionId: l.selection.id, oddsAtPlacement: oddsToDecimalString(l.oddsMilli) }] },
+                selections: {
+                  create:
+                    l.kind === 'SELECTION'
+                      ? [{ selectionId: l.selection.id, oddsAtPlacement: oddsToDecimalString(l.oddsMilli) }]
+                      : l.selections.map((x, j) => ({ selectionId: x.id, oddsAtPlacement: oddsToDecimalString(l.partOddsMilli[j]!) })),
+                },
               })),
             },
           },

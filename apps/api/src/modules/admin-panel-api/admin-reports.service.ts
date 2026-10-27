@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { type AuditLog } from '@goalbet/db';
-import { type AdminAuditRow, type AdminDashboard, type AdminReport, OPEN_TICKET_STATUSES, type TicketStatus } from '@goalbet/shared';
+import { type AdminAuditRow, type AdminDashboard, type AdminPaymentsReport, type AdminReport, OPEN_TICKET_STATUSES, type TicketStatus } from '@goalbet/shared';
 import { PrismaService } from '../../common/prisma.service.js';
 import { WalletService } from '../wallet-ledger/wallet.service.js';
 import { awaitingSettlementWhere } from './admin-sportsbook.service.js';
@@ -10,7 +10,18 @@ const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 const num = (v: bigint | number | null | undefined) => Number(v ?? 0);
 
 /** Money flows come from the ledger (WalletTransaction), so reports always match the balances. */
-type LedgerTotals = { stakes: bigint; payouts: bigint; credits: bigint; debits: bigint; deposits: bigint; withdrawals: bigint };
+type LedgerTotals = {
+  stakes: bigint;
+  payouts: bigint;
+  wins: bigint;
+  cashOuts: bigint;
+  refunds: bigint;
+  cashOutCount: bigint;
+  credits: bigint;
+  debits: bigint;
+  deposits: bigint;
+  withdrawals: bigint;
+};
 
 export function toAuditRow(a: AuditLog): AdminAuditRow {
   return {
@@ -43,12 +54,16 @@ export class AdminReportsService {
       SELECT
         COALESCE(SUM(-"amountBani") FILTER (WHERE type = 'STAKE'), 0)::bigint AS stakes,
         COALESCE(SUM("amountBani") FILTER (WHERE type IN ('WIN', 'CASHOUT', 'REFUND', 'VOID_REVERSAL')), 0)::bigint AS payouts,
+        COALESCE(SUM("amountBani") FILTER (WHERE type = 'WIN'), 0)::bigint AS wins,
+        COALESCE(SUM("amountBani") FILTER (WHERE type = 'CASHOUT'), 0)::bigint AS "cashOuts",
+        COALESCE(SUM("amountBani") FILTER (WHERE type IN ('REFUND', 'VOID_REVERSAL')), 0)::bigint AS refunds,
+        COUNT(*) FILTER (WHERE type = 'CASHOUT')::bigint AS "cashOutCount",
         COALESCE(SUM("amountBani") FILTER (WHERE type = 'ADMIN_CREDIT'), 0)::bigint AS credits,
         COALESCE(SUM(-"amountBani") FILTER (WHERE type = 'ADMIN_DEBIT'), 0)::bigint AS debits,
         COALESCE(SUM("amountBani") FILTER (WHERE type = 'DEPOSIT'), 0)::bigint AS deposits,
         COALESCE(SUM(-"amountBani") FILTER (WHERE type = 'WITHDRAWAL'), 0)::bigint AS withdrawals
       FROM "WalletTransaction" WHERE "createdAt" >= ${from} AND "createdAt" < ${to}`;
-    return row ?? { stakes: 0n, payouts: 0n, credits: 0n, debits: 0n, deposits: 0n, withdrawals: 0n };
+    return row ?? { stakes: 0n, payouts: 0n, wins: 0n, cashOuts: 0n, refunds: 0n, cashOutCount: 0n, credits: 0n, debits: 0n, deposits: 0n, withdrawals: 0n };
   }
 
   /** One row per day in [from, to), zeros included. */
@@ -64,6 +79,61 @@ export class AdminReportsService {
       FROM generate_series(${from}::timestamptz, ${new Date(to.getTime() - DAY)}::timestamptz, interval '1 day') AS d
       ORDER BY d`;
     return rows.map((r) => ({ date: isoDay(r.date), stakesBani: num(r.stakes), payoutsBani: num(r.payouts), tickets: num(r.tickets) }));
+  }
+
+  /** Tickets placed in the range by bet type (a single whose leg is a Bet Builder counts as BET_BUILDER). */
+  private async byBetType(from: Date, to: Date): Promise<AdminReport['byBetType']> {
+    const rows = await this.prisma.$queryRaw<{ type: AdminReport['byBetType'][number]['type']; tickets: bigint; stakes: bigint }[]>`
+      SELECT CASE WHEN t.type = 'SINGLE' AND EXISTS (SELECT 1 FROM "TicketLeg" l WHERE l."ticketId" = t.id AND l.kind = 'BET_BUILDER')
+                  THEN 'BET_BUILDER' ELSE t.type::text END AS type,
+             COUNT(*)::bigint AS tickets, COALESCE(SUM(t."stakeBani"), 0)::bigint AS stakes
+      FROM "Ticket" t
+      WHERE t.status <> 'REJECTED' AND t."placedAt" >= ${from} AND t."placedAt" < ${to}
+      GROUP BY 1`;
+    return (['SINGLE', 'ACCA', 'BET_BUILDER'] as const).map((type) => {
+      const r = rows.find((x) => x.type === type);
+      return { type, tickets: num(r?.tickets), stakesBani: num(r?.stakes) };
+    });
+  }
+
+  /** F3.6 deposits / withdrawals paid by day and method, the Finance queue and how fast it moves. */
+  private async payments(from: Date, to: Date): Promise<AdminPaymentsReport> {
+    const [daily, byMethod, pending, decided, rejected] = await Promise.all([
+      this.prisma.$queryRaw<{ date: Date; deposits: bigint; withdrawals: bigint }[]>`
+        SELECT d::date AS date,
+          COALESCE((SELECT SUM(t."amountBani") FROM "WalletTransaction" t
+                    WHERE t.type = 'DEPOSIT' AND t."createdAt" >= d AND t."createdAt" < d + interval '1 day'), 0)::bigint AS deposits,
+          COALESCE((SELECT SUM(-t."amountBani") FROM "WalletTransaction" t
+                    WHERE t.type = 'WITHDRAWAL' AND t."createdAt" >= d AND t."createdAt" < d + interval '1 day'), 0)::bigint AS withdrawals
+        FROM generate_series(${from}::timestamptz, ${new Date(to.getTime() - DAY)}::timestamptz, interval '1 day') AS d
+        ORDER BY d`,
+      this.prisma.paymentRequest.groupBy({
+        by: ['type', 'method'],
+        where: { status: 'APPROVED', decidedAt: { gte: from, lt: to } },
+        _count: true,
+        _sum: { amountBani: true },
+      }),
+      this.prisma.paymentRequest.groupBy({ by: ['type'], where: { status: 'PENDING' }, _count: true, _sum: { amountBani: true }, _min: { createdAt: true } }),
+      this.prisma.$queryRaw<{ avg: number | null }[]>`
+        SELECT AVG(EXTRACT(EPOCH FROM ("decidedAt" - "createdAt")) / 60)::float AS avg
+        FROM "PaymentRequest" WHERE status IN ('APPROVED', 'REJECTED') AND "decidedAt" >= ${from} AND "decidedAt" < ${to}`,
+      this.prisma.paymentRequest.count({ where: { status: 'REJECTED', decidedAt: { gte: from, lt: to } } }),
+    ]);
+    const pend = (type: 'DEPOSIT' | 'WITHDRAWAL') => pending.find((p) => p.type === type);
+    const oldest = pending.map((p) => p._min.createdAt).filter((d): d is Date => !!d).sort((a, b) => a.getTime() - b.getTime())[0];
+    const avg = decided[0]?.avg;
+    return {
+      daily: daily.map((r) => ({ date: isoDay(r.date), depositsBani: num(r.deposits), withdrawalsBani: num(r.withdrawals) })),
+      byMethod: byMethod.map((g) => ({ type: g.type, method: g.method, requests: g._count, amountBani: g._sum.amountBani ?? 0 })),
+      queue: {
+        deposits: pend('DEPOSIT')?._count ?? 0,
+        withdrawals: pend('WITHDRAWAL')?._count ?? 0,
+        pendingBani: pending.reduce((a, p) => a + (p._sum.amountBani ?? 0), 0),
+        oldestAt: oldest?.toISOString() ?? null,
+      },
+      avgDecisionMinutes: avg === null || avg === undefined ? null : Math.round(avg),
+      rejected,
+    };
   }
 
   private async exposure() {
@@ -82,7 +152,7 @@ export class AdminReportsService {
     const range = { createdAt: { gte: from, lt: to } };
     const placed = { placedAt: { gte: from, lt: to }, status: { not: 'REJECTED' as const } };
 
-    const [totalUsers, newUsers, suspended, activeUsers, tickets, byStatus, ledger, exposure, daily, top] = await Promise.all([
+    const [totalUsers, newUsers, suspended, activeUsers, tickets, byStatus, ledger, exposure, daily, top, byBetType, payments] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.user.count({ where: range }),
       this.prisma.user.count({ where: { status: 'SUSPENDED' } }),
@@ -104,6 +174,8 @@ export class AdminReportsService {
         ) x
         JOIN "Event" e ON e.id = x."eventId"
         GROUP BY e.id ORDER BY potential DESC LIMIT 10`,
+      this.byBetType(from, to),
+      this.payments(from, to),
     ]);
 
     const stakes = num(ledger.stakes);
@@ -124,6 +196,9 @@ export class AdminReportsService {
         tickets: num(r.tickets),
         potentialPayoutBani: num(r.potential),
       })),
+      payouts: { winsBani: num(ledger.wins), cashOutsBani: num(ledger.cashOuts), refundsBani: num(ledger.refunds), cashOuts: num(ledger.cashOutCount) },
+      byBetType,
+      payments,
     };
   }
 

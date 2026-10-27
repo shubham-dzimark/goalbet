@@ -137,12 +137,18 @@ export function useRealtimeConnection() {
     s.on('event', (m: EventStateMessage) => {
       applyEvent(qc, m);
       repriceCashOut(m.eventId);
-      if (slipTouches(m.eventId)) void qc.invalidateQueries({ queryKey: ['slip-odds'] });
+      if (slipTouches(m.eventId)) {
+        void qc.invalidateQueries({ queryKey: ['slip-odds'] });
+        void qc.invalidateQueries({ queryKey: ['builder-quote'] });
+      }
     });
     s.on('odds', (m: OddsMessage) => {
       applyOdds(qc, m);
       repriceCashOut(m.eventId);
-      if (slipTouches(m.eventId, m.selections.map((x) => x.selectionId))) void qc.invalidateQueries({ queryKey: ['slip-odds'] });
+      if (slipTouches(m.eventId, m.selections.map((x) => x.selectionId))) {
+        void qc.invalidateQueries({ queryKey: ['slip-odds'] });
+        void qc.invalidateQueries({ queryKey: ['builder-quote'] });
+      }
     });
     s.on('wallet', (m: WalletMessage) => {
       const { user, setUser } = useAuth.getState();

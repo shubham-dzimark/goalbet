@@ -48,6 +48,7 @@
     "WITHDRAWAL_PENDING": "Ai deja o retragere în așteptare. Anuleaz-o sau așteaptă procesarea ei.",
     "TOO_MANY_PENDING": "Ai prea multe cereri de depunere în așteptare.",
     "REQUEST_NOT_PENDING": "Această cerere a fost deja procesată.",
+    "DEPOSIT_LIMIT_EXCEEDED": "Această depunere ar depăși limita ta de depunere de {max}. Poți modifica limitele din Contul meu.",
     "EVENT_ALREADY_SETTLED": "Acest meci a fost deja decontat.",
     "SETTLEMENT_NOT_READY": "Meciul nu a început încă, deci nu poate fi decontat."
   },

@@ -1,15 +1,15 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Banknote, Download, Scale, ShieldAlert, Ticket, TrendingDown, TrendingUp, Users } from 'lucide-react';
+import { ArrowRight, Banknote, Clock, Download, Hourglass, Scale, ShieldAlert, Ticket, TrendingDown, TrendingUp, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { type AdminReport } from '@goalbet/shared';
 import { Button, Skeleton } from '@goalbet/ui';
 import { EventStatusBadge } from '@/components/ui/badges';
-import { CountBars, MoneyTrendChart } from '@/components/ui/charts';
+import { CountBars, MoneyTrendChart, PaymentsTrendChart } from '@/components/ui/charts';
 import { type Column, DataTable } from '@/components/ui/data-table';
-import { DateInput, PageHeader, Panel, StatCard, ViewTabs } from '@/components/ui/page';
+import { DateInput, DetailList, PageHeader, Panel, StatCard, ViewTabs } from '@/components/ui/page';
 import { Link } from '@/i18n/navigation';
 import { downloadCsv } from '@/lib/csv';
 import { qs } from '@/lib/data';
@@ -34,6 +34,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function ReportsPage() {
   const t = useTranslations('reports');
   const ts = useTranslations('ticketStatus');
+  const tm = useTranslations('wallet.requests.methods');
   const f = useFmt();
   const [preset, setPreset] = useState<Preset>('30');
   const [from, setFrom] = useState(iso(new Date(Date.now() - 29 * 86_400_000)));
@@ -45,8 +46,12 @@ export default function ReportsPage() {
   const exportCsv = () => {
     if (!data) return;
     downloadCsv(`goalbet-report-${data.range.from}_${data.range.to}.csv`, [
-      ['date', 'tickets', 'stakes_ron', 'payouts_ron', 'ggr_ron'],
-      ...data.daily.map((d) => [d.date, d.tickets, (d.stakesBani / 100).toFixed(2), (d.payoutsBani / 100).toFixed(2), ((d.stakesBani - d.payoutsBani) / 100).toFixed(2)]),
+      ['date', 'tickets', 'stakes_ron', 'payouts_ron', 'ggr_ron', 'deposits_ron', 'withdrawals_ron'],
+      ...data.daily.map((d, i) => {
+        const p = data.payments.daily[i];
+        const ron = (b: number) => (b / 100).toFixed(2);
+        return [d.date, d.tickets, ron(d.stakesBani), ron(d.payoutsBani), ron(d.stakesBani - d.payoutsBani), ron(p?.depositsBani ?? 0), ron(p?.withdrawalsBani ?? 0)];
+      }),
     ]);
   };
 
@@ -64,6 +69,22 @@ export default function ReportsPage() {
     { key: 'status', header: t('exposure.status'), cell: (r) => <EventStatusBadge status={r.status} /> },
     { key: 'tickets', header: t('exposure.tickets'), align: 'right', cell: (r) => r.tickets },
     { key: 'payout', header: t('exposure.potential'), align: 'right', cell: (r) => <span className="font-display text-base font-bold text-accent">{f.ron(r.potentialPayoutBani)}</span> },
+  ];
+
+  const methodCols: Column<AdminReport['payments']['byMethod'][number]>[] = [
+    {
+      key: 'method',
+      header: t('payments.method'),
+      cell: (r) => (
+        <div>
+          <p className="font-semibold">{t(`payments.types.${r.type}`)}</p>
+          <p className="text-xs text-ink-faint">
+            {tm(r.method)} · {t('payments.requestsCount', { count: r.requests })}
+          </p>
+        </div>
+      ),
+    },
+    { key: 'amount', header: t('payments.amount'), align: 'right', cell: (r) => <span className="font-display text-base font-bold">{f.ron(r.amountBani)}</span> },
   ];
 
   return (
@@ -130,6 +151,65 @@ export default function ReportsPage() {
               )}
             </Panel>
           </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Panel title={t('betTypes.title')}>
+              <DetailList
+                rows={data.byBetType.map((b) => ({
+                  label: t(`betTypes.${b.type}`),
+                  value: (
+                    <span data-testid={`bet-type-${b.type}`}>
+                      {t('kpi.tickets', { count: b.tickets })} · <span className="font-display font-bold">{f.ron(b.stakesBani)}</span>
+                    </span>
+                  ),
+                }))}
+              />
+            </Panel>
+            <Panel title={t('payoutKinds.title')}>
+              <DetailList
+                rows={[
+                  { label: t('payoutKinds.wins'), value: f.ron(data.payouts.winsBani) },
+                  { label: t('payoutKinds.cashOuts', { count: data.payouts.cashOuts }), value: f.ron(data.payouts.cashOutsBani) },
+                  { label: t('payoutKinds.refunds'), value: f.ron(data.payouts.refundsBani) },
+                ]}
+              />
+            </Panel>
+          </div>
+
+          <section data-testid="report-payments">
+            <h2 className="mb-3 font-display text-lg font-bold uppercase italic tracking-wide">{t('payments.title')}</h2>
+            <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard
+                label={t('payments.waiting')}
+                value={f.num(data.payments.queue.deposits + data.payments.queue.withdrawals)}
+                icon={Hourglass}
+                tone={data.payments.queue.deposits + data.payments.queue.withdrawals > 0 ? 'gold' : 'neutral'}
+                hint={t('payments.waitingHint', { deposits: data.payments.queue.deposits, withdrawals: data.payments.queue.withdrawals })}
+              />
+              <StatCard label={t('payments.pendingAmount')} value={f.ron(data.payments.queue.pendingBani)} icon={Banknote} />
+              <StatCard
+                label={t('payments.oldest')}
+                value={data.payments.queue.oldestAt ? f.ago(data.payments.queue.oldestAt) : '—'}
+                icon={Clock}
+                tone={data.payments.queue.oldestAt && Date.now() - new Date(data.payments.queue.oldestAt).getTime() > 86_400_000 ? 'danger' : 'neutral'}
+                hint={t('payments.oldestHint')}
+              />
+              <StatCard
+                label={t('payments.avgDecision')}
+                value={data.payments.avgDecisionMinutes === null ? '—' : t('payments.minutes', { count: data.payments.avgDecisionMinutes })}
+                icon={Clock}
+                hint={t('payments.rejected', { count: data.payments.rejected })}
+              />
+            </div>
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+              <Panel title={t('payments.trend')}>
+                <PaymentsTrendChart data={data.payments.daily} height={260} />
+              </Panel>
+              <Panel title={t('payments.byMethod')} bodyClassName="p-0">
+                <DataTable compact testId="payments-by-method" columns={methodCols} rows={data.payments.byMethod} rowKey={(r) => `${r.type}-${r.method}`} empty={t('payments.empty')} />
+              </Panel>
+            </div>
+          </section>
 
           <section>
             <div className="mb-3 flex items-center justify-between gap-2">

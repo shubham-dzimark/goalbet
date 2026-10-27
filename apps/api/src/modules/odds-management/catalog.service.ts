@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { type MarketType, type Prisma } from '@goalbet/db';
 import {
   type BoostDto,
+  type BuilderQuoteDto,
   type CountryGroupDto,
   type EventDetailDto,
   type EventSummaryDto,
@@ -9,9 +10,15 @@ import {
 } from '@goalbet/shared';
 import { DomainError } from '../../common/errors.js';
 import { PrismaService } from '../../common/prisma.service.js';
-import { boostActive, marketInclude, toCompetition, toDetail, toMarket, toSelection, toSummary } from './catalog.mappers.js';
+import { BuilderPricingService } from './builder-pricing.service.js';
+import { boostActive, marketInclude, selectionBlock, toCompetition, toDetail, toMarket, toSelection, toSummary } from './catalog.mappers.js';
 
 const HOUR = 3600_000;
+
+const bettableInclude = {
+  boost: true,
+  market: { include: { event: { include: { competition: { select: { enabled: true, active: true } } } } } },
+} satisfies Prisma.SelectionInclude;
 
 /**
  * Read side of OddsManagement for the player site (F1.1, F1.5, F1.6, F1.9). Only enabled
@@ -21,7 +28,10 @@ const HOUR = 3600_000;
 export class CatalogService {
   private disabledTypes: { at: number; value: MarketType[] } | null = null;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly builder: BuilderPricingService,
+  ) {}
 
   private async disabledMarketTypes(): Promise<MarketType[]> {
     if (this.disabledTypes && Date.now() - this.disabledTypes.at < 5_000) return this.disabledTypes.value;
@@ -198,30 +208,35 @@ export class CatalogService {
   /** Bet slip refresh: current price and availability of the selections the player picked. */
   async selections(ids: string[]) {
     const disabled = new Set(await this.disabledMarketTypes());
-    const rows = await this.prisma.selection.findMany({
-      where: { id: { in: ids.slice(0, 50) } },
-      include: { boost: true, market: { include: { event: { include: { competition: { select: { enabled: true, active: true } } } } } } },
-    });
+    const rows = await this.prisma.selection.findMany({ where: { id: { in: ids.slice(0, 50) } }, include: bettableInclude });
     const now = Date.now();
-    return rows.map((s) => {
-      const { market } = s;
-      const { event } = market;
-      const eventOpen =
-        event.competition.enabled && event.competition.active && (event.status === 'LIVE' || (event.status === 'SCHEDULED' && event.startTime.getTime() > now));
-      return {
-        id: s.id,
-        oddsMilli: toSelection(s).oddsMilli,
-        available:
-          eventOpen &&
-          !event.suspended &&
-          !event.feedSuspended &&
-          market.enabled &&
-          market.status === 'OPEN' &&
-          !disabled.has(market.type) &&
-          s.active,
-        live: event.status === 'LIVE',
-      };
-    });
+    return rows.map((s) => ({
+      id: s.id,
+      oddsMilli: toSelection(s).oddsMilli,
+      available: selectionBlock(s, disabled, now) === null,
+      live: s.market.event.status === 'LIVE',
+    }));
+  }
+
+  /** F1.11 live price of a Bet Builder combination for the slip (never throws for a bad combination). */
+  async builderQuote(eventId: string, ids: string[]): Promise<BuilderQuoteDto> {
+    const disabled = new Set<string>(await this.disabledMarketTypes());
+    const rows = await this.prisma.selection.findMany({ where: { id: { in: ids.slice(0, 12) } }, include: bettableInclude });
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    const base = { eventId, selectionIds: ids };
+    const now = Date.now();
+    for (const id of ids) {
+      const s = byId.get(id);
+      if (!s) return { ...base, available: false, reason: 'SELECTION_NOT_FOUND', selectionId: id };
+      if (s.market.eventId !== eventId) return { ...base, available: false, reason: 'ONE_MATCH', selectionId: id };
+      const block = selectionBlock(s, disabled, now);
+      if (block) return { ...base, available: false, reason: block, selectionId: id };
+    }
+    const selections = ids.map((id) => byId.get(id)!);
+    const reason = this.builder.check(eventId, selections, now);
+    if (reason) return { ...base, available: false, reason };
+    const price = await this.builder.price(eventId, selections, now);
+    return { ...base, available: true, oddsMilli: price.oddsMilli, source: price.source };
   }
 }
 

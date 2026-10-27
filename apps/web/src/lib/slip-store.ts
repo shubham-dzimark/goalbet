@@ -27,6 +27,7 @@ interface SlipState {
   modeChosen: boolean;
   singleStakes: Record<string, string>;
   accaStake: string;
+  builderStake: string;
   oddsPref: OddsPref;
   sheetOpen: boolean;
   toggle: (item: Omit<SlipItem, 'prevOddsMilli' | 'available'>) => void;
@@ -36,6 +37,7 @@ interface SlipState {
   setMode: (mode: SlipMode) => void;
   setSingleStake: (selectionId: string, value: string) => void;
   setAccaStake: (value: string) => void;
+  setBuilderStake: (value: string) => void;
   setOddsPref: (p: OddsPref) => void;
   setSheetOpen: (open: boolean) => void;
   /** Merge fresh prices/availability from the backend. */
@@ -62,6 +64,7 @@ export const useSlip = create<SlipState>()(
       modeChosen: false,
       singleStakes: {},
       accaStake: '10',
+      builderStake: '10',
       oddsPref: 'HIGHER',
       sheetOpen: false,
       toggle: (item) =>
@@ -86,6 +89,7 @@ export const useSlip = create<SlipState>()(
       setMode: (mode) => set({ mode, modeChosen: true }),
       setSingleStake: (id, value) => set((s) => ({ singleStakes: { ...s.singleStakes, [id]: value } })),
       setAccaStake: (accaStake) => set({ accaStake }),
+      setBuilderStake: (builderStake) => set({ builderStake }),
       setOddsPref: (oddsPref) => set({ oddsPref }),
       setSheetOpen: (sheetOpen) => set({ sheetOpen }),
       applyUpdates: (updates) =>
@@ -120,6 +124,7 @@ export const useSlip = create<SlipState>()(
         modeChosen: s.modeChosen,
         singleStakes: s.singleStakes,
         accaStake: s.accaStake,
+        builderStake: s.builderStake,
         oddsPref: s.oddsPref,
       }),
     },

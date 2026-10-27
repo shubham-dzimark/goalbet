@@ -99,7 +99,10 @@
     "stakes": "Stakes",
     "payouts": "Payouts",
     "barsLabel": "Tickets by status",
-    "tickets": "Tickets"
+    "tickets": "Tickets",
+    "paymentsLabel": "Deposits and withdrawals paid per day",
+    "deposits": "Deposits",
+    "withdrawals": "Withdrawals"
   },
   "users": {
     "kicker": "User management",
@@ -178,7 +181,10 @@
         "DAILY_STAKE": "Daily stake",
         "WEEKLY_STAKE": "Weekly stake",
         "MONTHLY_STAKE": "Monthly stake",
-        "MAX_STAKE_PER_BET": "Max stake per bet"
+        "MAX_STAKE_PER_BET": "Max stake per bet",
+        "DAILY_DEPOSIT": "Daily deposit",
+        "WEEKLY_DEPOSIT": "Weekly deposit",
+        "MONTHLY_DEPOSIT": "Monthly deposit"
       },
       "source": {
         "USER": "Set by the player",
@@ -548,7 +554,40 @@
       "potential": "Potential payout",
       "empty": "No open tickets."
     },
-    "transactionLog": "Transaction log"
+    "transactionLog": "Transaction log",
+    "betTypes": {
+      "title": "Bets by type",
+      "SINGLE": "Singles",
+      "ACCA": "Accumulators",
+      "BET_BUILDER": "Bet Builders"
+    },
+    "payoutKinds": {
+      "title": "Payouts by kind",
+      "wins": "Winnings",
+      "cashOuts": "Cash outs ({count})",
+      "refunds": "Refunds (void bets)"
+    },
+    "payments": {
+      "title": "Deposits & withdrawals",
+      "trend": "Paid per day",
+      "byMethod": "Paid by method",
+      "method": "Method",
+      "amount": "Amount",
+      "types": {
+        "DEPOSIT": "Deposit",
+        "WITHDRAWAL": "Withdrawal"
+      },
+      "empty": "Nothing paid in this period.",
+      "waiting": "Waiting for Finance",
+      "waitingHint": "{deposits} deposits · {withdrawals} withdrawals",
+      "pendingAmount": "Amount waiting",
+      "oldest": "Oldest waiting",
+      "oldestHint": "Requested",
+      "avgDecision": "Average decision time",
+      "minutes": "{count, plural, one {# min} other {# min}}",
+      "rejected": "{count, plural, one {# rejected} other {# rejected}} in this period",
+      "requestsCount": "{count, plural, one {# request} other {# requests}}"
+    }
   },
   "audit": {
     "kicker": "Audit logs",

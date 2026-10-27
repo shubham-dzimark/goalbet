@@ -99,7 +99,10 @@
     "stakes": "Mize",
     "payouts": "Plăți",
     "barsLabel": "Bilete după stare",
-    "tickets": "Bilete"
+    "tickets": "Bilete",
+    "paymentsLabel": "Depuneri și retrageri plătite pe zi",
+    "deposits": "Depuneri",
+    "withdrawals": "Retrageri"
   },
   "users": {
     "kicker": "Gestionare utilizatori",
@@ -178,7 +181,10 @@
         "DAILY_STAKE": "Miză zilnică",
         "WEEKLY_STAKE": "Miză săptămânală",
         "MONTHLY_STAKE": "Miză lunară",
-        "MAX_STAKE_PER_BET": "Miză maximă pe pariu"
+        "MAX_STAKE_PER_BET": "Miză maximă pe pariu",
+        "DAILY_DEPOSIT": "Depunere zilnică",
+        "WEEKLY_DEPOSIT": "Depunere săptămânală",
+        "MONTHLY_DEPOSIT": "Depunere lunară"
       },
       "source": {
         "USER": "Setată de jucător",
@@ -548,7 +554,40 @@
       "potential": "Plată posibilă",
       "empty": "Niciun bilet deschis."
     },
-    "transactionLog": "Jurnal tranzacții"
+    "transactionLog": "Jurnal tranzacții",
+    "betTypes": {
+      "title": "Pariuri pe tip",
+      "SINGLE": "Simple",
+      "ACCA": "Combinate",
+      "BET_BUILDER": "Bet Builder"
+    },
+    "payoutKinds": {
+      "title": "Plăți pe tip",
+      "wins": "Câștiguri",
+      "cashOuts": "Cash out ({count})",
+      "refunds": "Rambursări (pariuri anulate)"
+    },
+    "payments": {
+      "title": "Depuneri și retrageri",
+      "trend": "Plătite pe zi",
+      "byMethod": "Plătite pe metodă",
+      "method": "Metodă",
+      "amount": "Sumă",
+      "types": {
+        "DEPOSIT": "Depunere",
+        "WITHDRAWAL": "Retragere"
+      },
+      "empty": "Nimic plătit în această perioadă.",
+      "waiting": "În așteptare la Finanțe",
+      "waitingHint": "{deposits} depuneri · {withdrawals} retrageri",
+      "pendingAmount": "Sumă în așteptare",
+      "oldest": "Cea mai veche cerere",
+      "oldestHint": "Solicitată",
+      "avgDecision": "Timp mediu de decizie",
+      "minutes": "{count, plural, one {# min} other {# min}}",
+      "rejected": "{count, plural, one {# respinsă} other {# respinse}} în această perioadă",
+      "requestsCount": "{count, plural, one {# cerere} other {# cereri}}"
+    }
   },
   "audit": {
     "kicker": "Jurnal de audit",

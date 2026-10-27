@@ -34,6 +34,7 @@ export function DataTable<T>({
   onLoadMore,
   testId,
   className,
+  compact = false,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -46,12 +47,14 @@ export function DataTable<T>({
   onLoadMore?: () => void;
   testId?: string;
   className?: string;
+  /** small tables in a side panel: no minimum width */
+  compact?: boolean;
 }) {
   const t = useTranslations('table');
   return (
     <div className={cn('glass overflow-hidden rounded-[var(--radius-card)]', className)} data-testid={testId}>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-sm">
+        <table className={cn('w-full border-collapse text-sm', !compact && 'min-w-[640px]')}>
           <thead>
             <tr className="border-b border-line bg-tint/[0.03]">
               {columns.map((c) => (
