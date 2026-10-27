@@ -10,11 +10,13 @@ import {
   adminMarketTypeUpdateSchema,
   adminMarketUpdateSchema,
   adminSettingUpdateSchema,
+  adminSettleEventSchema,
 } from '@goalbet/shared';
 import { AdminAuthGuard, type AuthedAdmin, CurrentAdmin, Roles } from '../../common/auth/guards.js';
 import { DomainError } from '../../common/errors.js';
 import { ReqMeta, type RequestMeta } from '../../common/request-meta.js';
 import { ZBody, ZQuery } from '../../common/zod.js';
+import { SettlementService } from '../settlement-engine/settlement.service.js';
 import { actorOf } from './admin-actor.js';
 import { AdminSportsbookService } from './admin-sportsbook.service.js';
 
@@ -27,7 +29,10 @@ import { AdminSportsbookService } from './admin-sportsbook.service.js';
 @UseGuards(AdminAuthGuard)
 @Controller('admin/sportsbook')
 export class AdminSportsbookController {
-  constructor(private readonly sportsbook: AdminSportsbookService) {}
+  constructor(
+    private readonly sportsbook: AdminSportsbookService,
+    private readonly settlement: SettlementService,
+  ) {}
 
   @Get('competitions')
   competitions() {
@@ -75,6 +80,19 @@ export class AdminSportsbookController {
     @ReqMeta() meta: RequestMeta,
   ) {
     return this.sportsbook.suspendEvent(actorOf(admin, meta), id, body.suspended, body.reason);
+  }
+
+  /** F2.9 manual settlement with an entered result (when the provider has none). */
+  @Post('events/:id/settle')
+  @Roles('OPERATOR')
+  @HttpCode(200)
+  settleEvent(
+    @CurrentAdmin() admin: AuthedAdmin,
+    @Param('id', ParseUUIDPipe) id: string,
+    @ZBody(adminSettleEventSchema) body: z.output<typeof adminSettleEventSchema>,
+    @ReqMeta() meta: RequestMeta,
+  ) {
+    return this.settlement.settleManually(actorOf(admin, meta), id, body);
   }
 
   @Get('events/:id/markets')

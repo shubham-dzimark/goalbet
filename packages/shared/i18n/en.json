@@ -47,7 +47,9 @@
     "PAYMENT_AMOUNT_LIMIT": "The amount is outside the allowed limits.",
     "WITHDRAWAL_PENDING": "You already have a withdrawal waiting. Cancel it or wait for it to be processed.",
     "TOO_MANY_PENDING": "You have too many deposit requests waiting.",
-    "REQUEST_NOT_PENDING": "This request has already been processed."
+    "REQUEST_NOT_PENDING": "This request has already been processed.",
+    "EVENT_ALREADY_SETTLED": "This match has already been settled.",
+    "SETTLEMENT_NOT_READY": "This match has not kicked off yet, so it cannot be settled."
   },
   "validation": {
     "required": "This field is required.",
@@ -65,7 +67,8 @@
     "amount": "Enter a valid amount.",
     "reason": "Enter a reason (at least 3 characters).",
     "iban": "Enter a valid IBAN (e.g. RO49 AAAA 1B31 0075 9384 0000).",
-    "holder": "Enter the account holder’s full name."
+    "holder": "Enter the account holder’s full name.",
+    "halfTime": "The half-time score cannot be higher than the full-time score."
   },
   "markets": {
     "MATCH_RESULT": "Final result (1X2)",

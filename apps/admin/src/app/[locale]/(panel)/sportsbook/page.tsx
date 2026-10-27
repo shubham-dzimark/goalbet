@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Lock, Pause, Play, Star } from 'lucide-react';
+import { Flag, Lock, Pause, Play, Star } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import {
@@ -10,6 +10,7 @@ import {
   type AdminMarketRow,
   type AdminMarketTypeRow,
   type AdminSettings,
+  type AdminSettlementResult,
   type SettingKey,
 } from '@goalbet/shared';
 import { Badge, Button, Dialog, Input, SidePanelContent, Skeleton, Tabs, TabsContent, TabsList, TabsTrigger, cn } from '@goalbet/ui';
@@ -170,8 +171,9 @@ function Events() {
   const [suspendedOnly, setSuspendedOnly] = useState(false);
   const [target, setTarget] = useState<AdminEventRow | null>(null);
   const [open, setOpen] = useState<AdminEventRow | null>(null);
+  const [settling, setSettling] = useState<AdminEventRow | null>(null);
   const { data: comps } = useQuery({ queryKey: ['competitions'], queryFn: () => adminApi<AdminCompetitionRow[]>('/admin/sportsbook/competitions') });
-  const list = usePaged<AdminEventRow>(['events'], '/admin/sportsbook/events', { q, status, competitionId, suspendedOnly: suspendedOnly ? 'true' : undefined }, { refetchInterval: 15_000 });
+  const list = usePaged<AdminEventRow>(['events'], '/admin/sportsbook/events', { q, status: status === 'AWAITING' ? undefined : status, awaitingSettlement: status === 'AWAITING' ? 'true' : undefined, competitionId, suspendedOnly: suspendedOnly ? 'true' : undefined }, { refetchInterval: 15_000 });
 
   const columns: Column<AdminEventRow>[] = [
     {
@@ -212,6 +214,31 @@ function Events() {
         </div>
       ),
     },
+    {
+      key: 'settlement',
+      header: t('cols.settlement'),
+      align: 'right',
+      cell: (e) =>
+        e.settledAt ? (
+          <Badge tone="success">{t('settled')}</Badge>
+        ) : new Date(e.startTime).getTime() < Date.now() || e.status === 'FINISHED' || e.status === 'CANCELLED' ? (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!can('OPERATOR')}
+            onClick={(ev) => {
+              ev.stopPropagation();
+              setSettling(e);
+            }}
+            data-testid={`event-settle-${e.id}`}
+          >
+            <Flag className="size-3.5" aria-hidden="true" />
+            {t('settle')}
+          </Button>
+        ) : (
+          <span className="text-xs text-ink-faint">—</span>
+        ),
+    },
   ];
 
   return (
@@ -234,6 +261,7 @@ function Events() {
             { value: 'SCHEDULED', label: t('statuses.SCHEDULED') },
             { value: 'FINISHED', label: t('statuses.FINISHED') },
             { value: 'CANCELLED', label: t('statuses.CANCELLED') },
+            { value: 'AWAITING', label: t('awaiting') },
           ]}
         />
         <label className="flex items-center gap-2 text-sm text-ink-muted">
@@ -267,7 +295,98 @@ function Events() {
         }}
       />
       <EventMarketsPanel event={open} onClose={() => setOpen(null)} />
+      <SettleDialog event={settling} onClose={() => setSettling(null)} />
     </>
+  );
+}
+
+const SCORE_FIELDS = ['htHome', 'htAway', 'ftHome', 'ftAway', 'corners', 'cards'] as const;
+type ScoreField = (typeof SCORE_FIELDS)[number];
+
+/**
+ * F2.9 manual settlement: the operator enters the final result (or calls the match off) when the
+ * provider has none. Every bet on the match is graded and paid at once; player markets are void.
+ */
+function SettleDialog({ event, onClose }: { event: AdminEventRow | null; onClose: () => void }) {
+  const t = useTranslations('sportsbook.settle');
+  const f = useFmt();
+  const qc = useQueryClient();
+  const [cancelled, setCancelled] = useState(false);
+  const [score, setScore] = useState<Record<ScoreField, string>>({ htHome: '0', htAway: '0', ftHome: '0', ftAway: '0', corners: '0', cards: '0' });
+  useEffect(() => {
+    if (!event) return;
+    setCancelled(event.status === 'CANCELLED');
+    setScore({
+      htHome: String(event.htHomeScore ?? 0),
+      htAway: String(event.htAwayScore ?? 0),
+      ftHome: String(event.homeScore),
+      ftAway: String(event.awayScore),
+      corners: String(event.corners),
+      cards: String(event.cards),
+    });
+  }, [event]);
+  const num = (k: ScoreField) => Math.max(0, Math.min(99, Number.parseInt(score[k], 10) || 0));
+  const set = (k: ScoreField) => (e: { target: { value: string } }) => setScore((s) => ({ ...s, [k]: e.target.value }));
+
+  return (
+    <ReasonDialog
+      open={!!event}
+      onOpenChange={(o) => !o && onClose()}
+      title={event ? t('title', { match: `${event.homeTeam} – ${event.awayTeam}` }) : ''}
+      description={t(cancelled ? 'cancelHelp' : 'help', { tickets: event?.openTickets ?? 0 })}
+      confirmLabel={t(cancelled ? 'confirmCancel' : 'confirm')}
+      tone={cancelled ? 'danger' : 'primary'}
+      onConfirm={async (reason) => {
+        const res = await adminApi<AdminSettlementResult>(`/admin/sportsbook/events/${event!.id}/settle`, {
+          method: 'POST',
+          body: { cancelled, reason, ...Object.fromEntries(SCORE_FIELDS.map((k) => [k, num(k)])) },
+        });
+        toast.success(t('done', { tickets: res.ticketsSettled, paid: f.ron(res.paidBani) }));
+        await qc.invalidateQueries({ queryKey: ['events'] });
+        await qc.invalidateQueries({ queryKey: ['dashboard'] });
+      }}
+    >
+      <label className="flex items-center gap-2 text-sm font-medium">
+        <Toggle checked={cancelled} onChange={setCancelled} label={t('cancelled')} tone="danger" testId="settle-cancelled" />
+        {t('cancelled')}
+      </label>
+      {cancelled ? null : (
+        <div className="grid grid-cols-[auto_1fr_1fr] items-center gap-x-3 gap-y-2 text-sm" data-testid="settle-score">
+          <span />
+          <span className="truncate text-xs font-semibold text-ink-muted">{event?.homeTeam}</span>
+          <span className="truncate text-xs font-semibold text-ink-muted">{event?.awayTeam}</span>
+          {(['ht', 'ft'] as const).map((p) => (
+            <div key={p} className="contents">
+              <span className="text-xs font-bold uppercase text-ink-faint">{t(p)}</span>
+              {(['Home', 'Away'] as const).map((side) => {
+                const k: ScoreField = `${p}${side}`;
+                return (
+                  <Input
+                    key={k}
+                    type="number"
+                    min={0}
+                    max={99}
+                    inputMode="numeric"
+                    value={score[k]}
+                    onChange={set(k)}
+                    aria-label={`${t(p)} – ${side === 'Home' ? event?.homeTeam : event?.awayTeam}`}
+                    data-testid={`settle-${k}`}
+                  />
+                );
+              })}
+            </div>
+          ))}
+          <span className="text-xs font-bold uppercase text-ink-faint">{t('stats')}</span>
+          {(['corners', 'cards'] as const).map((k) => (
+            <label key={k} className="flex items-center gap-2">
+              <Input type="number" min={0} max={99} inputMode="numeric" value={score[k]} onChange={set(k)} className="w-20" data-testid={`settle-${k}`} />
+              <span className="text-xs text-ink-muted">{t(k)}</span>
+            </label>
+          ))}
+        </div>
+      )}
+      {!cancelled && (num('htHome') > num('ftHome') || num('htAway') > num('ftAway')) ? <p className="text-xs text-danger">{t('halfTimeError')}</p> : null}
+    </ReasonDialog>
   );
 }
 

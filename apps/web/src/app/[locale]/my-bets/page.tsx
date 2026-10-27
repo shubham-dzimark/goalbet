@@ -6,13 +6,14 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { type Page, type TicketDto } from '@goalbet/shared';
 import { Button, EmptyState, Skeleton } from '@goalbet/ui';
+import { useCashOutOffers } from '@/components/bets/cash-out';
 import { TicketCard } from '@/components/bets/ticket-card';
 import { Reveal } from '@/components/fx/reveal';
 import { Segmented } from '@/components/fx/segmented';
 import { PageTitle } from '@/components/sport/event-list';
 import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/api';
-import { usePoll } from '@/lib/realtime';
+import { usePoll, useWatch } from '@/lib/realtime';
 import { useRequireAuth } from '@/lib/use-require-auth';
 
 type Tab = 'active' | 'settled' | 'cashout';
@@ -34,6 +35,9 @@ export default function MyBetsPage() {
     refetchInterval: tab === 'active' ? poll : false,
   });
   const tickets = list.data?.pages.flatMap((p) => p.items) ?? [];
+  const offers = useCashOutOffers(authed && tab === 'active');
+  // live scores and odds of the matches on open tickets (also re-prices the cash-out offers)
+  useWatch({ eventIds: tab === 'active' ? [...new Set(tickets.flatMap((tk) => tk.legs.map((l) => l.event.id)))].sort() : [] });
 
   return (
     <div>
@@ -71,7 +75,7 @@ export default function MyBetsPage() {
         <>
           <Reveal className="grid items-start gap-4 xl:grid-cols-2" deps={[tab, tickets.length]}>
             {tickets.map((ticket) => (
-              <TicketCard key={ticket.id} ticket={ticket} />
+              <TicketCard key={ticket.id} ticket={ticket} cashOut={offers.data?.get(ticket.id)} />
             ))}
           </Reveal>
           {list.hasNextPage ? (

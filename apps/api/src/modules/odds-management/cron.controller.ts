@@ -1,15 +1,11 @@
 import { Controller, Get, Headers, Inject } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
-import { timingSafeEqual } from 'node:crypto';
-import { DomainError } from '../../common/errors.js';
+import { assertCron } from '../../common/cron-auth.js';
 import { ENV, type Env } from '../../config/env.js';
 import { FreshnessService } from './freshness.service.js';
 
-/**
- * Scheduled refresh for serverless hosts (Vercel Cron sends `Authorization: Bearer $CRON_SECRET`).
- * Hidden unless JOBS_MODE=on-request and CRON_SECRET is set.
- */
+/** Scheduled refresh for serverless hosts (see assertCron). */
 @ApiExcludeController()
 @SkipThrottle()
 @Controller('cron')
@@ -21,11 +17,7 @@ export class CronController {
 
   @Get('refresh')
   async refresh(@Headers('authorization') auth?: string) {
-    const secret = this.env.CRON_SECRET;
-    if (!this.freshness.enabled || !secret) throw new DomainError('NOT_FOUND');
-    const expected = Buffer.from(`Bearer ${secret}`);
-    const given = Buffer.from(auth ?? '');
-    if (given.length !== expected.length || !timingSafeEqual(given, expected)) throw new DomainError('UNAUTHORIZED');
+    assertCron(this.env, auth);
     return this.freshness.runAll();
   }
 }

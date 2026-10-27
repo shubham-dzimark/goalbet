@@ -25,6 +25,10 @@ export const placeBetSchema = z.object({
 });
 export type PlaceBetInput = z.input<typeof placeBetSchema>;
 
+/** F2.5 accept a cash out: the amount the player saw (re-checked against the 1 % tolerance, F2.6). */
+export const cashOutAcceptSchema = z.object({ offerBani: z.number().int().positive({ message: 'validation.amount' }) });
+export type CashOutAcceptInput = z.input<typeof cashOutAcceptSchema>;
+
 export const ticketListQuerySchema = z.object({
   tab: z.enum(['active', 'settled', 'cashout']).default('active'),
   cursor: z.string().optional(),

@@ -173,7 +173,21 @@
     "loadMore": "Încarcă mai multe",
     "back": "Înapoi la pariuri",
     "kicker": "Biletele tale",
-    "browse": "Vezi meciurile"
+    "browse": "Vezi meciurile",
+    "cashOutBar": {
+      "button": "Cash out {amount}",
+      "question": "Încasezi {amount} acum? Miza a fost {stake}.",
+      "changed": "Oferta s-a schimbat la {amount}. Confirmă din nou pentru a o accepta.",
+      "confirm": "Confirmă {amount}",
+      "cancel": "Păstrează biletul",
+      "unavailable": "Cash out indisponibil",
+      "reason": {
+        "MARKET_SUSPENDED": "pariurile sunt suspendate acum",
+        "LEG_LOST": "o selecție a pierdut",
+        "NO_PRICE": "nu există cotă live pentru o selecție",
+        "NO_VALUE": "nu mai are valoare"
+      }
+    }
   },
   "wallet": {
     "title": "Portofel",

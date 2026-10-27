@@ -1,10 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { type Prisma, type Tx, type WalletTxType } from '@goalbet/db';
-import { type WalletMessage, type WalletTransactionDto } from '@goalbet/shared';
+import { type ReconciliationReport, type WalletMessage, type WalletTransactionDto } from '@goalbet/shared';
 import { type Actor, AuditService } from '../../common/audit.service.js';
 import { DomainError } from '../../common/errors.js';
 import { PrismaService } from '../../common/prisma.service.js';
 import { Channels, RedisService } from '../../common/redis.service.js';
+
+const RECONCILE_KEY = 'reconcile:last';
 
 export interface LedgerEntry {
   userId: string;
@@ -155,7 +157,12 @@ export class WalletService {
    * Ledger reconciliation (rule 2): every wallet balance must equal the sum of its transactions,
    * and the last transaction's balanceAfter must equal the balance. Mismatches are logged + audited.
    */
-  async reconcile() {
+  /**
+   * Rule 2 money check (hourly job): every balance equals the sum of its ledger, and the held
+   * amount equals the player's pending withdrawal requests. Mismatches are logged and audited;
+   * the last report is kept in Redis for the admin dashboard.
+   */
+  async reconcile(): Promise<ReconciliationReport & { mismatches: number }> {
     const mismatches = await this.prisma.$queryRaw<{ walletId: string; balanceBani: number; ledgerBani: bigint; lastAfter: number | null }[]>`
       SELECT w.id AS "walletId", w."balanceBani",
              COALESCE(SUM(t."amountBani"), 0) AS "ledgerBani",
@@ -164,24 +171,50 @@ export class WalletService {
       FROM "Wallet" w LEFT JOIN "WalletTransaction" t ON t."walletId" = w.id
       GROUP BY w.id
       HAVING w."balanceBani" <> COALESCE(SUM(t."amountBani"), 0)`;
+    const holds = await this.prisma.$queryRaw<{ walletId: string; heldBani: number; pendingBani: bigint }[]>`
+      SELECT w.id AS "walletId", w."heldBani",
+             COALESCE((SELECT SUM(p."amountBani") FROM "PaymentRequest" p
+                       WHERE p."userId" = w."userId" AND p.type = 'WITHDRAWAL' AND p.status = 'PENDING'), 0) AS "pendingBani"
+      FROM "Wallet" w
+      WHERE w."heldBani" <> COALESCE((SELECT SUM(p."amountBani") FROM "PaymentRequest" p
+                       WHERE p."userId" = w."userId" AND p.type = 'WITHDRAWAL' AND p.status = 'PENDING'), 0)`;
     const wallets = await this.prisma.wallet.count();
+    const actor: Actor = { type: 'SYSTEM', label: 'reconciliation' };
     for (const m of mismatches) {
       this.logger.error({ reconciliation: 'MISMATCH', ...m, ledgerBani: Number(m.ledgerBani) });
       await this.audit.log({
         category: 'SYSTEM',
         action: 'LEDGER_MISMATCH',
-        actor: { type: 'SYSTEM', label: 'reconciliation' },
+        actor,
         entityType: 'Wallet',
         entityId: m.walletId,
         meta: { balanceBani: m.balanceBani, ledgerBani: Number(m.ledgerBani), lastBalanceAfter: m.lastAfter },
       });
     }
-    await this.audit.log({
-      category: 'SYSTEM',
-      action: 'LEDGER_RECONCILED',
-      actor: { type: 'SYSTEM', label: 'reconciliation' },
-      meta: { wallets, mismatches: mismatches.length },
-    });
-    return { wallets, mismatches: mismatches.length };
+    for (const h of holds) {
+      this.logger.error({ reconciliation: 'HOLD_MISMATCH', ...h, pendingBani: Number(h.pendingBani) });
+      await this.audit.log({
+        category: 'SYSTEM',
+        action: 'HOLD_MISMATCH',
+        actor,
+        entityType: 'Wallet',
+        entityId: h.walletId,
+        meta: { heldBani: h.heldBani, pendingWithdrawalsBani: Number(h.pendingBani) },
+      });
+    }
+    const report: ReconciliationReport = {
+      ranAt: new Date().toISOString(),
+      wallets,
+      ledgerMismatches: mismatches.length,
+      holdMismatches: holds.length,
+    };
+    await this.redis.client.set(RECONCILE_KEY, JSON.stringify(report));
+    await this.audit.log({ category: 'SYSTEM', action: 'LEDGER_RECONCILED', actor, meta: { ...report } });
+    return { ...report, mismatches: mismatches.length };
+  }
+
+  async lastReconciliation(): Promise<ReconciliationReport | null> {
+    const raw = await this.redis.client.get(RECONCILE_KEY);
+    return raw ? (JSON.parse(raw) as ReconciliationReport) : null;
   }
 }

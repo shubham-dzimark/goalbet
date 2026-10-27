@@ -18,3 +18,5 @@ export { BoostService } from './modules/odds-management/boost.service.js';
 export { SyncTasksService, type SyncTask } from './modules/odds-management/sync-tasks.service.js';
 export { WalletService } from './modules/wallet-ledger/wallet.service.js';
 export { WalletLedgerModule } from './modules/wallet-ledger/wallet-ledger.module.js';
+export { SettlementEngineModule } from './modules/settlement-engine/settlement-engine.module.js';
+export { SettlementService } from './modules/settlement-engine/settlement.service.js';

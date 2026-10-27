@@ -2,8 +2,9 @@
 
 import { CheckCircle2, CircleDashed, MinusCircle, XCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type LegStatus, type TicketDto, type TicketStatus } from '@goalbet/shared';
+import { type CashOutQuoteDto, type LegStatus, type TicketDto, type TicketStatus } from '@goalbet/shared';
 import { cn } from '@goalbet/ui';
+import { CashOutBar } from '@/components/bets/cash-out';
 import { TeamCrest } from '@/components/fx/team-crest';
 import { Link } from '@/i18n/navigation';
 import { useFormat } from '@/lib/format';
@@ -28,7 +29,7 @@ function LegIcon({ status }: { status: LegStatus }) {
 }
 
 /** F1.7 ticket stub: every leg with odds and status, stake, odds, potential / actual win. */
-export function TicketCard({ ticket, link = true }: { ticket: TicketDto; link?: boolean }) {
+export function TicketCard({ ticket, link = true, cashOut }: { ticket: TicketDto; link?: boolean; cashOut?: CashOutQuoteDto | undefined }) {
   const t = useTranslations();
   const f = useFormat();
   const { marketTitle, outcomeLong } = useMarketText();
@@ -127,6 +128,7 @@ export function TicketCard({ ticket, link = true }: { ticket: TicketDto; link?: 
           </dd>
         </div>
       </dl>
+      {settled ? null : <CashOutBar ticket={ticket} quote={cashOut} />}
       {link ? (
         <Link href={`/my-bets/${ticket.id}`} className="relative block border-t border-line px-4 py-2.5 text-center text-xs font-bold uppercase tracking-wider text-ink-muted transition-colors hover:bg-tint/[0.03] hover:text-brand">
           {t('bets.details')}
