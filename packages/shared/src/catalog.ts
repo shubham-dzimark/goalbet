@@ -146,6 +146,17 @@ export interface TicketDto {
   legs: TicketLegDto[];
 }
 
+/** F1.11 price of a Bet Builder combination on one match (GET /catalog/builder). */
+export type BuilderQuoteDto = { eventId: string; selectionIds: string[] } & (
+  | { available: true; oddsMilli: number; source: 'PROVIDER' | 'MODEL' }
+  | {
+      available: false;
+      /** BuilderError, ONE_MATCH, or the first selection's block (EVENT_SUSPENDED, MARKET_SUSPENDED, …) */
+      reason: string;
+      selectionId?: string;
+    }
+);
+
 /** F2.3 the live cash-out offer for an open ticket (re-checked on accept, F2.6). */
 export type CashOutQuoteDto = { ticketId: string; quotedAt: string } & (
   | { available: true; offerBani: number }

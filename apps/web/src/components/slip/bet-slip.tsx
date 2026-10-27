@@ -1,11 +1,11 @@
 'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, ArrowDown, ArrowUp, Check, Ticket, Trash2, X } from 'lucide-react';
+import { AlertTriangle, ArrowDown, ArrowUp, Blocks, Check, Ticket, Trash2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
-import { type TicketDto, combineOdds, parseRonToBani, potentialWin } from '@goalbet/shared';
+import { type BuilderQuoteDto, type TicketDto, combineOdds, parseRonToBani, potentialWin } from '@goalbet/shared';
 import { Alert, Button, cn } from '@goalbet/ui';
 import { AnimatedNumber } from '@/components/fx/animated-number';
 import { Segmented } from '@/components/fx/segmented';
@@ -36,6 +36,21 @@ function useSlipRefresh() {
   useEffect(() => {
     if (data) applyUpdates(data);
   }, [data, applyUpdates]);
+}
+
+/** F1.11 live price of the Bet Builder combination (one match, 2–12 selections). */
+function useBuilderQuote(items: SlipItem[], enabled: boolean) {
+  const eventIds = [...new Set(items.map((i) => i.eventId))];
+  const oneMatch = eventIds.length === 1 && items.length >= 2;
+  const ids = items.map((i) => i.selectionId).join(',');
+  const poll = usePoll(4_000);
+  return useQuery({
+    queryKey: ['builder-quote', eventIds[0], ids],
+    queryFn: () => api<BuilderQuoteDto>(`/catalog/builder?eventId=${eventIds[0]}&ids=${ids}`),
+    enabled: enabled && oneMatch,
+    refetchInterval: poll,
+    placeholderData: (prev) => (prev && prev.selectionIds.join(',') === ids ? prev : undefined),
+  });
 }
 
 function StakeInput({ value, onChange, id, label, large = false }: { value: string; onChange: (v: string) => void; id: string; label: string; large?: boolean }) {
@@ -118,6 +133,40 @@ function SlipLine({ item, stake, onStake }: { item: SlipItem; stake?: string; on
   );
 }
 
+/** Bet Builder status: one match, at least two picks, the combined price or why it can't be priced. */
+function BuilderPanel({ items, events, quote, loading }: { items: SlipItem[]; events: number; quote: BuilderQuoteDto | undefined; loading: boolean }) {
+  const t = useTranslations('slip');
+  const te = useTranslations('errors');
+  const f = useFormat();
+  if (events > 1) return <Alert tone="warning" data-testid="builder-one-match">{t('builderOneMatch')}</Alert>;
+  if (items.length < 2) return <Alert tone="info" data-testid="builder-need-two">{t('builderNeedTwo')}</Alert>;
+  if (!quote) return null;
+  if (!quote.available) {
+    const text = t.has(`builderReason.${quote.reason}`) ? t(`builderReason.${quote.reason}`) : te.has(quote.reason) ? te(quote.reason) : te('BUILDER_INVALID');
+    return (
+      <Alert tone="warning" className="flex items-start gap-2" data-testid="builder-invalid">
+        <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+        {text}
+      </Alert>
+    );
+  }
+  const product = combineOdds(items.map((i) => i.oddsMilli));
+  return (
+    <div className={cn('flex items-center gap-3 rounded-2xl bg-brand/[0.07] p-3 ring-1 ring-brand/25 transition-opacity', loading && 'opacity-70')} data-testid="builder-quote">
+      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand/15 text-brand">
+        <Blocks className="size-5" aria-hidden="true" />
+      </span>
+      <div className="min-w-0 flex-1 text-xs text-ink-muted">
+        <p className="font-semibold text-ink">{t('builderPicks', { count: items.length })}</p>
+        <p>{t('builderHint', { product: f.odds(product) })}</p>
+      </div>
+      <motion.span key={quote.oddsMilli} initial={{ scale: 1.25, opacity: 0.4 }} animate={{ scale: 1, opacity: 1 }} className="font-display text-2xl font-bold tabular-nums text-brand" data-testid="builder-odds">
+        {f.odds(quote.oddsMilli)}
+      </motion.span>
+    </div>
+  );
+}
+
 function PlacedStamp({ code, count, onDone }: { code: string | null; count: number; onDone: () => void }) {
   const t = useTranslations('slip');
   const tn = useTranslations('nav');
@@ -175,10 +224,18 @@ export function BetSlip({ className }: { className?: string }) {
   const conflict = slipHasConflict(items);
   const accaOdds = useMemo(() => (items.length > 0 ? combineOdds(items.map((i) => i.oddsMilli)) : 0), [items]);
   const accaStake = parseRonToBani(slip.accaStake) ?? 0;
+  const builderMode = slip.mode === 'builder';
+  const builderQuote = useBuilderQuote(items, builderMode);
+  const builderEvents = new Set(items.map((i) => i.eventId)).size;
+  const builderOdds = builderQuote.data?.available ? builderQuote.data.oddsMilli : 0;
+  const builderStake = parseRonToBani(slip.builderStake) ?? 0;
   const singles = items.map((i) => ({ item: i, stake: parseRonToBani(slip.singleStakes[i.selectionId] ?? '10') ?? 0 }));
-  const totalStake = slip.mode === 'acca' ? accaStake : singles.reduce((a, s) => a + s.stake, 0);
-  const totalWin =
-    slip.mode === 'acca'
+  const totalStake = slip.mode === 'acca' ? accaStake : builderMode ? builderStake : singles.reduce((a, s) => a + s.stake, 0);
+  const totalWin = builderMode
+    ? builderStake > 0 && builderOdds > 0
+      ? potentialWin(builderStake, builderOdds)
+      : 0
+    : slip.mode === 'acca'
       ? accaStake > 0 && accaOdds > 0
         ? potentialWin(accaStake, accaOdds)
         : 0
@@ -192,8 +249,11 @@ export function BetSlip({ className }: { className?: string }) {
     items.length > 0 &&
     !busy &&
     !anyUnavailable &&
-    slip.mode !== 'builder' &&
-    (slip.mode === 'single' ? singles.every((s) => s.stake > 0) : !conflict && items.length >= 2 && accaStake > 0);
+    (builderMode
+      ? builderOdds > 0 && builderStake > 0 && !builderQuote.isFetching
+      : slip.mode === 'single'
+        ? singles.every((s) => s.stake > 0)
+        : !conflict && items.length >= 2 && accaStake > 0);
 
   const refreshUser = async () => {
     const me = await api<SessionUser>('/me').catch(() => null);
@@ -203,6 +263,11 @@ export function BetSlip({ className }: { className?: string }) {
   };
 
   const onError = (e: unknown) => {
+    if (e instanceof ApiError && e.code === 'ODDS_CHANGED' && builderMode) {
+      void qc.invalidateQueries({ queryKey: ['builder-quote'] });
+      setError({ text: toMessage(e), oddsChanged: true });
+      return;
+    }
     if (e instanceof ApiError && e.code === 'ODDS_CHANGED') {
       const changes = (e.details?.['changes'] as { selectionId: string; currentOddsMilli: number }[] | undefined) ?? [];
       slip.applyUpdates(
@@ -237,7 +302,20 @@ export function BetSlip({ className }: { className?: string }) {
     setBusy(true);
     slip.acceptChanges();
     try {
-      if (slip.mode === 'acca') {
+      if (builderMode) {
+        const ticket = await api<TicketDto>('/bets', {
+          method: 'POST',
+          headers: { 'Idempotency-Key': newIdempotencyKey() },
+          body: {
+            type: 'SINGLE',
+            stakeBani: builderStake,
+            oddsChangePreference: slip.oddsPref,
+            legs: [{ kind: 'BET_BUILDER', eventId: items[0]!.eventId, selectionIds: items.map((i) => i.selectionId), oddsMilli: builderOdds }],
+          },
+        });
+        slip.clear();
+        setSuccess({ code: ticket.code, count: 1 });
+      } else if (slip.mode === 'acca') {
         const ticket = await placeOne('ACCA', accaStake, items);
         slip.clear();
         setSuccess({ code: ticket.code, count: 1 });
@@ -331,18 +409,26 @@ export function BetSlip({ className }: { className?: string }) {
           </ul>
 
           <div className="space-y-3 p-4">
-            {slip.mode === 'builder' ? <Alert tone="info">{t('builderSoon')}</Alert> : null}
+            {builderMode ? <BuilderPanel items={items} events={builderEvents} quote={builderQuote.data} loading={builderQuote.isFetching} /> : null}
             {slip.mode === 'acca' && conflict ? (
               <Alert tone="warning" className="flex items-start gap-2" data-testid="slip-conflict">
                 <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                {t('conflict')}
+                <span>
+                  {t('conflict')}
+                  {builderEvents === 1 ? (
+                    <button type="button" className="ml-1 font-bold underline" onClick={() => slip.setMode('builder')} data-testid="slip-to-builder">
+                      {t('useBuilder')}
+                    </button>
+                  ) : null}
+                </span>
               </Alert>
             ) : null}
             {slip.mode === 'acca' && !conflict && items.length < 2 ? <Alert tone="info">{t('needTwo')}</Alert> : null}
 
             {slip.mode === 'acca' ? <StakeInput id="stake-acca" value={slip.accaStake} onChange={slip.setAccaStake} label={t('stake')} large /> : null}
+            {builderMode ? <StakeInput id="stake-builder" value={slip.builderStake} onChange={slip.setBuilderStake} label={t('stake')} large /> : null}
 
-            {slip.mode !== 'builder' ? (
+            {items.length > 0 ? (
               <div className="grid grid-cols-4 gap-1.5">
                 {QUICK_STAKES.map((q) => (
                   <button
@@ -350,7 +436,13 @@ export function BetSlip({ className }: { className?: string }) {
                     type="button"
                     data-testid={`quick-${q}`}
                     className="h-9 rounded-xl bg-tint/[0.05] text-sm font-bold ring-1 ring-line transition-all hover:bg-tint/10 hover:ring-brand/40 active:scale-95"
-                    onClick={() => (slip.mode === 'acca' ? slip.setAccaStake(String(q)) : items.forEach((i) => slip.setSingleStake(i.selectionId, String(q))))}
+                    onClick={() =>
+                      slip.mode === 'acca'
+                        ? slip.setAccaStake(String(q))
+                        : builderMode
+                          ? slip.setBuilderStake(String(q))
+                          : items.forEach((i) => slip.setSingleStake(i.selectionId, String(q)))
+                    }
                   >
                     {q}
                   </button>
@@ -360,11 +452,11 @@ export function BetSlip({ className }: { className?: string }) {
 
             <div className="rounded-2xl bg-tint/[0.035] p-3 ring-1 ring-line">
               <dl className="space-y-1.5 text-sm">
-                {slip.mode === 'acca' ? (
+                {slip.mode === 'acca' || builderMode ? (
                   <div className="flex justify-between">
-                    <dt className="text-ink-muted">{t('totalOdds')}</dt>
+                    <dt className="text-ink-muted">{builderMode ? t('builderOdds') : t('totalOdds')}</dt>
                     <dd className="font-display text-lg font-bold tabular-nums" data-testid="slip-total-odds">
-                      {f.odds(accaOdds || 1000)}
+                      {builderMode ? (builderOdds ? f.odds(builderOdds) : '—') : f.odds(accaOdds || 1000)}
                     </dd>
                   </div>
                 ) : null}

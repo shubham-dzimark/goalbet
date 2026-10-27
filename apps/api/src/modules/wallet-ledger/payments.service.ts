@@ -11,6 +11,7 @@ import {
 } from '@goalbet/shared';
 import { type Actor, AuditService } from '../../common/audit.service.js';
 import { DomainError } from '../../common/errors.js';
+import { DAY, strictestLimits } from '../../common/limits.js';
 import { PrismaService } from '../../common/prisma.service.js';
 import { Channels, RedisService } from '../../common/redis.service.js';
 import { SettingsService } from '../../common/settings.service.js';
@@ -31,6 +32,13 @@ const maskIban = (iban: string) => `${iban.slice(0, 4)} •••• •••�
  * A withdrawal holds its amount from the moment it is requested, so it can't be staked or
  * requested twice. Above `wallet.approvalThresholdBani` two different admins must approve.
  */
+
+const DEPOSIT_WINDOWS: [string, number][] = [
+  ['DAILY_DEPOSIT', DAY],
+  ['WEEKLY_DEPOSIT', 7 * DAY],
+  ['MONTHLY_DEPOSIT', 30 * DAY],
+];
+
 @Injectable()
 export class PaymentsService {
   constructor(
@@ -138,6 +146,7 @@ export class PaymentsService {
       if (await this.isExcluded(userId)) throw new DomainError('SELF_EXCLUDED', undefined, 403);
       const pending = await this.prisma.paymentRequest.count({ where: { userId, type: 'DEPOSIT', status: 'PENDING' } });
       if (pending >= MAX_PENDING_DEPOSITS) throw new DomainError('TOO_MANY_PENDING', { max: MAX_PENDING_DEPOSITS });
+      await this.checkDepositLimits(userId, input.amountBani);
       if (input.payerReference) details = { payerReference: input.payerReference };
     } else {
       if (await this.prisma.paymentRequest.count({ where: { userId, type: 'WITHDRAWAL', status: 'PENDING' } })) throw new DomainError('WITHDRAWAL_PENDING');
@@ -166,6 +175,24 @@ export class PaymentsService {
     });
     await this.notify(created);
     return this.toDto(created);
+  }
+
+  /**
+   * Responsible gambling: daily / weekly / monthly deposit limits (player or operator, strictest
+   * wins). Requests waiting for Finance count too, so a player can't queue past the limit.
+   */
+  private async checkDepositLimits(userId: string, amountBani: number) {
+    const strictest = strictestLimits(await this.prisma.userLimit.findMany({ where: { userId } }));
+    for (const [type, span] of DEPOSIT_WINDOWS) {
+      const limit = strictest.get(type);
+      if (limit === undefined) continue;
+      const agg = await this.prisma.paymentRequest.aggregate({
+        where: { userId, type: 'DEPOSIT', status: { in: ['PENDING', 'APPROVED'] }, createdAt: { gte: new Date(Date.now() - span) } },
+        _sum: { amountBani: true },
+      });
+      const used = agg._sum.amountBani ?? 0;
+      if (used + amountBani > limit) throw new DomainError('DEPOSIT_LIMIT_EXCEEDED', { limit: type, maxBani: limit, usedBani: used });
+    }
   }
 
   async cancel(userId: string, id: string, actor: Actor): Promise<PaymentRequestDto> {

@@ -10,8 +10,23 @@
 | — | Player deposit & withdrawal requests (admin-approved), held funds, Finance queue | ✅ Done |
 | — | Data provider & API key managed in the admin panel (no restart) | ✅ Done |
 | 5 | Cash out (F2.3–F2.7), settlement + payout + credit (F2.8–F2.11), reconciliation (incl. held funds = pending withdrawals); cash out and payouts respect held money | ✅ Done |
-| 6 | Bet Builder (F1.11), sportsbook settings (F3.5), reports + exposure (F3.6) incl. deposits/withdrawals by day and method and queue age; player deposit limits (daily/weekly/monthly) | — |
+| 6 | Bet Builder (F1.11), sportsbook settings (F3.5), reports + exposure (F3.6) incl. deposits/withdrawals by day and method and queue age; player deposit limits (daily/weekly/monthly) | ✅ Done |
 | 7 | Responsive polish, responsible gambling, provider skeleton, all E2E (incl. deposit/withdrawal flows), README with the licence / KYC / AML notes for real money | — |
+
+## Phase 6 — what was built
+
+- **Bet Builder (F1.11):** pick 2–12 selections from one match, open the *Bet Builder* tab in the slip and they become one bet with one price. The price is the provider's correlated price when it has one, otherwise the product of the prices × the Bet Builder factor (Sportsbook → Limits, default 85 %), never below 1.01. Combinations that can't all win (e.g. home win + both teams score + under 2.5), two picks from one market, picks from two matches or unsupported markets are explained in the slip and refused by the API. The ticket shows one leg with all its picks; it wins only if every pick wins, and settles and cashes out as one leg (cash out re-prices the whole combination). An accumulator with two picks from one match offers a one-click switch to Bet Builder.
+- **Reports (F3.6):** new sections — bets by type (singles, accumulators, Bet Builders), payouts split into winnings, cash outs and refunds, and *Deposits & withdrawals*: paid per day (chart), paid by method, the Finance queue (waiting requests, amount, oldest), average decision time and rejections. The CSV export gains deposits and withdrawals per day.
+- **Deposit limits:** players (My account → *Betting & deposit limits*) and operators (player page → Limits) can set daily, weekly and monthly deposit limits. Deposit requests waiting or paid in the window count; going over is refused with a clear message. Like stake limits, lowering applies at once, raising or removing waits 24 h, and the stricter of player and operator limits applies.
+- **Sportsbook settings (F3.5)** were completed in phase 3; the Bet Builder factor is now in use.
+
+**Tests:** 105 API integration (5 new in `bet-builder.test.ts`, 2 new in `reports-limits.test.ts`) · shared unit · i18n parity. All green. Browser check (Chromium, 1500 px and 390 px): Bet Builder slip with the combined price → placed → shown as one leg in My Bets with a cash-out offer; deposit limits on the account page; Reports page with the new sections and no horizontal scroll at phone width.
+
+## How to try phase 6
+
+1. Open a match on http://localhost:3000, click e.g. *1*, *Over 2.5* and *Both teams to score – Yes*, then the slip's *Bet Builder* tab: one combined price, place it. Try *Under 2.5* instead to see a contradiction explained.
+2. My account → *Betting & deposit limits* → set a daily deposit limit, then ask for a bigger deposit in Wallet.
+3. Admin → Reports: bets by type, payouts by kind, *Deposits & withdrawals*.
 
 ## Phase 5 — what was built
 

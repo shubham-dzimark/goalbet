@@ -52,6 +52,13 @@ export class CatalogController {
     return list.length ? this.catalog.selections(list) : [];
   }
 
+  /** F1.11 Bet Builder price for 2–12 selections of one match. */
+  @Get('builder')
+  builder(@Query('eventId', ParseUUIDPipe) eventId: string, @Query('ids') ids = '') {
+    const list = [...new Set(ids.split(',').filter((id) => /^[0-9a-f-]{36}$/i.test(id)))];
+    return this.catalog.builderQuote(eventId, list);
+  }
+
   @Get('search')
   search(@Query('q') q = '') {
     return this.catalog.search(q.slice(0, 60));

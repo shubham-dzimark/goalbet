@@ -15,9 +15,53 @@ const TOOLTIP = {
 /** Stakes vs payouts per day (emerald = money in, gold = money out). */
 export function MoneyTrendChart({ data, height = 260 }: { data: { date: string; stakesBani: number; payoutsBani: number }[]; height?: number }) {
   const t = useTranslations('charts');
-  const f = useFmt();
   return (
-    <div role="img" aria-label={t('trendLabel')}>
+    <TwoSeriesBars
+      data={data}
+      height={height}
+      label={t('trendLabel')}
+      series={[
+        { key: 'stakesBani', label: t('stakes') },
+        { key: 'payoutsBani', label: t('payouts') },
+      ]}
+    />
+  );
+}
+
+/** Deposits vs withdrawals paid per day. */
+export function PaymentsTrendChart({ data, height = 260 }: { data: { date: string; depositsBani: number; withdrawalsBani: number }[]; height?: number }) {
+  const t = useTranslations('charts');
+  return (
+    <TwoSeriesBars
+      data={data}
+      height={height}
+      label={t('paymentsLabel')}
+      series={[
+        { key: 'depositsBani', label: t('deposits') },
+        { key: 'withdrawalsBani', label: t('withdrawals') },
+      ]}
+    />
+  );
+}
+
+/** Money per day as two bar series: emerald (first) and gold (second). */
+type Series = { key: string; label: string };
+
+function TwoSeriesBars({
+  data,
+  height,
+  label,
+  series,
+}: {
+  data: ({ date: string } & Record<string, string | number>)[];
+  height: number;
+  label: string;
+  series: [Series, Series];
+}) {
+  const f = useFmt();
+  const [a, b] = series;
+  return (
+    <div role="img" aria-label={label}>
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barGap={2} barCategoryGap={data.length > 40 ? '10%' : '24%'}>
@@ -28,21 +72,21 @@ export function MoneyTrendChart({ data, height = 260 }: { data: { date: string; 
               {...TOOLTIP}
               cursor={{ fill: 'var(--color-line)' }}
               labelFormatter={(d) => f.shortDay(String(d))}
-              formatter={(v, name) => [f.ron(Number(v)), name === 'stakesBani' ? t('stakes') : t('payouts')]}
+              formatter={(v, name) => [f.ron(Number(v)), name === a.key ? a.label : b.label]}
             />
-            <Bar dataKey="stakesBani" fill="var(--color-brand)" radius={[4, 4, 0, 0]} maxBarSize={22} />
-            <Bar dataKey="payoutsBani" fill="var(--color-accent)" radius={[4, 4, 0, 0]} maxBarSize={22} />
+            <Bar dataKey={a.key} fill="var(--color-brand)" radius={[4, 4, 0, 0]} maxBarSize={22} />
+            <Bar dataKey={b.key} fill="var(--color-accent)" radius={[4, 4, 0, 0]} maxBarSize={22} />
           </BarChart>
         </ResponsiveContainer>
       </div>
       <div className="mt-3 flex justify-center gap-4 text-xs text-ink-muted">
         <span className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full bg-brand" />
-          {t('stakes')}
+          {a.label}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full bg-accent" />
-          {t('payouts')}
+          {b.label}
         </span>
       </div>
     </div>

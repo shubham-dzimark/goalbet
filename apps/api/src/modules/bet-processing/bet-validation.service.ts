@@ -2,11 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { type Prisma, type UserLimit } from '@goalbet/db';
 import { type PlaceBetInput, type Settings, combineOdds, potentialWin } from '@goalbet/shared';
 import { DomainError } from '../../common/errors.js';
+import { DAY, strictestLimits } from '../../common/limits.js';
 import { PrismaService } from '../../common/prisma.service.js';
 import { SettingsService } from '../../common/settings.service.js';
-import { effectiveOddsMilli, selectionInclude } from '../odds-management/catalog.mappers.js';
+import { BuilderPricingService } from '../odds-management/builder-pricing.service.js';
+import { effectiveOddsMilli, selectionBlock, selectionInclude } from '../odds-management/catalog.mappers.js';
 
-const DAY = 86_400_000;
 
 const selectionForBet = {
   ...selectionInclude,
@@ -15,12 +16,23 @@ const selectionForBet = {
 
 type SelectionForBet = Prisma.SelectionGetPayload<{ include: typeof selectionForBet }>;
 
-export interface ValidatedLeg {
-  kind: 'SELECTION';
-  eventId: string;
-  selection: SelectionForBet;
-  oddsMilli: number;
-}
+export type ValidatedLeg =
+  | { kind: 'SELECTION'; eventId: string; selection: SelectionForBet; oddsMilli: number }
+  | {
+      kind: 'BET_BUILDER';
+      eventId: string;
+      selections: SelectionForBet[];
+      /** one correlated price for the whole leg (F1.11) */
+      oddsMilli: number;
+      /** each part's own price, kept on the ticket for display */
+      partOddsMilli: number[];
+    };
+
+/** The selections of a leg (one, or several for a Bet Builder). */
+export const legSelections = (l: ValidatedLeg) => (l.kind === 'SELECTION' ? [l.selection] : l.selections);
+
+type LegIn = PlaceBetInput['legs'][number];
+const legIds = (l: LegIn) => (l.kind === 'SELECTION' ? [l.selectionId] : l.selectionIds);
 
 export interface ValidatedBet {
   type: 'SINGLE' | 'ACCA';
@@ -37,11 +49,6 @@ type Input = Required<Pick<PlaceBetInput, 'type' | 'stakeBani' | 'legs'>> & {
   oddsChangePreference: 'NONE' | 'HIGHER' | 'ANY';
 };
 
-/** Effective value of a limit right now (increases and removals wait for their cooling-off time). */
-export function effectiveLimit(l: UserLimit, now = Date.now()): number | null {
-  if (l.pendingAmountBani !== null && l.effectiveAt.getTime() <= now) return l.pendingAmountBani === 0 ? null : l.pendingAmountBani;
-  return l.amountBani;
-}
 
 /**
  * F1.13 — validates a bet in the exact order of the flow chart:
@@ -57,6 +64,7 @@ export class BetValidationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly settings: SettingsService,
+    private readonly builder: BuilderPricingService,
   ) {}
 
   async validate(userId: string, input: Input): Promise<ValidatedBet> {
@@ -77,49 +85,58 @@ export class BetValidationService {
       throw new DomainError('SELF_EXCLUDED', { until: exclusion.endsAt?.toISOString() ?? null }, 403);
     }
 
-    // request shape: single = 1 leg, accumulator = 2..max legs, one selection per match
-    if (input.legs.some((l) => l.kind !== 'SELECTION')) throw new DomainError('BUILDER_INVALID');
+    // request shape: single = 1 leg (a selection or a Bet Builder), accumulator = 2..max legs, one leg per match
     if (input.type === 'SINGLE' && input.legs.length !== 1) throw new DomainError('VALIDATION_FAILED', { reason: 'single_needs_one_leg' });
     if (input.type === 'ACCA' && (input.legs.length < 2 || input.legs.length > settings['betting.maxAccaLegs'])) {
       throw new DomainError('VALIDATION_FAILED', { reason: 'acca_legs', max: settings['betting.maxAccaLegs'] });
     }
-    const legsIn = input.legs as Extract<PlaceBetInput['legs'][number], { kind: 'SELECTION' }>[];
     const selections = await this.prisma.selection.findMany({
-      where: { id: { in: legsIn.map((l) => l.selectionId) } },
+      where: { id: { in: input.legs.flatMap(legIds) } },
       include: selectionForBet,
     });
     const byId = new Map(selections.map((s) => [s.id, s]));
 
     // ── 2. market status ──
-    const disabledTypes = new Set(
+    const disabledTypes = new Set<string>(
       (await this.prisma.marketTypeSetting.findMany({ where: { enabled: false } })).map((t) => t.type),
     );
     const now = Date.now();
     const seenEvents = new Set<string>();
-    for (const l of legsIn) {
-      const s = byId.get(l.selectionId);
-      if (!s) throw new DomainError('SELECTION_NOT_FOUND', { selectionId: l.selectionId });
-      const { market } = s;
-      const { event } = market;
-      if (seenEvents.has(event.id)) throw new DomainError('DUPLICATE_EVENT', { eventId: event.id });
-      seenEvents.add(event.id);
-      if (!event.competition.enabled || !event.competition.active) throw new DomainError('LEAGUE_DISABLED', { selectionId: s.id });
-      const open = event.status === 'LIVE' || (event.status === 'SCHEDULED' && event.startTime.getTime() > now);
-      if (!open) throw new DomainError('EVENT_NOT_AVAILABLE', { selectionId: s.id, eventId: event.id });
-      if (event.suspended || event.feedSuspended) throw new DomainError('EVENT_SUSPENDED', { selectionId: s.id, eventId: event.id });
-      if (!market.enabled || market.status === 'SETTLED' || disabledTypes.has(market.type)) {
-        throw new DomainError('MARKET_CLOSED', { selectionId: s.id });
+    for (const l of input.legs) {
+      const ids = legIds(l);
+      if (l.kind === 'BET_BUILDER' && new Set(ids).size !== ids.length) throw new DomainError('BUILDER_INVALID', { reason: 'SAME_MARKET', eventId: l.eventId });
+      for (const id of ids) {
+        const s = byId.get(id);
+        if (!s) throw new DomainError('SELECTION_NOT_FOUND', { selectionId: id });
+        if (l.kind === 'BET_BUILDER' && s.market.eventId !== l.eventId) throw new DomainError('BUILDER_INVALID', { reason: 'ONE_MATCH', eventId: l.eventId });
       }
-      if (market.status !== 'OPEN' || !s.active) throw new DomainError('MARKET_SUSPENDED', { selectionId: s.id });
+      const eventId = byId.get(ids[0]!)!.market.eventId;
+      if (seenEvents.has(eventId)) throw new DomainError('DUPLICATE_EVENT', { eventId });
+      seenEvents.add(eventId);
+      for (const id of ids) {
+        const block = selectionBlock(byId.get(id)!, disabledTypes, now);
+        if (block) throw new DomainError(block, { selectionId: id, eventId });
+      }
     }
 
-    // ── 3. latest odds vs submitted odds ──
-    const legs: ValidatedLeg[] = legsIn.map((l) => {
-      const s = byId.get(l.selectionId)!;
-      return { kind: 'SELECTION', eventId: s.market.eventId, selection: s, oddsMilli: effectiveOddsMilli(s) };
-    });
-    const changes = legsIn
-      .map((l, i) => ({ selectionId: l.selectionId, submittedOddsMilli: l.oddsMilli, currentOddsMilli: legs[i]!.oddsMilli }))
+    // ── 3. latest odds vs submitted odds (a Bet Builder is re-priced as one leg) ──
+    const legs: ValidatedLeg[] = [];
+    for (const l of input.legs) {
+      if (l.kind === 'SELECTION') {
+        const s = byId.get(l.selectionId)!;
+        legs.push({ kind: 'SELECTION', eventId: s.market.eventId, selection: s, oddsMilli: effectiveOddsMilli(s, now) });
+      } else {
+        const parts = l.selectionIds.map((id) => byId.get(id)!);
+        const price = await this.builder.price(l.eventId, parts, now);
+        legs.push({ kind: 'BET_BUILDER', eventId: l.eventId, selections: parts, oddsMilli: price.oddsMilli, partOddsMilli: price.partOddsMilli });
+      }
+    }
+    const changes = input.legs
+      .map((l, i) => ({
+        ...(l.kind === 'SELECTION' ? { selectionId: l.selectionId } : { eventId: l.eventId, builder: true }),
+        submittedOddsMilli: l.oddsMilli,
+        currentOddsMilli: legs[i]!.oddsMilli,
+      }))
       .filter((c) => c.submittedOddsMilli !== c.currentOddsMilli);
     const rejectChange =
       input.oddsChangePreference === 'NONE'
@@ -147,7 +164,7 @@ export class BetValidationService {
       legs,
       totalOddsMilli,
       potentialWinBani: win,
-      isLive: legs.some((l) => l.selection.market.event.status === 'LIVE'),
+      isLive: legs.some((l) => legSelections(l)[0]!.market.event.status === 'LIVE'),
       oddsChangePreference: input.oddsChangePreference,
     };
   }
@@ -158,12 +175,7 @@ export class BetValidationService {
     if (win > s['betting.maxPayoutBani']) throw new DomainError('MAX_PAYOUT_EXCEEDED', { maxBani: s['betting.maxPayoutBani'] });
 
     // Player self-limits and admin-set per-user limits: the strictest of each type applies.
-    const strictest = new Map<string, number>();
-    for (const l of limits) {
-      const v = effectiveLimit(l);
-      if (v === null) continue;
-      strictest.set(l.type, Math.min(v, strictest.get(l.type) ?? Number.MAX_SAFE_INTEGER));
-    }
+    const strictest = strictestLimits(limits);
     const perBet = strictest.get('MAX_STAKE_PER_BET');
     if (perBet !== undefined && stake > perBet) {
       throw new DomainError('USER_LIMIT_EXCEEDED', { limit: 'MAX_STAKE_PER_BET', maxBani: perBet });

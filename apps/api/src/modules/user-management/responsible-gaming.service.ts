@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { type UserLimitType } from '@goalbet/db';
 import { type Actor, AuditService } from '../../common/audit.service.js';
 import { PrismaService } from '../../common/prisma.service.js';
-import { effectiveLimit } from '../bet-processing/bet-validation.service.js';
+import { effectiveLimit } from '../../common/limits.js';
 
 const COOLING_OFF_MS = 24 * 3600_000;
 const DAY = 86_400_000;

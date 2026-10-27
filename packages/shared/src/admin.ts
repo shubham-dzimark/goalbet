@@ -5,6 +5,8 @@ import type {
   CreditApprovalStatus,
   EventStatus,
   MarketType,
+  PaymentMethod,
+  PaymentRequestType,
   TicketStatus,
   UserLimitType,
   UserStatus,
@@ -162,6 +164,22 @@ export interface AdminReport {
   exposure: { openTickets: number; openStakeBani: number; potentialPayoutBani: number };
   daily: { date: string; stakesBani: number; payoutsBani: number; tickets: number }[];
   topExposure: { eventId: string; name: string; startTime: string; status: EventStatus; tickets: number; potentialPayoutBani: number }[];
+  /** what the payouts are made of */
+  payouts: { winsBani: number; cashOutsBani: number; refundsBani: number; cashOuts: number };
+  /** tickets placed in the range by bet type */
+  byBetType: { type: 'SINGLE' | 'ACCA' | 'BET_BUILDER'; tickets: number; stakesBani: number }[];
+  payments: AdminPaymentsReport;
+}
+
+/** F3.6 player deposits and withdrawals (paid = approved by Finance). */
+export interface AdminPaymentsReport {
+  daily: { date: string; depositsBani: number; withdrawalsBani: number }[];
+  byMethod: { type: PaymentRequestType; method: PaymentMethod; requests: number; amountBani: number }[];
+  /** requests waiting for Finance right now */
+  queue: { deposits: number; withdrawals: number; pendingBani: number; oldestAt: string | null };
+  /** average time from request to decision for requests decided in the range */
+  avgDecisionMinutes: number | null;
+  rejected: number;
 }
 
 export interface AdminDashboard {

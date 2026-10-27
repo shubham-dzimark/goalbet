@@ -19,6 +19,7 @@ import { PrismaService } from '../../common/prisma.service.js';
 import { Channels, RedisService } from '../../common/redis.service.js';
 import { SettingsService } from '../../common/settings.service.js';
 import { ticketInclude, toTicketDto } from '../bet-processing/ticket.mapper.js';
+import { BuilderPricingService } from '../odds-management/builder-pricing.service.js';
 import { effectiveOddsMilli, selectionInclude } from '../odds-management/catalog.mappers.js';
 import { WalletService } from '../wallet-ledger/wallet.service.js';
 
@@ -26,7 +27,9 @@ const quoteInclude = {
   legs: {
     include: {
       event: { select: { status: true, startTime: true, suspended: true, feedSuspended: true, competition: { select: { enabled: true, active: true } } } },
-      selections: { include: { selection: { include: { ...selectionInclude, market: { select: { status: true, enabled: true, adminSuspended: true } } } } } },
+      selections: {
+        include: { selection: { include: { ...selectionInclude, market: { include: { event: { include: { competition: { select: { enabled: true, active: true } } } } } } } } },
+      },
     },
   },
 } as const;
@@ -52,6 +55,7 @@ export class CashOutService {
     private readonly redis: RedisService,
     private readonly settings: SettingsService,
     private readonly idempotency: IdempotencyService,
+    private readonly builder: BuilderPricingService,
   ) {}
 
   /** F2.3 current offer for one of the player's tickets. */
@@ -137,7 +141,8 @@ export class CashOutService {
     if (!t || !OPEN_TICKET_STATUSES.includes(t.status)) return { available: false, reason: 'NOT_OPEN' };
 
     const now = Date.now();
-    const legs: CashOutLeg[] = t.legs.map((l) => {
+    const legs: CashOutLeg[] = [];
+    for (const l of t.legs) {
       const ev = l.event;
       const sels = l.selections.map((s) => s.selection);
       const suspended =
@@ -148,10 +153,12 @@ export class CashOutService {
         // only bettable matches have a price: live, or not kicked off yet (a match the feed never started is not)
         !(ev.status === 'LIVE' || (ev.status === 'SCHEDULED' && ev.startTime.getTime() > now)) ||
         sels.some((s) => s.market.status !== 'OPEN' || !s.market.enabled || s.market.adminSuspended || !s.active);
-      // Bet Builder legs have one correlated price, re-priced only by the provider (phase 6)
-      const current = l.kind === 'SELECTION' && sels[0] ? effectiveOddsMilli(sels[0], now) : null;
-      return { placedOddsMilli: parseOddsMilli(l.oddsAtPlacement), currentOddsMilli: current, status: l.status, suspended };
-    });
+      // a Bet Builder leg is re-priced as a whole, like when it was placed
+      let current: number | null = null;
+      if (l.kind === 'SELECTION' && sels[0]) current = effectiveOddsMilli(sels[0], now);
+      else if (l.status === 'PENDING' && !suspended) current = (await this.builder.price(l.eventId, sels, now).catch(() => null))?.oddsMilli ?? null;
+      legs.push({ placedOddsMilli: parseOddsMilli(l.oddsAtPlacement), currentOddsMilli: current, status: l.status, suspended });
+    }
     return quoteCashOut({
       stakeBani: t.stakeBani,
       potentialWinBani: t.potentialWinBani,

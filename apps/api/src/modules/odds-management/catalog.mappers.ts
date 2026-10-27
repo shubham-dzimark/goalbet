@@ -1,6 +1,7 @@
 import { type Prisma } from '@goalbet/db';
 import {
   type CompetitionDto,
+  type ErrorCode,
   type EventDetailDto,
   type EventSummaryDto,
   type MarketDto,
@@ -31,6 +32,27 @@ export function boostActive(b: SelectionRow['boost'], now = Date.now()): b is No
 export function effectiveOddsMilli(s: SelectionRow, now = Date.now()): number {
   const base = parseOddsMilli(s.odds);
   return boostActive(s.boost, now) ? Math.max(base, parseOddsMilli(s.boost.odds)) : base;
+}
+
+/** A selection with its market, event and league: enough to tell whether it can be bet on now. */
+export type BettableSelection = SelectionRow & {
+  market: Prisma.MarketGetPayload<object> & { event: Prisma.EventGetPayload<object> & { competition: { enabled: boolean; active: boolean } } };
+};
+
+/**
+ * F1.13 step 2 for one selection, in flow-chart order: the first reason it can't be bet on now,
+ * or null. Shared by bet validation, the Bet Builder quote and the slip refresh.
+ */
+export function selectionBlock(s: BettableSelection, disabledTypes: ReadonlySet<string>, now = Date.now()): ErrorCode | null {
+  const { market } = s;
+  const { event } = market;
+  if (!event.competition.enabled || !event.competition.active) return 'LEAGUE_DISABLED';
+  const open = event.status === 'LIVE' || (event.status === 'SCHEDULED' && event.startTime.getTime() > now);
+  if (!open) return 'EVENT_NOT_AVAILABLE';
+  if (event.suspended || event.feedSuspended) return 'EVENT_SUSPENDED';
+  if (!market.enabled || market.status === 'SETTLED' || disabledTypes.has(market.type)) return 'MARKET_CLOSED';
+  if (market.status !== 'OPEN' || !s.active) return 'MARKET_SUSPENDED';
+  return null;
 }
 
 export function toSelection(s: SelectionRow): SelectionDto {

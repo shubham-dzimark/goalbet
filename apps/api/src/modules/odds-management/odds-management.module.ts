@@ -1,6 +1,7 @@
 import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { ApiIntegrationModule } from '../api-integration/api-integration.module.js';
 import { BoostService } from './boost.service.js';
+import { BuilderPricingService } from './builder-pricing.service.js';
 import { CatalogController } from './catalog.controller.js';
 import { CatalogService } from './catalog.service.js';
 import { CronController } from './cron.controller.js';
@@ -12,8 +13,8 @@ import { SyncTasksService } from './sync-tasks.service.js';
 @Module({
   imports: [ApiIntegrationModule],
   controllers: [CatalogController, CronController],
-  providers: [IngestService, CatalogService, BoostService, SyncTasksService, FreshnessService, FreshnessMiddleware],
-  exports: [IngestService, CatalogService, BoostService, SyncTasksService],
+  providers: [IngestService, CatalogService, BoostService, BuilderPricingService, SyncTasksService, FreshnessService, FreshnessMiddleware],
+  exports: [IngestService, CatalogService, BoostService, BuilderPricingService, SyncTasksService],
 })
 export class OddsManagementModule implements NestModule {
   // on serverless hosts every catalogue visit may refresh stale data (no-op with a worker)
