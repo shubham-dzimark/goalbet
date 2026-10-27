@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger, type OnApplicationShutdown, type OnModuleInit } from '@nestjs/common';
 import { type Job, Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
-import { AuditService, ENV, type Env, SYSTEM_ACTOR, SyncTasksService } from '@goalbet/api/kit';
+import { AuditService, ENV, type Env, SYSTEM_ACTOR, SettlementService, SyncTasksService, WalletService } from '@goalbet/api/kit';
 
 type Handler = (job: Job) => Promise<unknown>;
 
@@ -26,6 +26,8 @@ export class JobsService implements OnModuleInit, OnApplicationShutdown {
 
   constructor(
     private readonly tasks: SyncTasksService,
+    private readonly settlement: SettlementService,
+    private readonly wallet: WalletService,
     private readonly audit: AuditService,
     @Inject(ENV) env: Env,
   ) {
@@ -41,6 +43,10 @@ export class JobsService implements OnModuleInit, OnApplicationShutdown {
     'live-sync': { every: 2_000, handler: () => this.tasks.live() },
     /** F4.1 suspends live markets when the live data goes stale. */
     'feed-watchdog': { every: 5_000, handler: () => this.tasks.watchdog() },
+    /** F2.8–F2.11 settles finished / cancelled matches once the provider has the result. */
+    settlement: { every: 30_000, handler: () => this.settlement.settlePending() },
+    /** Rule 2 money check: balances vs ledger, holds vs pending withdrawals. */
+    reconciliation: { every: 3600_000, handler: () => this.wallet.reconcile() },
   };
 
   async onModuleInit() {

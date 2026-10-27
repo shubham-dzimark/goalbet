@@ -173,7 +173,21 @@
     "loadMore": "Load more",
     "back": "Back to my bets",
     "kicker": "Your tickets",
-    "browse": "Browse matches"
+    "browse": "Browse matches",
+    "cashOutBar": {
+      "button": "Cash out {amount}",
+      "question": "Cash out {amount} now? Your stake was {stake}.",
+      "changed": "The offer changed to {amount}. Confirm again to accept it.",
+      "confirm": "Confirm {amount}",
+      "cancel": "Keep bet",
+      "unavailable": "Cash out unavailable",
+      "reason": {
+        "MARKET_SUSPENDED": "betting is suspended right now",
+        "LEG_LOST": "a selection has lost",
+        "NO_PRICE": "no live price for a selection",
+        "NO_VALUE": "no value left"
+      }
+    }
   },
   "wallet": {
     "title": "Wallet",

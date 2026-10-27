@@ -9,9 +9,26 @@
 | 4 | Live (F1.6, F2.1, F2.2), WebSocket + Redis pub/sub, live delay, feed-stall safety | ✅ Done |
 | — | Player deposit & withdrawal requests (admin-approved), held funds, Finance queue | ✅ Done |
 | — | Data provider & API key managed in the admin panel (no restart) | ✅ Done |
-| 5 | Cash out (F2.3–F2.7), settlement + payout + credit (F2.8–F2.11), reconciliation (incl. held funds = pending withdrawals); cash out and payouts respect held money | — |
+| 5 | Cash out (F2.3–F2.7), settlement + payout + credit (F2.8–F2.11), reconciliation (incl. held funds = pending withdrawals); cash out and payouts respect held money | ✅ Done |
 | 6 | Bet Builder (F1.11), sportsbook settings (F3.5), reports + exposure (F3.6) incl. deposits/withdrawals by day and method and queue age; player deposit limits (daily/weekly/monthly) | — |
 | 7 | Responsive polish, responsible gambling, provider skeleton, all E2E (incl. deposit/withdrawal flows), README with the licence / KYC / AML notes for real money | — |
+
+## Phase 5 — what was built
+
+- **Automatic settlement (F2.8–F2.11):** the worker's `settlement` job (every 30 s) takes every finished or cancelled match that is not settled yet and, once the provider has the final result, settles it in one transaction: every selection is graded (all market types, Asian quarter lines, player markets void if the player did not play), then every leg and every ticket whose legs are decided (an accumulator is lost as soon as one leg loses). Winnings (`WIN`) and refunds for void tickets (`REFUND`) go through the ledger with a per-ticket reference, so a ticket is never paid twice. Players see the result and their balance change at once (push). A `SettlementRecord` keeps the result used, its source and version.
+- **Manual settlement (F2.9):** Admin → Sportsbook → Matches → *Awaiting settlement* lists matches with open bets that are finished, or still unsettled 3 h after kick-off (the job also asks the provider about those, e.g. after worker downtime). *Settle* asks for the half-time and full-time score, corners, cards and a reason, or *Match cancelled* to void every bet. Operator / Super admin only, audited (`EVENT_SETTLED_MANUALLY`). Without player stats, scorer and shots markets are voided.
+- **Cash out (F2.3–F2.7):** each open ticket in My Bets shows a live offer (stake × placed odds ÷ current odds, less the cash-out margin), refreshed when its matches' odds or scores change. *Cash out* → confirm → paid instantly (`CASHOUT`), ticket moves to *Cash Out history*. The offer is re-checked on accept with the ticket locked: up to 1 % lower is paid at the new amount, more than that shows the new offer to confirm again. Live tickets wait the live bet delay. No offer while a match or market is suspended, its league is off, it is past kick-off without the feed having started it, a leg has lost, or cash out is switched off (Sportsbook → Limits). A cashed-out ticket is never paid by settlement.
+- **Reconciliation:** hourly, every balance must equal the sum of its ledger and the held amount must equal the player's pending withdrawals. Mismatches are logged and audited (`LEDGER_MISMATCH`, `HOLD_MISMATCH`); the dashboard shows the last check and the number of matches awaiting settlement.
+- **Serverless hosts** (no worker): `GET /cron/settle` (same `CRON_SECRET`) runs settlement and the money check; added to `vercel.json`.
+
+**Tests:** 98 API integration (9 new in `settlement.test.ts`: provider settlement, accumulators, refunds, waiting for results, overdue matches, manual settlement with roles and validation, cash out incl. idempotency / price change / suspension / settings, reconciliation of held money) · shared unit tests · i18n parity. All green. Browser check (Chromium, 1500 px and 390 px): cash out offer → confirm → Cash Out history with the balance updated; admin dashboard tiles, *Awaiting settlement* list and the settle dialog (half-time check, cancelled mode).
+
+## How to try phase 5
+
+1. `pnpm dev`. Place a single and an accumulator in the web app (http://localhost:3000).
+2. My Bets → Active: each ticket shows *Cash out X RON*. Click it, then *Confirm*: the money is in the wallet at once and the ticket is under *Cash Out history*.
+3. Settle a match by hand: admin (http://localhost:3001) → Sportsbook → Matches → status *Awaiting settlement* (or any match that has kicked off) → *Settle*, enter the score and a reason. Winning tickets are paid and the player's My Bets and balance update live. With the mock feed, finished matches are settled automatically within about 30 s.
+4. Dashboard: *Awaiting settlement* and *Money check* tiles.
 
 ## Data provider settings — what was built
 

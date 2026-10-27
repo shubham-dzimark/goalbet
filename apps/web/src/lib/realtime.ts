@@ -4,7 +4,7 @@ import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { type Socket, io } from 'socket.io-client';
 import { create } from 'zustand';
-import { type EventStateMessage, type OddsMessage, type TicketMessage, type WalletMessage } from '@goalbet/shared';
+import { type EventStateMessage, type OddsMessage, type TicketDto, type TicketMessage, type WalletMessage } from '@goalbet/shared';
 import { useAuth } from './auth-store';
 import { useSlip } from './slip-store';
 
@@ -122,15 +122,26 @@ export function useRealtimeConnection() {
     });
     s.on('disconnect', () => useRealtime.setState({ connected: false }));
 
+    // a price or state change on a match of an open ticket moves its cash-out offer
+    const repriceCashOut = (eventId: string) => {
+      if (!qc.getQueryState(['cashout-offers'])) return;
+      const cached = qc.getQueriesData<{ pages?: { items: TicketDto[] }[] } | TicketDto>({ queryKey: ['tickets'] });
+      const single = qc.getQueriesData<TicketDto>({ queryKey: ['ticket'] });
+      const tickets = [...cached.flatMap(([, d]) => (d && 'pages' in d && d.pages ? d.pages.flatMap((p) => p.items) : [])), ...single.map(([, d]) => d)];
+      if (tickets.some((tk) => tk?.legs?.some((l) => l.event.id === eventId))) void qc.invalidateQueries({ queryKey: ['cashout-offers'] });
+    };
+
     const slipTouches = (eventId: string, selectionIds: string[] = []) =>
       useSlip.getState().items.some((i) => i.eventId === eventId || selectionIds.includes(i.selectionId));
 
     s.on('event', (m: EventStateMessage) => {
       applyEvent(qc, m);
+      repriceCashOut(m.eventId);
       if (slipTouches(m.eventId)) void qc.invalidateQueries({ queryKey: ['slip-odds'] });
     });
     s.on('odds', (m: OddsMessage) => {
       applyOdds(qc, m);
+      repriceCashOut(m.eventId);
       if (slipTouches(m.eventId, m.selections.map((x) => x.selectionId))) void qc.invalidateQueries({ queryKey: ['slip-odds'] });
     });
     s.on('wallet', (m: WalletMessage) => {
@@ -146,6 +157,7 @@ export function useRealtimeConnection() {
       void qc.invalidateQueries({ queryKey: ['tickets'] });
       void qc.invalidateQueries({ queryKey: ['ticket-counts'] });
       void qc.invalidateQueries({ queryKey: ['ticket', m.ticketId] });
+      void qc.invalidateQueries({ queryKey: ['cashout-offers'] });
     });
 
     // login, logout and token refresh: re-authenticate the socket

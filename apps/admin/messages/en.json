@@ -71,7 +71,15 @@
     "fullReport": "Full report",
     "recentActivity": "Recent activity",
     "allActivity": "All activity",
-    "waitingSplit": "{requests} player requests · {credits} credits →"
+    "waitingSplit": "{requests} player requests · {credits} credits →",
+    "awaitingSettlement": "Awaiting settlement",
+    "awaitingHint": "Finished matches not settled yet",
+    "allSettled": "All matches settled",
+    "reconciliation": "Money check",
+    "reconOk": "Balances match the ledger",
+    "reconBad": "{count, plural, one {# mismatch} other {# mismatches}} — see audit log",
+    "reconNever": "Not run yet",
+    "reconAt": "Checked {when}"
   },
   "table": {
     "empty": "Nothing to show yet.",
@@ -385,7 +393,8 @@
         "status": "Status",
         "markets": "Markets",
         "tickets": "Open bets",
-        "suspended": "Suspended"
+        "suspended": "Suspended",
+        "settlement": "Settlement"
       },
       "feed": "Feed",
       "resume": "Resume",
@@ -407,7 +416,10 @@
       "resumeHelp": "Bets are accepted again on every open market of this match.",
       "suspendHelp": "No new bets are accepted on this match until you resume it. Placed bets are not affected.",
       "resumed": "Match resumed",
-      "suspendedToast": "Match suspended"
+      "suspendedToast": "Match suspended",
+      "settled": "Settled",
+      "settle": "Settle",
+      "awaiting": "Awaiting settlement"
     },
     "eventMarkets": {
       "none": "No markets for this match yet.",
@@ -474,6 +486,21 @@
       "saved": "{name} saved",
       "invalid": "Enter a valid number.",
       "save": "Save"
+    },
+    "settle": {
+      "title": "Settle {match}",
+      "help": "Enter the final result. {tickets, plural, one {# open bet is} other {# open bets are}} graded and paid at once. Player markets (scorers, shots) are voided.",
+      "cancelHelp": "The match is called off: every open bet on it is voided and the stakes are refunded.",
+      "confirm": "Settle match",
+      "confirmCancel": "Void all bets",
+      "cancelled": "Match cancelled / abandoned",
+      "ht": "Half time",
+      "ft": "Full time",
+      "stats": "Stats",
+      "corners": "corners",
+      "cards": "cards",
+      "halfTimeError": "The half-time score cannot be higher than the full-time score.",
+      "done": "Settled: {tickets, plural, one {# ticket} other {# tickets}}, {paid} paid"
     }
   },
   "reports": {

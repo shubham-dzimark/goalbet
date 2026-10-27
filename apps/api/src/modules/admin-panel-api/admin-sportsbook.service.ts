@@ -20,6 +20,15 @@ import { DomainError } from '../../common/errors.js';
 import { PrismaService } from '../../common/prisma.service.js';
 import { Channels, RedisService } from '../../common/redis.service.js';
 import { SettingsService } from '../../common/settings.service.js';
+import { OVERDUE_AFTER_MS } from '../settlement-engine/settlement.service.js';
+
+
+/** F2.8 matches with open bets that are finished (or overdue) but not settled: they need settling. */
+export const awaitingSettlementWhere = (): Prisma.EventWhereInput => ({
+  settledAt: null,
+  OR: [{ status: { in: ['FINISHED', 'CANCELLED'] } }, { startTime: { lt: new Date(Date.now() - OVERDUE_AFTER_MS) } }],
+  legs: { some: { ticket: { status: { in: OPEN_TICKET_STATUSES } } } },
+});
 
 /**
  * F3.5 sportsbook settings: leagues, market types, single markets, event suspension and the
@@ -101,6 +110,7 @@ export class AdminSportsbookService {
     status?: EventStatus | undefined;
     q?: string | undefined;
     suspendedOnly?: boolean | undefined;
+    awaitingSettlement?: boolean | undefined;
     cursor?: string | undefined;
     limit: number;
   }) {
@@ -112,7 +122,11 @@ export class AdminSportsbookService {
       ...(q.suspendedOnly ? { suspended: true } : {}),
       AND: [
         // default view: live, plus upcoming (a match the feed never started drops out 2 h after kick-off)
-        q.status ? { status: q.status } : { OR: [{ status: 'LIVE' }, { status: 'SCHEDULED', startTime: { gte: new Date(Date.now() - 2 * 3600_000) } }] },
+        q.awaitingSettlement
+          ? awaitingSettlementWhere()
+          : q.status
+            ? { status: q.status }
+            : { OR: [{ status: 'LIVE' }, { status: 'SCHEDULED', startTime: { gte: new Date(Date.now() - 2 * 3600_000) } }] },
         term ? { OR: [{ homeTeam: contains }, { awayTeam: contains }] } : {},
       ],
     };
@@ -141,6 +155,11 @@ export class AdminSportsbookService {
       feedSuspended: e.feedSuspended,
       markets: e._count.markets,
       openTickets: e._count.legs,
+      htHomeScore: e.htHomeScore,
+      htAwayScore: e.htAwayScore,
+      corners: e.corners,
+      cards: e.cards,
+      settledAt: e.settledAt?.toISOString() ?? null,
     }));
     return { items, nextCursor: rows.length > q.limit ? (items.at(-1)?.id ?? null) : null };
   }

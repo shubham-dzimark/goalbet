@@ -47,7 +47,9 @@
     "PAYMENT_AMOUNT_LIMIT": "Suma nu se încadrează în limitele permise.",
     "WITHDRAWAL_PENDING": "Ai deja o retragere în așteptare. Anuleaz-o sau așteaptă procesarea ei.",
     "TOO_MANY_PENDING": "Ai prea multe cereri de depunere în așteptare.",
-    "REQUEST_NOT_PENDING": "Această cerere a fost deja procesată."
+    "REQUEST_NOT_PENDING": "Această cerere a fost deja procesată.",
+    "EVENT_ALREADY_SETTLED": "Acest meci a fost deja decontat.",
+    "SETTLEMENT_NOT_READY": "Meciul nu a început încă, deci nu poate fi decontat."
   },
   "validation": {
     "required": "Acest câmp este obligatoriu.",
@@ -65,6 +67,7 @@
     "amount": "Introdu o sumă validă.",
     "reason": "Introdu un motiv (cel puțin 3 caractere).",
     "iban": "Introdu un IBAN valid (ex. RO49 AAAA 1B31 0075 9384 0000).",
+    "halfTime": "Scorul de la pauză nu poate fi mai mare decât cel final.",
     "holder": "Introdu numele complet al titularului de cont."
   },
   "markets": {

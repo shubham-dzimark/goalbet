@@ -24,6 +24,7 @@ const TONES = {
   live: 'text-live bg-live/12',
   info: 'text-info bg-info/12',
   neutral: 'text-ink-muted bg-tint/[0.06]',
+  danger: 'text-danger bg-danger/12',
 } as const;
 
 /** KPI tile. */

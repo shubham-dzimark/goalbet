@@ -71,7 +71,15 @@
     "fullReport": "Raport complet",
     "recentActivity": "Activitate recentă",
     "allActivity": "Toată activitatea",
-    "waitingSplit": "{requests} cereri jucători · {credits} creditări →"
+    "waitingSplit": "{requests} cereri jucători · {credits} creditări →",
+    "awaitingSettlement": "Așteaptă decontarea",
+    "awaitingHint": "Meciuri terminate, nedecontate încă",
+    "allSettled": "Toate meciurile decontate",
+    "reconciliation": "Verificare bani",
+    "reconOk": "Soldurile corespund registrului",
+    "reconBad": "{count, plural, one {# nepotrivire} other {# nepotriviri}} — vezi jurnalul de audit",
+    "reconNever": "Nu a rulat încă",
+    "reconAt": "Verificat {when}"
   },
   "table": {
     "empty": "Nimic de afișat încă.",
@@ -385,7 +393,8 @@
         "status": "Stare",
         "markets": "Piețe",
         "tickets": "Pariuri deschise",
-        "suspended": "Suspendat"
+        "suspended": "Suspendat",
+        "settlement": "Decontare"
       },
       "feed": "Flux",
       "resume": "Reia",
@@ -407,7 +416,10 @@
       "resumeHelp": "Pariurile sunt din nou acceptate pe toate piețele deschise ale meciului.",
       "suspendHelp": "Nu se mai acceptă pariuri noi pe acest meci până îl reiei. Pariurile plasate nu sunt afectate.",
       "resumed": "Meci reluat",
-      "suspendedToast": "Meci suspendat"
+      "suspendedToast": "Meci suspendat",
+      "settled": "Decontat",
+      "settle": "Decontează",
+      "awaiting": "Așteaptă decontarea"
     },
     "eventMarkets": {
       "none": "Încă nu există piețe pentru acest meci.",
@@ -474,6 +486,21 @@
       "saved": "{name} salvat",
       "invalid": "Introdu un număr valid.",
       "save": "Salvează"
+    },
+    "settle": {
+      "title": "Decontează {match}",
+      "help": "Introdu rezultatul final. {tickets, plural, one {# pariu deschis este evaluat și plătit} other {# pariuri deschise sunt evaluate și plătite}} imediat. Piețele pe jucători (marcatori, șuturi) sunt anulate.",
+      "cancelHelp": "Meciul este anulat: toate pariurile deschise pe el sunt anulate și mizele returnate.",
+      "confirm": "Decontează meciul",
+      "confirmCancel": "Anulează toate pariurile",
+      "cancelled": "Meci anulat / abandonat",
+      "ht": "Pauză",
+      "ft": "Final",
+      "stats": "Statistici",
+      "corners": "cornere",
+      "cards": "cartonașe",
+      "halfTimeError": "Scorul de la pauză nu poate fi mai mare decât cel final.",
+      "done": "Decontat: {tickets, plural, one {# bilet} other {# bilete}}, {paid} plătiți"
     }
   },
   "reports": {

@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { type AuditLog } from '@goalbet/db';
 import { type AdminAuditRow, type AdminDashboard, type AdminReport, OPEN_TICKET_STATUSES, type TicketStatus } from '@goalbet/shared';
 import { PrismaService } from '../../common/prisma.service.js';
+import { WalletService } from '../wallet-ledger/wallet.service.js';
+import { awaitingSettlementWhere } from './admin-sportsbook.service.js';
 
 const DAY = 86_400_000;
 const isoDay = (d: Date) => d.toISOString().slice(0, 10);
@@ -31,7 +33,10 @@ export function toAuditRow(a: AuditLog): AdminAuditRow {
 /** F3.6 reports (users, stakes, payouts, open exposure, transaction logs) and the admin dashboard. */
 @Injectable()
 export class AdminReportsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly wallet: WalletService,
+  ) {}
 
   private async ledger(from: Date, to: Date): Promise<LedgerTotals> {
     const [row] = await this.prisma.$queryRaw<LedgerTotals[]>`
@@ -125,10 +130,12 @@ export class AdminReportsService {
   async dashboard(): Promise<AdminDashboard> {
     const today = new Date(`${isoDay(new Date())}T00:00:00Z`);
     const tomorrow = new Date(today.getTime() + DAY);
-    const [liveEvents, pendingApprovals, pendingPayments, todayTickets, newUsers, ledger, exposure, last7, audit] = await Promise.all([
+    const [liveEvents, pendingApprovals, pendingPayments, awaitingSettlement, reconciliation, todayTickets, newUsers, ledger, exposure, last7, audit] = await Promise.all([
       this.prisma.event.count({ where: { status: 'LIVE', competition: { active: true } } }),
       this.prisma.creditApproval.count({ where: { status: 'PENDING' } }),
       this.prisma.paymentRequest.count({ where: { status: 'PENDING' } }),
+      this.prisma.event.count({ where: awaitingSettlementWhere() }),
+      this.wallet.lastReconciliation(),
       this.prisma.ticket.count({ where: { placedAt: { gte: today, lt: tomorrow }, status: { not: 'REJECTED' } } }),
       this.prisma.user.count({ where: { createdAt: { gte: today, lt: tomorrow } } }),
       this.ledger(today, tomorrow),
@@ -141,6 +148,8 @@ export class AdminReportsService {
       openTickets: exposure.openTickets,
       pendingApprovals,
       pendingPayments,
+      awaitingSettlement,
+      reconciliation,
       today: { tickets: todayTickets, stakesBani: num(ledger.stakes), payoutsBani: num(ledger.payouts), newUsers },
       exposureBani: exposure.potentialPayoutBani,
       last7Days: last7.map(({ date, stakesBani, payoutsBani }) => ({ date, stakesBani, payoutsBani })),

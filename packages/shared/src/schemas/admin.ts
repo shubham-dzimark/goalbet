@@ -83,6 +83,8 @@ export const adminEventQuerySchema = z.object({
   status: z.enum(['SCHEDULED', 'LIVE', 'FINISHED', 'CANCELLED']).optional(),
   q: z.string().trim().max(100).optional(),
   suspendedOnly: z.coerce.boolean().optional(),
+  /** F2.8 finished (or long-overdue) matches that are not settled yet */
+  awaitingSettlement: z.coerce.boolean().optional(),
   ...cursorPage,
 });
 
@@ -90,6 +92,25 @@ export const adminEventSuspendSchema = z.object({
   suspended: z.boolean(),
   reason,
 });
+
+const goals = z.number().int().min(0).max(99);
+/**
+ * F2.9 manual settlement: the operator enters the final result when the provider has none.
+ * Player markets (scorers, shots) are voided: there are no player stats to settle them on.
+ */
+export const adminSettleEventSchema = z
+  .object({
+    cancelled: z.boolean().default(false),
+    ftHome: goals,
+    ftAway: goals,
+    htHome: goals,
+    htAway: goals,
+    corners: z.number().int().min(0).max(99),
+    cards: z.number().int().min(0).max(99),
+    reason,
+  })
+  .refine((v) => v.cancelled || (v.htHome <= v.ftHome && v.htAway <= v.ftAway), { path: ['htHome'], message: 'validation.halfTime' });
+export type AdminSettleEventInput = z.input<typeof adminSettleEventSchema>;
 
 export const adminMarketUpdateSchema = z
   .object({

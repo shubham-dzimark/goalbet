@@ -12,6 +12,7 @@ import type {
   TicketType,
   WalletTxType,
 } from './enums.js';
+import type { CashOutUnavailableReason } from './cashout.js';
 
 /** API response shapes shared by the API and the frontends. */
 
@@ -144,6 +145,12 @@ export interface TicketDto {
   cashedOutAt: string | null;
   legs: TicketLegDto[];
 }
+
+/** F2.3 the live cash-out offer for an open ticket (re-checked on accept, F2.6). */
+export type CashOutQuoteDto = { ticketId: string; quotedAt: string } & (
+  | { available: true; offerBani: number }
+  | { available: false; reason: CashOutUnavailableReason | 'DISABLED' | 'NOT_OPEN' }
+);
 
 export interface WalletTransactionDto {
   id: string;

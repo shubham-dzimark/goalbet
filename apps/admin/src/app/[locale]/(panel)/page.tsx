@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Hourglass, Radio, ShieldAlert, Ticket, TrendingUp, UserPlus, Wallet } from 'lucide-react';
+import { ArrowRight, Flag, Hourglass, Radio, Scale, ShieldAlert, Ticket, TrendingUp, UserPlus, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type AdminDashboard } from '@goalbet/shared';
 import { Skeleton } from '@goalbet/ui';
@@ -24,6 +24,7 @@ export default function DashboardPage() {
     refetchInterval: 15_000,
   });
 
+  const reconMismatches = data?.reconciliation ? data.reconciliation.ledgerMismatches + data.reconciliation.holdMismatches : 0;
   const hour = new Date().getHours();
   const greeting = t(hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening', { name: admin?.name.split(' ')[0] ?? '' });
 
@@ -69,6 +70,41 @@ export default function DashboardPage() {
               hint={t('ggrHint')}
             />
             <StatCard label={t('newUsers')} value={f.num(data.today.newUsers)} icon={UserPlus} />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <StatCard
+              testId="dashboard-awaiting"
+              label={t('awaitingSettlement')}
+              value={f.num(data.awaitingSettlement)}
+              icon={Flag}
+              tone={data.awaitingSettlement > 0 ? 'gold' : 'neutral'}
+              hint={
+                data.awaitingSettlement > 0 ? (
+                  <Link href="/sportsbook" className="font-semibold text-brand hover:underline">
+                    {t('awaitingHint')} →
+                  </Link>
+                ) : (
+                  t('allSettled')
+                )
+              }
+            />
+            <StatCard
+              testId="dashboard-reconciliation"
+              label={t('reconciliation')}
+              value={
+                !data.reconciliation ? (
+                  <span className="text-ink-muted">—</span>
+                ) : reconMismatches > 0 ? (
+                  <span className="text-danger">{t('reconBad', { count: reconMismatches })}</span>
+                ) : (
+                  <span className="text-brand">{t('reconOk')}</span>
+                )
+              }
+              icon={Scale}
+              tone={reconMismatches > 0 ? 'danger' : 'brand'}
+              hint={data.reconciliation ? t('reconAt', { when: f.ago(data.reconciliation.ranAt) }) : t('reconNever')}
+            />
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">

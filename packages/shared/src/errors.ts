@@ -62,6 +62,9 @@ export const ErrorCode = {
   WITHDRAWAL_PENDING: 'WITHDRAWAL_PENDING',
   TOO_MANY_PENDING: 'TOO_MANY_PENDING',
   REQUEST_NOT_PENDING: 'REQUEST_NOT_PENDING',
+  // settlement (F2.8–F2.11)
+  EVENT_ALREADY_SETTLED: 'EVENT_ALREADY_SETTLED',
+  SETTLEMENT_NOT_READY: 'SETTLEMENT_NOT_READY',
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 export const ERROR_CODES = Object.values(ErrorCode) as ErrorCode[];

@@ -112,6 +112,32 @@ export interface AdminEventRow {
   feedSuspended: boolean;
   markets: number;
   openTickets: number;
+  /** pre-fill for manual settlement */
+  htHomeScore: number | null;
+  htAwayScore: number | null;
+  corners: number;
+  cards: number;
+  settledAt: string | null;
+}
+
+/** F2.8–F2.11 result of settling one match. */
+export interface AdminSettlementResult {
+  eventId: string;
+  status: EventStatus;
+  version: number;
+  ticketsSettled: number;
+  /** total WIN + REFUND credited */
+  paidBani: number;
+}
+
+/** Hourly money check (rule 2): every balance equals its ledger; held money equals pending withdrawals. */
+export interface ReconciliationReport {
+  ranAt: string;
+  wallets: number;
+  /** balance ≠ sum of its transactions */
+  ledgerMismatches: number;
+  /** held ≠ sum of pending withdrawal requests */
+  holdMismatches: number;
 }
 
 export interface AdminMarketRow {
@@ -144,6 +170,10 @@ export interface AdminDashboard {
   pendingApprovals: number;
   /** player deposit / withdrawal requests waiting for Finance */
   pendingPayments: number;
+  /** finished matches not settled yet (F2.8) */
+  awaitingSettlement: number;
+  /** last hourly money check; null until it has run */
+  reconciliation: ReconciliationReport | null;
   today: { tickets: number; stakesBani: number; payoutsBani: number; newUsers: number };
   exposureBani: number;
   last7Days: { date: string; stakesBani: number; payoutsBani: number }[];
