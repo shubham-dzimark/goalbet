@@ -186,6 +186,8 @@ model User {
   status               UserStatus           @default(ACTIVE)
   locale               String               @default("ro")
   oddsChangePreference OddsChangePreference @default(HIGHER)
+  /// responsible gambling: remind the player of time played every N minutes (null = off)
+  realityCheckMinutes  Int?
   termsAcceptedAt      DateTime
   lastLoginAt          DateTime?
   createdAt            DateTime             @default(now())

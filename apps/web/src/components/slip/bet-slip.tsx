@@ -240,7 +240,8 @@ export function BetSlip({ className }: { className?: string }) {
         ? potentialWin(accaStake, accaOdds)
         : 0
       : singles.reduce((a, s) => a + (s.stake > 0 ? potentialWin(s.stake, s.item.oddsMilli) : 0), 0);
-  const unaccepted = items.some((i) => i.prevOddsMilli !== null);
+  // a player who accepts any odds change is not asked again; nothing changes while a bet is being placed
+  const unaccepted = slip.oddsPref !== 'ANY' && items.some((i) => i.prevOddsMilli !== null);
   const anyUnavailable = items.some((i) => !i.available);
   const hasLive = items.some((i) => i.live);
 
@@ -508,7 +509,7 @@ export function BetSlip({ className }: { className?: string }) {
               <Button asChild size="lg" className="w-full">
                 <Link href="/login">{t('loginToBet')}</Link>
               </Button>
-            ) : unaccepted || error?.oddsChanged ? (
+            ) : !busy && (unaccepted || error?.oddsChanged) ? (
               <Button
                 size="lg"
                 className="w-full bg-warning text-boost-ink hover:bg-warning/90"

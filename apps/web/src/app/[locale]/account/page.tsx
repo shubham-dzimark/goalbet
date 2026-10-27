@@ -9,6 +9,7 @@ import {
   type UserLimitType,
   type WalletTransactionDto,
   parseRonToBani,
+  REALITY_CHECK_MINUTES,
 } from '@goalbet/shared';
 import {
   Alert,
@@ -120,8 +121,8 @@ function ProfileCard({ user }: { user: SessionUser }) {
 
 function PreferencesCard({ user }: { user: SessionUser }) {
   const t = useTranslations();
-  const update = async (oddsChangePreference: string) => {
-    const u = await api<SessionUser>('/me', { method: 'PATCH', body: { oddsChangePreference } });
+  const update = async (body: Partial<Pick<SessionUser, 'oddsChangePreference' | 'realityCheckMinutes'>>) => {
+    const u = await api<SessionUser>('/me', { method: 'PATCH', body });
     useAuth.getState().setUser(u);
   };
   return (
@@ -138,13 +139,29 @@ function PreferencesCard({ user }: { user: SessionUser }) {
         </div>
         <label className="space-y-1.5 text-sm font-medium">
           {t('slip.oddsPref')}
-          <NativeSelect value={user.oddsChangePreference} onChange={(e) => void update(e.target.value)}>
+          <NativeSelect value={user.oddsChangePreference} onChange={(e) => void update({ oddsChangePreference: e.target.value as SessionUser['oddsChangePreference'] })}>
             {(['NONE', 'HIGHER', 'ANY'] as const).map((p) => (
               <option key={p} value={p}>
                 {t(`slip.pref${p}`)}
               </option>
             ))}
           </NativeSelect>
+        </label>
+        <label className="space-y-1.5 text-sm font-medium sm:col-span-2">
+          {t('account.realityCheck')}
+          <NativeSelect
+            value={user.realityCheckMinutes ?? ''}
+            onChange={(e) => void update({ realityCheckMinutes: e.target.value ? Number(e.target.value) : null })}
+            data-testid="reality-check-select"
+          >
+            <option value="">{t('account.realityCheckOff')}</option>
+            {REALITY_CHECK_MINUTES.map((m) => (
+              <option key={m} value={m}>
+                {t('account.realityCheckEvery', { count: m })}
+              </option>
+            ))}
+          </NativeSelect>
+          <span className="block text-xs font-normal text-ink-muted">{t('account.realityCheckHint')}</span>
         </label>
       </CardContent>
     </Card>
@@ -210,10 +227,11 @@ function LimitsCard({ limits }: { limits: LimitRow[] }) {
                 inputMode="decimal"
                 aria-label={t('account.amountRon')}
                 placeholder="RON"
+                data-testid={`limit-input-${type}`}
                 value={values[type] ?? ''}
                 onChange={(e) => setValues((v) => ({ ...v, [type]: e.target.value }))}
               />
-              <Button type="submit" variant="secondary" size="md">
+              <Button type="submit" variant="secondary" size="md" data-testid={`limit-set-${type}`}>
                 {t('account.set')}
               </Button>
               <Button
@@ -308,6 +326,11 @@ export default function AccountPage() {
   const f = useFormat();
   const authed = useRequireAuth();
   const [tab, setTab] = useState<AccountTab>('overview');
+  // deep links such as /account?tab=limits (reality check, responsible gambling page)
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get('tab');
+    if (wanted && ['overview', 'profile', 'preferences', 'limits', 'exclusion'].includes(wanted)) setTab(wanted as AccountTab);
+  }, []);
   const { data } = useQuery({
     queryKey: ['dashboard'],
     queryFn: () => api<Dashboard>('/me/dashboard'),
@@ -368,11 +391,11 @@ export default function AccountPage() {
         value={tab}
         onChange={setTab}
         options={[
-          { value: 'overview', label: t('account.tabs.overview') },
-          { value: 'profile', label: t('account.profile') },
-          { value: 'preferences', label: t('account.preferences') },
-          { value: 'limits', label: t('account.limits') },
-          { value: 'exclusion', label: t('account.exclusion') },
+          { value: 'overview', label: t('account.tabs.overview'), testId: 'account-tab-overview' },
+          { value: 'profile', label: t('account.profile'), testId: 'account-tab-profile' },
+          { value: 'preferences', label: t('account.preferences'), testId: 'account-tab-preferences' },
+          { value: 'limits', label: t('account.limits'), testId: 'account-tab-limits' },
+          { value: 'exclusion', label: t('account.exclusion'), testId: 'account-tab-exclusion' },
         ]}
       />
 

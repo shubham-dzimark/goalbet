@@ -87,7 +87,7 @@ export class AccountController {
         actor: { type: 'USER', id: u.id, ...meta },
         entityType: 'User',
         entityId: u.id,
-        before: { name: before.name, phone: before.phone, locale: before.locale, oddsChangePreference: before.oddsChangePreference },
+        before: { name: before.name, phone: before.phone, locale: before.locale, oddsChangePreference: before.oddsChangePreference, realityCheckMinutes: before.realityCheckMinutes },
         after: body,
       });
       return toUserDto(user, user.wallet);

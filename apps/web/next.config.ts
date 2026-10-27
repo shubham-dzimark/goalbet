@@ -15,9 +15,12 @@ const securityHeaders = [
 const config: NextConfig = {
   // standalone server for Docker (Linux). Skipped on Vercel (own output) and on Windows, where
   // copying the pnpm symlinks needs admin rights (EPERM).
-  ...(process.env.VERCEL || process.platform === 'win32' ? {} : { output: 'standalone' as const }),
+  // also skipped for the E2E build, which is served with `next start`
+  ...(process.env.VERCEL || process.platform === 'win32' || process.env.NEXT_DIST_DIR ? {} : { output: 'standalone' as const }),
   // monorepo: trace workspace packages into the standalone bundle
   outputFileTracingRoot: fileURLToPath(new URL('../..', import.meta.url)),
+  // the E2E stack builds into its own folder (other API port baked into the rewrites)
+  distDir: process.env.NEXT_DIST_DIR ?? '.next',
   transpilePackages: ['@goalbet/ui'],
   poweredByHeader: false,
   // The browser talks to the API through this origin, so auth cookies stay first-party.

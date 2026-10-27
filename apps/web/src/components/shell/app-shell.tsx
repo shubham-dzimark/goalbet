@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-store';
 import { useSlip } from '@/lib/slip-store';
 import { useRealtimeConnection } from '@/lib/realtime';
+import { RealityCheck } from './reality-check';
 import { useSyncTimeZone } from '@/lib/time-zone';
 import { ScrollProgress } from '../fx/scroll-progress';
 import { BetSlip } from '../slip/bet-slip';
@@ -59,6 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main id="main">{children}</main>
         <SiteFooter />
       </div>
+      {authed ? <RealityCheck /> : null}
       {!authPage ? (
         <aside className="hidden w-[360px] shrink-0 xl:block">
           <div className="glass sticky top-3 max-h-[calc(100dvh-1.5rem)] overflow-y-auto rounded-3xl">
