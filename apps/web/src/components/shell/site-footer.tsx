@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Suspense } from 'react';
 import { Logo } from '@goalbet/ui';
+import { Link } from '@/i18n/navigation';
 import { LanguageSwitcher } from '../language-switcher';
 
 export function SiteFooter() {
@@ -20,7 +21,12 @@ export function SiteFooter() {
           </Suspense>
         </div>
         <div className="space-y-0.5 md:text-right">
-          <p className="font-semibold text-ink">{t('responsible')}</p>
+          <p className="font-semibold text-ink">
+            {t('responsible')}{' '}
+            <Link href="/responsible-gambling" className="text-brand underline-offset-2 hover:underline" data-testid="footer-rg">
+              {t('rgLink')}
+            </Link>
+          </p>
           <p>{t('currencyNote')}</p>
           <p className="text-xs text-ink-faint">{t('rights', { year: new Date().getFullYear() })}</p>
         </div>

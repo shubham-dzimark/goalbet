@@ -11,7 +11,23 @@
 | — | Data provider & API key managed in the admin panel (no restart) | ✅ Done |
 | 5 | Cash out (F2.3–F2.7), settlement + payout + credit (F2.8–F2.11), reconciliation (incl. held funds = pending withdrawals); cash out and payouts respect held money | ✅ Done |
 | 6 | Bet Builder (F1.11), sportsbook settings (F3.5), reports + exposure (F3.6) incl. deposits/withdrawals by day and method and queue age; player deposit limits (daily/weekly/monthly) | ✅ Done |
-| 7 | Responsive polish, responsible gambling, provider skeleton, all E2E (incl. deposit/withdrawal flows), README with the licence / KYC / AML notes for real money | — |
+| 7 | Responsive polish, responsible gambling, provider skeleton, all E2E (incl. deposit/withdrawal flows), README with the licence / KYC / AML notes for real money | ✅ Done |
+
+## Phase 7 — what was built
+
+- **End-to-end tests (Playwright)** on an isolated stack (own database, Redis DB, ports and mock feed; your dev data is never touched): registration with the 18+ check, Romanian → English, pre-match single, accumulator and Bet Builder through the slip, live bet after the bet delay, My Bets, cash out, manual credit, deposit and withdrawal approved by Finance (incl. two-admin approval), manual settlement paying a bet, reports and audit log, admin roles, responsible-gambling tools, and no sideways scrolling on player and admin pages at 1440 px and 375 px (slip as bottom sheet on mobile). Also added as a CI job.
+- **Responsible gambling:** a *Responsible gambling* page (tools, warning signs, the free Joc Responsabil help line and ONJN, 18+) linked from every page's footer; a **reality check** (My account → Preferences: every 15/30/60/120 minutes, shows time played, staked, returned and net, with Continue / Set limits / Log out); deep links into the limits and self-exclusion tabs.
+- **Provider template** (`api-integration/template/provider.template.ts`) documenting what a commercial odds feed must implement.
+- **README** rewritten: features, quick start, tests incl. E2E, data providers, deployment notes and what real money in Romania still needs (ONJN licence, KYC, AML, payments, responsible gambling, tax, GDPR, integrity).
+- **Fixes found by the E2E run:** in the slip, a price change during a live bet's delay replaced the busy *Place bet* button with *Accept new odds*; players who chose "accept any odds change" were still asked to accept changes.
+- Every box of the flow chart is now marked Done in [FLOWCHART_TRACEABILITY.md](FLOWCHART_TRACEABILITY.md).
+
+**Tests:** 107 API integration (2 new) · shared unit · i18n parity · 15 E2E (13 desktop 1440 px + 2 mobile 375 px, 5–9 min), passed twice in a row. All green.
+
+## How to try phase 7
+
+1. `pnpm --filter @goalbet/e2e prepare-stack` then `pnpm --filter @goalbet/e2e e2e` (5–9 min after the first build; `pnpm --filter @goalbet/e2e e2e:report` opens the HTML report).
+2. Footer → *Responsible gambling*; My account → Preferences → *Reality check*.
 
 ## Phase 6 — what was built
 

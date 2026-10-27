@@ -70,7 +70,8 @@
     "responsible": "Gambling can be addictive. Play responsibly.",
     "adultsOnly": "18+",
     "currencyNote": "All amounts are in RON. Wallet credit is managed by the operator.",
-    "rights": "© {year} GoalBet. Placeholder brand."
+    "rights": "© {year} GoalBet. Placeholder brand.",
+    "rgLink": "Responsible gambling"
   },
   "language": {
     "label": "Language",
@@ -264,7 +265,11 @@
     "wallet": "Wallet",
     "tabs": {
       "overview": "Overview"
-    }
+    },
+    "realityCheck": "Reality check",
+    "realityCheckOff": "Off",
+    "realityCheckEvery": "Remind me every {count} minutes",
+    "realityCheckHint": "Shows how long you have been playing and what you staked and got back since you logged in."
   },
   "fx": {
     "kickoff": "Kick-off!",
@@ -380,5 +385,55 @@
       "submit": "Request withdrawal",
       "tooLow": "You need at least {min} available to withdraw. You have {available}."
     }
+  },
+  "realityCheck": {
+    "title": "Time for a break?",
+    "played": "You have been playing for {minutes} minutes.",
+    "staked": "Staked",
+    "returned": "Returned",
+    "net": "Result",
+    "hint": "Amounts since you logged in. Bet only what you can afford to lose.",
+    "continue": "Continue",
+    "limits": "Set limits",
+    "logout": "Log out"
+  },
+  "rg": {
+    "kicker": "Play safe",
+    "title": "Responsible gambling",
+    "intro": "Betting should be fun, never a way to make money or escape problems. Here is how GoalBet helps you stay in control, and where to find help.",
+    "toolsTitle": "Your tools",
+    "tools": {
+      "limits": {
+        "title": "Stake & deposit limits",
+        "text": "Daily, weekly and monthly limits on stakes and deposits, plus a maximum stake per bet. Lower limits apply at once; higher ones after 24 hours."
+      },
+      "reality": {
+        "title": "Reality check",
+        "text": "A reminder every 15–120 minutes with your playing time and result since you logged in."
+      },
+      "exclusion": {
+        "title": "Self-exclusion",
+        "text": "Take a break for a set time or permanently. You cannot bet or deposit until it ends; you can still withdraw."
+      },
+      "history": {
+        "title": "Full history",
+        "text": "Every bet and every wallet movement is in My bets and Wallet."
+      }
+    },
+    "manage": "Manage in My account",
+    "signsTitle": "Warning signs",
+    "signs": [
+      "You bet more than you planned, or chase losses.",
+      "You borrow money or sell things to gamble.",
+      "Betting causes arguments or worries at home or work.",
+      "You feel restless or irritable when you try to stop."
+    ],
+    "helpTitle": "Get help (Romania)",
+    "helpLine": "Joc Responsabil — free helpline 0800 800 099",
+    "helpLineText": "Free, confidential counselling for players and their families, by phone or chat.",
+    "helpSite": "jocresponsabil.ro",
+    "onjn": "ONJN (National Gambling Office) — onjn.gov.ro",
+    "onjnText": "The regulator: lists licensed operators and handles complaints.",
+    "adults": "Only adults (18+) may bet. We check your age when you register."
   }
 }

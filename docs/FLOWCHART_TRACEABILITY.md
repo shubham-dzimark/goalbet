@@ -9,7 +9,7 @@ _Last update: Phase 2 (pre-match betting)._
 
 | ID | Box | Status | Implementing files | Tests |
 | --- | --- | --- | --- | --- |
-| F0.1 | Football only | Partial | `packages/shared/src/enums.ts` (Sport = FOOTBALL), `mock/data.ts`; no sport selector anywhere in UI | `ingest-and-schema.test.ts › stores competitions… (football only)`; `mock-provider.test.ts › seeds the seven competitions`. Admin side checked in phase 3. |
+| F0.1 | Football only | Done | `packages/shared/src/enums.ts` (Sport = FOOTBALL), `mock/data.ts`; no sport selector in the player site or the admin | `ingest-and-schema.test.ts › stores competitions… (football only)`; `mock-provider.test.ts › seeds the seven competitions` |
 | F0.2 | RON only | Done | `packages/shared/src/money.ts` (`formatRon`), every amount in web (`lib/format.ts`), wallet currency `RON` | `money.test.ts › formats RO as 1.234,56 RON…`; `betting.test.ts` (amounts in bani end to end) |
 | F0.3 | RO (default) + EN, switch in header on both apps, remembered per user | Done | `apps/*/src/i18n/*`, `language-switcher.tsx` (web + admin), `packages/shared/i18n`, `PATCH /me`, `PATCH /admin/auth/me` | `auth.test.ts › F0.3 stores the locale on the profile`; `admin-auth.test.ts › remembers the admin language`; `web|admin/test/i18n-parity.test.ts`; `schemas-i18n.test.ts › ro and en have identical keys` |
 | F0.4 | Wallet changes only via bets / cash out / settlement / admin | Done | `WalletService.apply` is the only balance writer; players can only *request* deposits/withdrawals (`PaymentsService`) and money moves when Finance approves (ledger `DEPOSIT` / `WITHDRAWAL`); withdrawals hold their amount (`Wallet.heldBani`, CHECK 0 ≤ held ≤ balance); DB guards (append-only ledger, balance ≥ 0) | `ingest-and-schema.test.ts › F4.3 database guards`; `admin-wallet.test.ts › F3.3…`; `payments.test.ts` (6); `betting.test.ts › F1.15…` |
@@ -29,7 +29,7 @@ _Last update: Phase 2 (pre-match betting)._
 | F1.9 | Select match & markets | Done | `catalog.service.ts › event`, web `match/[id]`, `market-board.tsx` (tabs per group; 1X2, DC, goals O/U 0.5–5.5, team goals, BTTS, European + Asian handicap, correct score, corners, cards, anytime scorer, player shots, half-time) | `mock-provider.test.ts › offers every market group of F1.9`; `catalog.test.ts › … match page …` |
 | F1.10 | Normal bet | Done | `bet-validation.service.ts` (single = 1 leg, acca = 2..20, one selection per match), slip conflict warning (`slipHasConflict`) | `betting.test.ts › F1.10 accumulator…` |
 | F1.11 | Bet Builder | Done | shared rules `bet-builder.ts` (2–12 picks, one pick per market, supported markets, contradiction search with the settlement rules); `builder-pricing.service.ts` (provider's correlated price, else product × `builder.factorBps`, min 1.01); `GET /catalog/builder` live quote; `bet-validation.service.ts` accepts `BET_BUILDER` legs (one leg, one price, parts' prices kept); settled as one leg (`combineBuilderParts`); cash out re-prices the leg; slip *Bet Builder* tab with the combined price, reasons when it can't be priced, "combine them" shortcut from an accumulator conflict | `bet-builder.test.ts` (shared, 12); `bet-builder.test.ts` (API, 5: pricing, provider price, refusals, place/settle/cash out, lost part) |
-| F1.12 | Bet slip | Partial | `slip-store.ts` (persisted for guests), `slip/bet-slip.tsx` (Single / Accumulator / Bet Builder tabs, stake RON, quick stakes 10/20/50/100, total or Bet Builder odds, potential win, odds-change preference, live price refresh, accept new odds), `slip/mobile-slip.tsx` (floating bar → bottom sheet) | API side covered by `betting.test.ts`, `bet-builder.test.ts`; UI verified with Playwright screenshots — automated E2E in phase 7 |
+| F1.12 | Bet slip | Done | `slip-store.ts` (persisted for guests), `slip/bet-slip.tsx` (Single / Accumulator / Bet Builder tabs, stake RON, quick stakes 10/20/50/100, total or Bet Builder odds, potential win, odds-change preference, live price refresh, accept new odds), `slip/mobile-slip.tsx` (bottom sheet from the tab bar) | `betting.test.ts`, `bet-builder.test.ts`; E2E `betting.spec.ts`, `live.spec.ts`, `responsive.spec.ts` (mobile sheet) |
 | F1.13 | Validate bet (backend) | Done | `bet-validation.service.ts` (user → market status → odds vs preference → limits → balance) | `betting.test.ts › F1.13 validation order…` (7 tests incl. "checks run in flow-chart order") |
 | F1.14 | Rejected | Done | typed `DomainError` codes, `BetAttempt` row + `BET_REJECTED` audit, localised messages (`useErrorMessage`), "accept new odds" in slip | `betting.test.ts › expectRejected(...)` in every rejection test (no ticket, no money moved, attempt + audit logged) |
 | F1.15 | Create ticket | Done | `bet.service.ts` (Idempotency-Key, live delay + re-validation, `$transaction` + `SELECT … FOR UPDATE`, STAKE ledger entry, 10-char code, ACTIVE / LIVE) | `betting.test.ts › F1.15 create ticket` (6 tests incl. idempotency + parallel overdraw) |
@@ -70,20 +70,20 @@ _Last update: Phase 2 (pre-match betting)._
 | F4.1 | Sports data / odds provider | Done | provider + API key chosen in Admin → Data provider (`provider-config.service.ts`, `provider-router.ts`, admin `data-provider/`; env fallback, no restart); `odds-provider.ts` (+ `liveDataTime` for cached feeds), `mock/*`, `api-football/*`, `mock-control.controller.ts`; feed-stall safety: worker `feed-watchdog` (5 s) → `IngestService.checkFeed` suspends live matches when live data is older than `feed.stallSeconds`, fresh data lifts it; `FEED_STALLED` / `FEED_RECOVERED` audited | `mock-provider.test.ts` (7), `ingest-and-schema.test.ts`, `realtime.test.ts › F4.1` (2), `data-provider.test.ts` (5) |
 | F4.2 | Backend / betting engine modules | Done | `apps/api/src/modules/*` (8 chart-named modules) | `ingest-and-schema.test.ts › F4.2…` |
 | F4.3 | Database | Done | `packages/db/prisma/schema.prisma` + migrations | `ingest-and-schema.test.ts › F4.3…` |
-| F4.4 | User frontend | Partial | `apps/web` (Next.js 16, responsive: 0 px horizontal overflow at 375 px verified) | `web/test/i18n-parity.test.ts`; Playwright viewports in phase 7 |
+| F4.4 | User frontend | Done | `apps/web` (Next.js 16, RO/EN, light/dark, responsive) | `web/test/i18n-parity.test.ts`; E2E (all player specs) at 1440 px and 375 px |
 | F4.5 | Admin frontend | Done | `apps/admin` (Emerald Pitch back office: dashboard, users, wallet, bets, sportsbook, reports, audit; RO/EN; role-aware actions) | `admin/test/i18n-parity.test.ts`; scripted screenshots |
 
 ## F5 — Supported features
 
 | ID | Feature | Status | Proof |
 | --- | --- | --- | --- |
-| F5.1 | Pre-match betting | Partial | API: `betting.test.ts › places a pre-match single`; E2E in phase 7 |
-| F5.2 | Live betting | Partial | API: `betting.test.ts › live bets wait the bet delay…`, `realtime.test.ts`; E2E in phase 7 |
-| F5.3 | Multiple markets | Partial | `mock-provider.test.ts › offers every market group`; UI E2E in phase 7 |
-| F5.4 | Bet Builder | Missing | phase 6 |
-| F5.5 | Cash out | Missing | phase 5 |
-| F5.6 | RON wallet (admin controlled) | Partial | `admin-wallet.test.ts`; E2E in phase 7 |
-| F5.7 | Romanian & English | Partial | key-parity tests; E2E in phase 7 |
-| F5.8 | Reports & logs | Missing | phase 3 / 6 |
-| F5.9 | Responsive | Missing | Playwright 1440 / 375 in phase 7 |
-| F5.10 | Complete, scalable, secure | Partial | stateless API, Redis rate limits, Helmet, Argon2id, TOTP, refresh rotation, append-only ledger, row-locked money ops, idempotency |
+| F5.1 | Pre-match betting | Done | API `betting.test.ts`; E2E `betting.spec.ts › single, accumulator and Bet Builder…` |
+| F5.2 | Live betting | Done | API `betting.test.ts › live bets wait the bet delay…`, `realtime.test.ts`; E2E `live.spec.ts` (live page, live bet after the delay, ticket LIVE) |
+| F5.3 | Multiple markets | Done | `mock-provider.test.ts › offers every market group`; E2E `betting.spec.ts` (1X2, totals, BTTS on the match page) |
+| F5.4 | Bet Builder | Done | `bet-builder.test.ts` (shared 12, API 5); E2E `betting.spec.ts` (combined price, contradiction explained, placed) |
+| F5.5 | Cash out | Done | `settlement.test.ts › F2.3–F2.7` (3); E2E `betting.spec.ts` (cash out from My Bets) |
+| F5.6 | RON wallet (admin controlled) | Done | `admin-wallet.test.ts`, `payments.test.ts`; E2E `wallet.spec.ts` (manual credit, deposit and withdrawal approved by Finance, four-eyes) |
+| F5.7 | Romanian & English | Done | key-parity tests; E2E `account.spec.ts` (Romanian by default, switch to English on the same page) |
+| F5.8 | Reports & logs | Done | `admin-panel.test.ts › F3.6 / F3.8`, `reports-limits.test.ts`; E2E `admin.spec.ts` (reports, audit log after a manual settlement) |
+| F5.9 | Responsive | Done | E2E `responsive.spec.ts` in both projects (1440 px, 375 px): no sideways scroll on player and admin pages, slip as bottom sheet on mobile |
+| F5.10 | Complete, scalable, secure | Done | stateless API (horizontal scaling, Redis channels), BullMQ workers, Redis rate limits, Helmet, Argon2id, TOTP 2FA with roles, refresh rotation, append-only ledger, row-locked money ops, idempotency, hourly reconciliation, audit log; E2E role checks (`admin.spec.ts`); real-money gaps listed in README |

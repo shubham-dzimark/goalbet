@@ -8,6 +8,7 @@ export interface UserDto {
   locale: string;
   status: string;
   oddsChangePreference: OddsChangePreference;
+  realityCheckMinutes: number | null;
   balanceBani: number;
   dateOfBirth: string;
   createdAt: string;
@@ -22,6 +23,7 @@ export function toUserDto(user: User, wallet: Pick<Wallet, 'balanceBani'> | null
     locale: user.locale,
     status: user.status,
     oddsChangePreference: user.oddsChangePreference,
+    realityCheckMinutes: user.realityCheckMinutes,
     balanceBani: wallet?.balanceBani ?? 0,
     dateOfBirth: user.dateOfBirth.toISOString().slice(0, 10),
     createdAt: user.createdAt.toISOString(),

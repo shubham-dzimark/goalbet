@@ -95,4 +95,7 @@ export const updateProfileSchema = z.object({
   phone: phoneSchema.optional(),
   locale: localeSchema.optional(),
   oddsChangePreference: z.enum(['NONE', 'HIGHER', 'ANY']).optional(),
+  /** reality check every N minutes, null = off */
+  realityCheckMinutes: z.union([z.literal(15), z.literal(30), z.literal(60), z.literal(120)]).nullable().optional(),
 });
+export const REALITY_CHECK_MINUTES = [15, 30, 60, 120] as const;

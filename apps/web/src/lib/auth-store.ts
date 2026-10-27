@@ -8,6 +8,8 @@ export interface SessionUser {
   locale: string;
   status: string;
   oddsChangePreference: 'NONE' | 'HIGHER' | 'ANY';
+  /** reality check every N minutes; null = off */
+  realityCheckMinutes: number | null;
   balanceBani: number;
   dateOfBirth: string;
   createdAt: string;

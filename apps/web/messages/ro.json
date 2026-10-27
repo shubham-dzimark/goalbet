@@ -70,7 +70,8 @@
     "responsible": "Jocurile de noroc pot crea dependență. Joacă responsabil.",
     "adultsOnly": "18+",
     "currencyNote": "Toate sumele sunt în RON. Creditul din portofel este gestionat de operator.",
-    "rights": "© {year} GoalBet. Brand provizoriu."
+    "rights": "© {year} GoalBet. Brand provizoriu.",
+    "rgLink": "Joc responsabil"
   },
   "language": {
     "label": "Limbă",
@@ -264,7 +265,11 @@
     "wallet": "Portofel",
     "tabs": {
       "overview": "Prezentare"
-    }
+    },
+    "realityCheck": "Verificare a realității",
+    "realityCheckOff": "Dezactivat",
+    "realityCheckEvery": "Amintește-mi la fiecare {count} minute",
+    "realityCheckHint": "Arată de cât timp joci, cât ai mizat și cât ai primit înapoi de la autentificare."
   },
   "fx": {
     "kickoff": "Start!",
@@ -380,5 +385,55 @@
       "submit": "Cere retragerea",
       "tooLow": "Ai nevoie de cel puțin {min} disponibili pentru retragere. Ai {available}."
     }
+  },
+  "realityCheck": {
+    "title": "E timpul pentru o pauză?",
+    "played": "Joci de {minutes} minute.",
+    "staked": "Mizat",
+    "returned": "Primit",
+    "net": "Rezultat",
+    "hint": "Sume de la autentificare. Pariază doar cât îți permiți să pierzi.",
+    "continue": "Continuă",
+    "limits": "Setează limite",
+    "logout": "Deconectare"
+  },
+  "rg": {
+    "kicker": "Joacă în siguranță",
+    "title": "Joc responsabil",
+    "intro": "Pariurile trebuie să fie o distracție, nu o sursă de bani sau o evadare din probleme. Iată cum te ajută GoalBet să păstrezi controlul și unde găsești ajutor.",
+    "toolsTitle": "Instrumentele tale",
+    "tools": {
+      "limits": {
+        "title": "Limite de miză și depunere",
+        "text": "Limite zilnice, săptămânale și lunare pentru mize și depuneri, plus o miză maximă pe pariu. Limitele mai mici se aplică imediat; cele mai mari după 24 de ore."
+      },
+      "reality": {
+        "title": "Verificare a realității",
+        "text": "Un memento la fiecare 15–120 de minute cu timpul de joc și rezultatul de la autentificare."
+      },
+      "exclusion": {
+        "title": "Autoexcludere",
+        "text": "Ia o pauză pe o perioadă stabilită sau definitiv. Nu poți paria sau depune până se încheie; poți totuși retrage bani."
+      },
+      "history": {
+        "title": "Istoric complet",
+        "text": "Fiecare pariu și fiecare mișcare din portofel se află în Pariurile mele și Portofel."
+      }
+    },
+    "manage": "Gestionează în Contul meu",
+    "signsTitle": "Semne de avertizare",
+    "signs": [
+      "Pariezi mai mult decât ți-ai propus sau încerci să recuperezi pierderile.",
+      "Împrumuți bani sau vinzi lucruri ca să joci.",
+      "Pariurile provoacă certuri sau griji acasă ori la serviciu.",
+      "Devii neliniștit sau iritat când încerci să te oprești."
+    ],
+    "helpTitle": "Cere ajutor (România)",
+    "helpLine": "Joc Responsabil — linie gratuită 0800 800 099",
+    "helpLineText": "Consiliere gratuită și confidențială pentru jucători și familiile lor, la telefon sau prin chat.",
+    "helpSite": "jocresponsabil.ro",
+    "onjn": "ONJN (Oficiul Național pentru Jocuri de Noroc) — onjn.gov.ro",
+    "onjnText": "Autoritatea de reglementare: lista operatorilor licențiați și reclamații.",
+    "adults": "Doar persoanele majore (18+) pot paria. Vârsta este verificată la înregistrare."
   }
 }
