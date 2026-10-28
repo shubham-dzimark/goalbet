@@ -29,6 +29,17 @@ test.describe('F2.9 manual settlement, F5.8 reports & logs', () => {
     const paid = await api<{ payoutBani: number }>(`/tickets/${ticket.id}`, { token: p.token });
     expect(paid.payoutBani).toBeGreaterThan(1000);
 
+    // F2.9 the result was wrong: re-settle as 0–0, the winnings are taken back
+    await page.locator('select').nth(1).selectOption('FINISHED');
+    await page.getByTestId(`event-resettle-${ev.id}`).click();
+    await page.getByTestId('settle-htHome').fill('0');
+    await page.getByTestId('settle-ftHome').fill('0');
+    await page.getByTestId('reason-input').fill('E2E: goal disallowed by VAR');
+    await page.getByTestId('reason-confirm').click();
+    // the first settlement's toast may still be showing
+    await expect(page.getByTestId('toast-success').last()).toBeVisible();
+    await expect.poll(async () => (await api<{ status: string }>(`/tickets/${ticket.id}`, { token: p.token })).status).toBe('LOST');
+
     // F3.6 reports
     await page.getByTestId('nav-reports').click();
     await expect(page.getByTestId('report')).toBeVisible();

@@ -96,7 +96,7 @@ export const adminEventSuspendSchema = z.object({
 const goals = z.number().int().min(0).max(99);
 /**
  * F2.9 manual settlement: the operator enters the final result when the provider has none.
- * Player markets (scorers, shots) are voided: there are no player stats to settle them on.
+ * Player markets (scorers, shots) are settled for the players the operator lists; others are void.
  */
 export const adminSettleEventSchema = z
   .object({
@@ -107,6 +107,11 @@ export const adminSettleEventSchema = z
     htAway: goals,
     corners: z.number().int().min(0).max(99),
     cards: z.number().int().min(0).max(99),
+    /** players who appeared, with goals and shots; players left out are void for player markets */
+    players: z
+      .array(z.object({ ref: z.string().min(1).max(64), goals: z.number().int().min(0).max(20), shots: z.number().int().min(0).max(60) }))
+      .max(80)
+      .default([]),
     reason,
   })
   .refine((v) => v.cancelled || (v.htHome <= v.ftHome && v.htAway <= v.ftAway), { path: ['htHome'], message: 'validation.halfTime' });

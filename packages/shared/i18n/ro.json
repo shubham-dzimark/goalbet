@@ -50,7 +50,10 @@
     "REQUEST_NOT_PENDING": "Această cerere a fost deja procesată.",
     "DEPOSIT_LIMIT_EXCEEDED": "Această depunere ar depăși limita ta de depunere de {max}. Poți modifica limitele din Contul meu.",
     "EVENT_ALREADY_SETTLED": "Acest meci a fost deja decontat.",
-    "SETTLEMENT_NOT_READY": "Meciul nu a început încă, deci nu poate fi decontat."
+    "SETTLEMENT_NOT_READY": "Meciul nu a început încă, deci nu poate fi decontat.",
+    "EVENT_NOT_SETTLED": "Acest meci nu a fost încă decontat: decontează-l mai întâi.",
+    "RESETTLE_INSUFFICIENT_FUNDS": "Unii jucători nu mai au câștigurile care ar trebui retrase, așa că nu s-a modificat nimic. Reglează mai întâi soldul lor.",
+    "SCORER_GOALS_EXCEED_SCORE": "Golurile jucătorilor depășesc scorul echipei."
   },
   "validation": {
     "required": "Acest câmp este obligatoriu.",

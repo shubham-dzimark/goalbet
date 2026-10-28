@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Flag, Lock, Pause, Play, Star } from 'lucide-react';
+import { Flag, Lock, Pause, Play, RotateCcw, Star } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import {
@@ -10,6 +10,8 @@ import {
   type AdminMarketRow,
   type AdminMarketTypeRow,
   type AdminSettings,
+  type AdminEventPlayer,
+  type AdminResettlementResult,
   type AdminSettlementResult,
   type SettingKey,
 } from '@goalbet/shared';
@@ -171,7 +173,7 @@ function Events() {
   const [suspendedOnly, setSuspendedOnly] = useState(false);
   const [target, setTarget] = useState<AdminEventRow | null>(null);
   const [open, setOpen] = useState<AdminEventRow | null>(null);
-  const [settling, setSettling] = useState<AdminEventRow | null>(null);
+  const [settling, setSettling] = useState<{ event: AdminEventRow; mode: 'settle' | 'resettle' } | null>(null);
   const { data: comps } = useQuery({ queryKey: ['competitions'], queryFn: () => adminApi<AdminCompetitionRow[]>('/admin/sportsbook/competitions') });
   const list = usePaged<AdminEventRow>(['events'], '/admin/sportsbook/events', { q, status: status === 'AWAITING' ? undefined : status, awaitingSettlement: status === 'AWAITING' ? 'true' : undefined, competitionId, suspendedOnly: suspendedOnly ? 'true' : undefined }, { refetchInterval: 15_000 });
 
@@ -220,7 +222,23 @@ function Events() {
       align: 'right',
       cell: (e) =>
         e.settledAt ? (
-          <Badge tone="success">{t('settled')}</Badge>
+          <div className="flex items-center justify-end gap-2">
+            <Badge tone="success">{t('settled')}</Badge>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={!can('OPERATOR')}
+              onClick={(ev) => {
+                ev.stopPropagation();
+                setSettling({ event: e, mode: 'resettle' });
+              }}
+              title={t('resettle')}
+              data-testid={`event-resettle-${e.id}`}
+            >
+              <RotateCcw className="size-3.5" aria-hidden="true" />
+              <span className="sr-only sm:not-sr-only">{t('resettle')}</span>
+            </Button>
+          </div>
         ) : new Date(e.startTime).getTime() < Date.now() || e.status === 'FINISHED' || e.status === 'CANCELLED' ? (
           <Button
             size="sm"
@@ -228,7 +246,7 @@ function Events() {
             disabled={!can('OPERATOR')}
             onClick={(ev) => {
               ev.stopPropagation();
-              setSettling(e);
+              setSettling({ event: e, mode: 'settle' });
             }}
             data-testid={`event-settle-${e.id}`}
           >
@@ -295,7 +313,7 @@ function Events() {
         }}
       />
       <EventMarketsPanel event={open} onClose={() => setOpen(null)} />
-      <SettleDialog event={settling} onClose={() => setSettling(null)} />
+      <SettleDialog event={settling?.event ?? null} mode={settling?.mode ?? 'settle'} onClose={() => setSettling(null)} />
     </>
   );
 }
@@ -303,15 +321,30 @@ function Events() {
 const SCORE_FIELDS = ['htHome', 'htAway', 'ftHome', 'ftAway', 'corners', 'cards'] as const;
 type ScoreField = (typeof SCORE_FIELDS)[number];
 
+type PlayerStat = { played: boolean; goals: string; shots: string };
+
 /**
  * F2.9 manual settlement: the operator enters the final result (or calls the match off) when the
- * provider has none. Every bet on the match is graded and paid at once; player markets are void.
+ * provider has none, with goals and shots for the players who have bets. Every bet on the match
+ * is graded and paid at once. In re-settle mode a settled match is corrected: the difference is
+ * paid or taken back.
  */
-function SettleDialog({ event, onClose }: { event: AdminEventRow | null; onClose: () => void }) {
+function SettleDialog({ event, mode, onClose }: { event: AdminEventRow | null; mode: 'settle' | 'resettle'; onClose: () => void }) {
   const t = useTranslations('sportsbook.settle');
   const f = useFmt();
   const qc = useQueryClient();
   const [cancelled, setCancelled] = useState(false);
+  const [stats, setStats] = useState<Record<string, PlayerStat>>({});
+  const players = useQuery({
+    queryKey: ['event-players', event?.id],
+    queryFn: () => adminApi<AdminEventPlayer[]>(`/admin/sportsbook/events/${event!.id}/players`),
+    enabled: !!event,
+  });
+  useEffect(() => setStats({}), [event]);
+  const stat = (ref: string): PlayerStat => stats[ref] ?? { played: false, goals: '0', shots: '0' };
+  const setStat = (ref: string, patch: Partial<PlayerStat>) => setStats((s) => ({ ...s, [ref]: { ...stat(ref), ...patch } }));
+  const int = (v: string) => Math.max(0, Math.min(60, Number.parseInt(v, 10) || 0));
+  const resettle = mode === 'resettle';
   const [score, setScore] = useState<Record<ScoreField, string>>({ htHome: '0', htAway: '0', ftHome: '0', ftAway: '0', corners: '0', cards: '0' });
   useEffect(() => {
     if (!event) return;
@@ -332,16 +365,26 @@ function SettleDialog({ event, onClose }: { event: AdminEventRow | null; onClose
     <ReasonDialog
       open={!!event}
       onOpenChange={(o) => !o && onClose()}
-      title={event ? t('title', { match: `${event.homeTeam} – ${event.awayTeam}` }) : ''}
-      description={t(cancelled ? 'cancelHelp' : 'help', { tickets: event?.openTickets ?? 0 })}
-      confirmLabel={t(cancelled ? 'confirmCancel' : 'confirm')}
-      tone={cancelled ? 'danger' : 'primary'}
+      title={event ? t(resettle ? 'resettleTitle' : 'title', { match: `${event.homeTeam} – ${event.awayTeam}` }) : ''}
+      description={resettle ? t('resettleHelp') : t(cancelled ? 'cancelHelp' : 'help', { tickets: event?.openTickets ?? 0 })}
+      confirmLabel={resettle ? t('confirmResettle') : t(cancelled ? 'confirmCancel' : 'confirm')}
+      tone={cancelled || resettle ? 'danger' : 'primary'}
       onConfirm={async (reason) => {
-        const res = await adminApi<AdminSettlementResult>(`/admin/sportsbook/events/${event!.id}/settle`, {
-          method: 'POST',
-          body: { cancelled, reason, ...Object.fromEntries(SCORE_FIELDS.map((k) => [k, num(k)])) },
-        });
-        toast.success(t('done', { tickets: res.ticketsSettled, paid: f.ron(res.paidBani) }));
+        const body = {
+          cancelled,
+          reason,
+          ...Object.fromEntries(SCORE_FIELDS.map((k) => [k, num(k)])),
+          players: Object.entries(stats)
+            .filter(([, v]) => v.played)
+            .map(([ref, v]) => ({ ref, goals: int(v.goals), shots: int(v.shots) })),
+        };
+        if (resettle) {
+          const res = await adminApi<AdminResettlementResult>(`/admin/sportsbook/events/${event!.id}/resettle`, { method: 'POST', body });
+          toast.success(t('resettled', { tickets: res.ticketsChanged, credited: f.ron(res.creditedBani), debited: f.ron(res.debitedBani) }));
+        } else {
+          const res = await adminApi<AdminSettlementResult>(`/admin/sportsbook/events/${event!.id}/settle`, { method: 'POST', body });
+          toast.success(t('done', { tickets: res.ticketsSettled, paid: f.ron(res.paidBani) }));
+        }
         await qc.invalidateQueries({ queryKey: ['events'] });
         await qc.invalidateQueries({ queryKey: ['dashboard'] });
       }}
@@ -386,6 +429,51 @@ function SettleDialog({ event, onClose }: { event: AdminEventRow | null; onClose
         </div>
       )}
       {!cancelled && (num('htHome') > num('ftHome') || num('htAway') > num('ftAway')) ? <p className="text-xs text-danger">{t('halfTimeError')}</p> : null}
+      {!cancelled && (players.data?.length ?? 0) > 0 ? (
+        <fieldset className="space-y-2" data-testid="settle-players">
+          <legend className="text-xs font-bold uppercase text-ink-faint">{t('playersTitle')}</legend>
+          <p className="text-xs text-ink-muted">{t('playersHelp')}</p>
+          <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
+            {players.data!.map((pl) => {
+              const st = stat(pl.ref);
+              return (
+                <div key={pl.ref} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 rounded-lg px-2 py-1.5 text-sm odd:bg-tint/[0.03]">
+                  <label className="flex min-w-0 items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={st.played}
+                      onChange={(e) => setStat(pl.ref, { played: e.target.checked })}
+                      className="size-4 accent-[var(--color-brand)]"
+                      data-testid={`settle-played-${pl.ref}`}
+                    />
+                    <span className="truncate">
+                      {pl.name} <span className="text-xs text-ink-faint">· {pl.team === 'HOME' ? event?.homeTeam : event?.awayTeam}</span>
+                      {pl.openBets > 0 ? <span className="ml-1 text-xs text-accent">({t('openBets', { count: pl.openBets })})</span> : null}
+                    </span>
+                  </label>
+                  {(['goals', 'shots'] as const).map((k) => (
+                    <label key={k} className="flex items-center gap-1 text-xs text-ink-muted">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={60}
+                        inputMode="numeric"
+                        value={st[k]}
+                        disabled={!st.played}
+                        onChange={(e) => setStat(pl.ref, { [k]: e.target.value })}
+                        className="h-8 w-14 px-2"
+                        aria-label={`${t(k)} – ${pl.name}`}
+                        data-testid={`settle-${k}-${pl.ref}`}
+                      />
+                      {t(k)}
+                    </label>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </fieldset>
+      ) : null}
     </ReasonDialog>
   );
 }

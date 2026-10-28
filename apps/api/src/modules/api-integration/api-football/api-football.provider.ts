@@ -82,6 +82,10 @@ const HOUR = 60 * MIN;
 const LEAGUE_AVG = { home: 1.45, away: 1.15 };
 const LIVE_WINDOW_MS = 135 * MIN;
 const MIN_LIVE_INTERVAL_MS = 2 * MIN;
+/** how often a finished-but-unresolved match's day is re-read for its result */
+const RESULT_RECHECK_MS = 20 * MIN;
+/** Redis hash fixture id → UTC day it was listed on */
+const FIXTURE_DAYS = 'af:fixture-days';
 const RESERVE_CALLS = 12;
 const PREDICTION_HORIZON_MS = 30 * HOUR;
 
@@ -134,13 +138,17 @@ export class ApiFootballProvider implements OddsProvider {
     return list.filter((f) => this.leagues.includes(f.league.id));
   }
 
-  /** All of our fixtures for a UTC day (one call returns every league; we keep ours). */
-  private async day(date: string): Promise<ApiFixture[]> {
+  /**
+   * All of our fixtures for a UTC day (one call returns every league; we keep ours). Each fixture's
+   * day is remembered so its result can be fetched later with the same one call per day.
+   */
+  private async day(date: string, maxAgeMs?: number): Promise<ApiFixture[]> {
     const today = isoDay(Date.now());
-    const maxAge = date === today ? 3 * HOUR : date < today ? 24 * HOUR : 6 * HOUR;
+    const maxAge = maxAgeMs ?? (date === today ? 3 * HOUR : date < today ? 24 * HOUR : 6 * HOUR);
     const data = await this.cached(`af:fx:${date}`, maxAge, async () =>
       this.ours(await this.client.get<ApiFixture>('/fixtures', { date, timezone: 'UTC' })),
     );
+    if (data?.length) await this.redis.hset(FIXTURE_DAYS, Object.fromEntries(data.map((f) => [String(f.fixture.id), date])));
     return data ?? [];
   }
 
@@ -204,10 +212,7 @@ export class ApiFootballProvider implements OddsProvider {
 
     const states: ProviderLiveState[] = [];
     for (const f of live ?? []) states.push(this.toLiveState(f, now - fetchedAt));
-    // Kicked off per schedule but not in the live list any more → queue a result check.
-    const liveIds = new Set((live ?? []).map((f) => f.fixture.id));
-    const gone = window.filter((f) => !liveIds.has(f.fixture.id) && now - new Date(f.fixture.date).getTime() > 20 * MIN);
-    if (gone.length) await this.redis.sadd('af:pending', ...gone.map((f) => String(f.fixture.id)));
+    // matches that left the live list are resolved by getResult (re-reading their day)
     return states;
   }
 
@@ -241,27 +246,20 @@ export class ApiFootballProvider implements OddsProvider {
     };
   }
 
-  /** Final result, fetched in batches of up to 20 pending fixtures per call and cached. */
-  async getResult(fixtureRef: string): Promise<ProviderResult | null> {
+  /**
+   * Final result. The free plan can't fetch fixtures by id list, so the match's whole day is
+   * re-read instead (one call covers every match of that day), at most every 20 minutes.
+   */
+  async getResult(fixtureRef: string, kickoff?: Date): Promise<ProviderResult | null> {
     const id = Number(fixtureRef.replace(/^af-/, ''));
     if (!Number.isFinite(id)) return null;
-    let f = await this.fixtureById(id);
     const final = (x?: ApiFixture) => !!x && ['FINISHED', 'CANCELLED'].includes(STATUS[x.fixture.status.short]?.status ?? '');
+    let f = await this.fixtureById(id);
     if (!final(f)) {
-      await this.redis.sadd('af:pending', String(id));
-      await this.cached('af:results-batch', 5 * MIN, async () => {
-        const ids = (await this.redis.smembers('af:pending')).slice(0, 20);
-        if (ids.length === 0) return [];
-        const list = await this.client.get<ApiFixture>('/fixtures', { ids: ids.join('-'), timezone: 'UTC' });
-        for (const x of list) {
-          if (final(x)) {
-            await this.redis.set(`af:res:${x.fixture.id}`, JSON.stringify(x), 'EX', 7 * 86_400);
-            await this.redis.srem('af:pending', String(x.fixture.id));
-          }
-        }
-        return list.map((x) => x.fixture.id);
-      });
-      f = await this.fixtureById(id);
+      // matches listed before days were remembered: the kick-off day is the listing day (UTC)
+      const date = (await this.redis.hget(FIXTURE_DAYS, String(id))) ?? (kickoff ? isoDay(kickoff.getTime()) : null);
+      if (date) f = (await this.day(date, RESULT_RECHECK_MS)).find((x) => x.fixture.id === id) ?? f;
+      if (final(f)) await this.redis.set(`af:res:${id}`, JSON.stringify(f), 'EX', 7 * 86_400);
     }
     if (!f || !final(f)) return null;
     const st = STATUS[f.fixture.status.short]!;

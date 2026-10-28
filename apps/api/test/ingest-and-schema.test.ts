@@ -109,3 +109,18 @@ describe('F4.2 engine modules named after the chart', () => {
     ]);
   });
 });
+
+describe('concurrent market syncs (fixtures sync and pre-match refresh racing)', () => {
+  it('two jobs adding the same new markets at once neither fail nor duplicate them', async () => {
+    await ingest.syncCompetitions();
+    const now = Date.now();
+    const [eventId] = await ingest.syncFixtures(new Date(now), new Date(now + 2 * 24 * 3600_000));
+    const results = await Promise.allSettled([ingest.syncMarkets(eventId!), ingest.syncMarkets(eventId!), ingest.syncMarkets(eventId!)]);
+    expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
+
+    const markets = await ctx.prisma.market.findMany({ where: { eventId }, include: { _count: { select: { selections: true } } } });
+    expect(markets.length).toBeGreaterThan(10);
+    expect(new Set(markets.map((m) => m.key)).size).toBe(markets.length);
+    expect(markets.every((m) => m._count.selections > 0)).toBe(true);
+  });
+});

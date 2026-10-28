@@ -132,6 +132,26 @@ export interface AdminSettlementResult {
   paidBani: number;
 }
 
+/** Correcting a settled match: what changed for the players (F2.9 re-settlement). */
+export interface AdminResettlementResult {
+  eventId: string;
+  version: number;
+  ticketsChanged: number;
+  /** extra winnings / refunds paid */
+  creditedBani: number;
+  /** winnings taken back (VOID_REVERSAL) */
+  debitedBani: number;
+}
+
+/** A squad player with player markets on the match, for manual settlement. */
+export interface AdminEventPlayer {
+  ref: string;
+  name: string;
+  team: 'HOME' | 'AWAY';
+  /** open bets on this player's markets */
+  openBets: number;
+}
+
 /** Hourly money check (rule 2): every balance equals its ledger; held money equals pending withdrawals. */
 export interface ReconciliationReport {
   ranAt: string;
