@@ -90,4 +90,21 @@ describe('F4.1 data provider managed in the admin panel', () => {
     await ctx.http().post('/admin/data-provider/sync').set(sa.auth).expect(202);
     expect(await ctx.prisma.auditLog.count({ where: { action: 'DATA_PROVIDER_SYNC' } })).toBe(1);
   });
+
+  it('after switching to API-Football, matches from the demo feed still get their results (old bets settle)', async () => {
+    const mock = await router().resolve();
+    const now = Date.now();
+    const past = await mock.getFixtures(new Date(now - 26 * 3600_000), new Date(now - 3 * 3600_000));
+    let ref: string | null = null;
+    for (const f of past) if (await mock.getResult(f.ref)) ref ??= f.ref;
+    expect(ref).toMatch(/^mock-/);
+    const expected = await mock.getResult(ref!);
+
+    const sa = await as('SUPER_ADMIN');
+    await save(sa.auth, { provider: 'api-football', apiKey: FAKE_KEY }).expect(200);
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('no network calls expected'));
+    expect((await router().resolve()).name).toBe('api-football');
+    expect(await router().getResult(ref!)).toEqual(expected);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
 });

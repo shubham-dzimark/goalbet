@@ -13,6 +13,15 @@
 | 6 | Bet Builder (F1.11), sportsbook settings (F3.5), reports + exposure (F3.6) incl. deposits/withdrawals by day and method and queue age; player deposit limits (daily/weekly/monthly) | ✅ Done |
 | 7 | Responsive polish, responsible gambling, provider skeleton, all E2E (incl. deposit/withdrawal flows), README with the licence / KYC / AML notes for real money | ✅ Done |
 
+## Fix: bets on finished matches not settling
+
+- **Cause 1:** results for matches older than yesterday were requested every 30 s, but the API-Football free plan refuses those dates; each refused call also counted against our daily budget, which then hit its limit and froze live scores. The plan's date window is now remembered (no more refused calls) and refused calls are not counted.
+- **Cause 2:** matches from the demo feed, left over after switching to API-Football, were asked about the wrong provider; they now get their results from the demo feed.
+- Matches the free plan can no longer give results for wait for an operator under *Awaiting settlement* (manual *Settle*).
+- The dev worker now reloads when engine code changes.
+
+**Tests:** `api-football-results.test.ts` (+2: refused date remembered, refused call not charged), `data-provider.test.ts` (+1: demo-feed matches settle after switching provider).
+
 ## Email (SMTP) settings in the admin panel
 
 - **Admin → System → Email** (Super admin): mail server, port, security (SSL/TLS, STARTTLS, none), username, password (stored encrypted, never shown again; Replace / Remove), sender name and address, on/off switch.

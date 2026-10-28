@@ -72,6 +72,9 @@ export class ApiFootballClient {
     const body = (await res.json()) as { response: T[]; errors: unknown };
     const errors = body.errors;
     if (errors && !Array.isArray(errors) && Object.keys(errors as object).length > 0) {
+      // plan refusals (date range, unsupported parameter) are not charged by API-Football:
+      // give the call back so our own daily budget matches theirs
+      if ('plan' in (errors as object)) await this.redis.decr(`af:budget:${day()}`);
       throw new Error(`api-football ${path}: ${JSON.stringify(errors)}`);
     }
     this.logger.debug({ apiFootball: path, params, results: body.response.length });
