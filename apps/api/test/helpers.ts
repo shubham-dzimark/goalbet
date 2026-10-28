@@ -50,6 +50,8 @@ export async function resetDb(ctx: TestContext) {
   ctx.app.get(SettingsService).invalidate();
   const { ProviderConfigService } = await import('../src/modules/api-integration/provider-config.service.js');
   ctx.app.get(ProviderConfigService).invalidate();
+  const { MailConfigService } = await import('../src/common/mail-config.service.js');
+  ctx.app.get(MailConfigService).invalidate();
 }
 
 export const validRegistration = (n = randomInt(1_000_000)) => ({

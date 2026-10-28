@@ -152,6 +152,27 @@ export interface AdminEventPlayer {
   openBets: number;
 }
 
+/** Outgoing email settings as shown in the admin panel (the password is never returned). */
+export interface AdminMailStatus {
+  /** admin = saved in the panel; env = SMTP_URL from the server environment; none = emails only logged */
+  source: 'admin' | 'env' | 'none';
+  enabled: boolean;
+  host: string;
+  port: number;
+  security: 'tls' | 'starttls' | 'none';
+  username: string;
+  password: { set: boolean };
+  fromName: string;
+  fromAddress: string;
+  updatedAt: string | null;
+}
+
+export interface AdminMailTestResult {
+  ok: boolean;
+  /** SMTP server message when it failed */
+  error?: string;
+}
+
 /** Hourly money check (rule 2): every balance equals its ledger; held money equals pending withdrawals. */
 export interface ReconciliationReport {
   ranAt: string;

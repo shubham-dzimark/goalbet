@@ -8,6 +8,7 @@ import { AdminAccountsService } from './admin-accounts.service.js';
 import { AdminAuthController } from './admin-auth.controller.js';
 import { AdminAuthService } from './admin-auth.service.js';
 import { AdminBetsController } from './admin-bets.controller.js';
+import { AdminMailController } from './admin-mail.controller.js';
 import { AdminDataProviderController } from './admin-data-provider.controller.js';
 import { AdminPaymentsController } from './admin-payments.controller.js';
 import { AdminReportsController } from './admin-reports.controller.js';
@@ -21,7 +22,7 @@ import { AdminWalletController } from './admin-wallet.controller.js';
 /** F4.2 AdminPanelApi — everything behind the admin app (F3.1–F3.8). */
 @Module({
   imports: [WalletLedgerModule, ApiIntegrationModule, OddsManagementModule, SettlementEngineModule],
-  controllers: [AdminAuthController, AdminAccountController, AdminAdminsController, AdminUsersController, AdminWalletController, AdminPaymentsController, AdminBetsController, AdminSportsbookController, AdminReportsController, AdminDataProviderController],
+  controllers: [AdminAuthController, AdminAccountController, AdminAdminsController, AdminUsersController, AdminWalletController, AdminPaymentsController, AdminBetsController, AdminSportsbookController, AdminReportsController, AdminDataProviderController, AdminMailController],
   providers: [AdminAuthService, AdminAccountsService, AdminUsersService, AdminSportsbookService, AdminReportsService],
 })
 export class AdminPanelApiModule {}

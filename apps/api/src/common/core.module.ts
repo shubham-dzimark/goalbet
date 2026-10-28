@@ -5,6 +5,7 @@ import { AdminAuthGuard, OptionalUserAuthGuard, UserAuthGuard } from './auth/gua
 import { SessionService } from './auth/session.service.js';
 import { TokensService } from './auth/tokens.service.js';
 import { IdempotencyService } from './idempotency.service.js';
+import { MailConfigService } from './mail-config.service.js';
 import { MailerService } from './mailer.service.js';
 import { PrismaService } from './prisma.service.js';
 import { RedisService } from './redis.service.js';
@@ -17,6 +18,7 @@ const providers = [
   RedisService,
   AuditService,
   SettingsService,
+  MailConfigService,
   MailerService,
   IdempotencyService,
   TokensService,

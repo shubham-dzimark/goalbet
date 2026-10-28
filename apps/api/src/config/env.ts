@@ -88,7 +88,7 @@ export function checkProduction(env: Env) {
 
   const warnings = env.ALLOW_INSECURE_LOCAL ? problems.map((p) => `${p} (allowed by ALLOW_INSECURE_LOCAL)`) : [];
   if (env.PAYMENT_BANK_IBAN === 'RO49AAAA1B31007593840000') warnings.push('PAYMENT_BANK_* still shows the demo bank account');
-  if (!env.SMTP_URL) warnings.push('SMTP_URL is not set: password-reset emails are only logged');
+  if (!env.SMTP_URL) warnings.push('SMTP_URL is not set: set up outgoing email in Admin → Email, or emails are only logged');
   if (!env.SENTRY_DSN) warnings.push('SENTRY_DSN is not set: errors are only in the logs');
   for (const w of warnings) console.warn(`[config] ${w}`);
 }

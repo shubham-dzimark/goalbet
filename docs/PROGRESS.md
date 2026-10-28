@@ -13,6 +13,15 @@
 | 6 | Bet Builder (F1.11), sportsbook settings (F3.5), reports + exposure (F3.6) incl. deposits/withdrawals by day and method and queue age; player deposit limits (daily/weekly/monthly) | ✅ Done |
 | 7 | Responsive polish, responsible gambling, provider skeleton, all E2E (incl. deposit/withdrawal flows), README with the licence / KYC / AML notes for real money | ✅ Done |
 
+## Email (SMTP) settings in the admin panel
+
+- **Admin → System → Email** (Super admin): mail server, port, security (SSL/TLS, STARTTLS, none), username, password (stored encrypted, never shown again; Replace / Remove), sender name and address, on/off switch.
+- **Send test**: sends a real email with the settings in the form, before saving; shows the server's error (e.g. "535 Authentication failed") if it fails. Nothing is stored; each test is audited.
+- Changes apply to the next email without a restart; `SMTP_URL` / `MAIL_FROM` in `.env` are only the fallback.
+- Checked end to end against a local SMTP server: wrong password refused, test email delivered, settings saved, then a real password-reset email sent with the saved settings.
+
+**Tests:** `mail-settings.test.ts` (4: encrypted save never returned or logged, mailer switches at once, keep/replace/remove password and on/off, unsaved test with server error, Super admin only and validation); E2E responsive check covers the page.
+
 ## Fixes after phase 7
 
 - **API-Football results** are fetched by re-reading the match's day (the free plan refused the old id-list call ~80 times a day, wasting calls; matches older than yesterday never settled automatically).
