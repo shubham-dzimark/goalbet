@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "cd ../.. && pnpm turbo run build --filter=@goalbet/api && pnpm --filter @goalbet/db migrate:deploy",
+  "buildCommand": "cd ../.. && pnpm turbo run build --filter=@goalbet/api && pnpm --filter @goalbet/api build:serverless && pnpm --filter @goalbet/db migrate:deploy",
   "outputDirectory": "public",
   "rewrites": [
     {
@@ -11,7 +11,8 @@
   ],
   "functions": {
     "api/index.js": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "includeFiles": "node_modules/swagger-ui-dist/**"
     }
   },
   "crons": [
