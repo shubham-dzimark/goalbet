@@ -20,7 +20,7 @@ coverage/
 packages/db/src/generated/
 
 # seed output with admin credentials (never commit)
-seed-credentials.txt
+seed-credentials*.txt
 
 # Playwright
 e2e/test-results/

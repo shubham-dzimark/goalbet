@@ -102,6 +102,8 @@ function applyOdds(qc: QueryClient, m: OddsMessage) {
 export function useRealtimeConnection() {
   const qc = useQueryClient();
   useEffect(() => {
+    // serverless API (Vercel Functions) has no socket server: the pages poll instead
+    if (process.env.NEXT_PUBLIC_REALTIME === 'off') return;
     const s = io({
       // through the web app's /api proxy; Next.js strips trailing slashes, so the server uses none either
       path: '/api/socket.io',
