@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "cd ../.. && pnpm turbo run build --filter=@goalbet/web"
+  "buildCommand": "cd ../.. && pnpm turbo run build --filter=@goalbet/web",
+  "regions": [
+    "fra1"
+  ]
 }

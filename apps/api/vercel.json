@@ -3,12 +3,28 @@
   "framework": null,
   "buildCommand": "cd ../.. && pnpm turbo run build --filter=@goalbet/api && pnpm --filter @goalbet/db migrate:deploy",
   "outputDirectory": "public",
-  "rewrites": [{ "source": "/(.*)", "destination": "/api" }],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api"
+    }
+  ],
   "functions": {
-    "api/index.js": { "maxDuration": 60 }
+    "api/index.js": {
+      "maxDuration": 60
+    }
   },
   "crons": [
-    { "path": "/cron/refresh", "schedule": "0 6 * * *" },
-    { "path": "/cron/settle", "schedule": "30 6 * * *" }
+    {
+      "path": "/cron/refresh",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/cron/settle",
+      "schedule": "30 6 * * *"
+    }
+  ],
+  "regions": [
+    "fra1"
   ]
 }
