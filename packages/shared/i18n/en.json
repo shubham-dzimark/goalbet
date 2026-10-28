@@ -50,7 +50,10 @@
     "REQUEST_NOT_PENDING": "This request has already been processed.",
     "DEPOSIT_LIMIT_EXCEEDED": "This deposit would go over your deposit limit of {max}. You can change your limits in My account.",
     "EVENT_ALREADY_SETTLED": "This match has already been settled.",
-    "SETTLEMENT_NOT_READY": "This match has not kicked off yet, so it cannot be settled."
+    "SETTLEMENT_NOT_READY": "This match has not kicked off yet, so it cannot be settled.",
+    "EVENT_NOT_SETTLED": "This match has not been settled yet: settle it first.",
+    "RESETTLE_INSUFFICIENT_FUNDS": "Some players no longer have the winnings that would be taken back, so nothing was changed. Settle their balance first.",
+    "SCORER_GOALS_EXCEED_SCORE": "The players' goals add up to more than the team's score."
   },
   "validation": {
     "required": "This field is required.",

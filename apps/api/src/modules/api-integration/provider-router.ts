@@ -81,8 +81,8 @@ export class ProviderRouter implements OddsProvider {
     return (await this.resolve()).getLiveStates();
   }
 
-  async getResult(fixtureRef: string) {
-    return (await this.resolve()).getResult(fixtureRef);
+  async getResult(fixtureRef: string, kickoff?: Date) {
+    return (await this.resolve()).getResult(fixtureRef, kickoff);
   }
 
   async liveDataTime() {

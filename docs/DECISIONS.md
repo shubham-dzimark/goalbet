@@ -54,7 +54,7 @@ Choices not dictated by the brief, with the reason. Newest last.
 33. **Self-exclusion** cannot be lifted by the player. It blocks betting (`SELF_EXCLUDED`) but not logging in, so the player can still see bets and balance.
 34. **Fonts are self-hosted** (`@fontsource`, imported via `@goalbet/ui/fonts`) instead of `next/font/google`. Turbopack's dev server failed to load the Google font loader on this setup, and self-hosting also removes network calls from builds and Docker images.
 35. **The admin credit/debit backend arrived in phase 2** (screens in phase 3), so test players can be funded and the betting flow exercised end to end.
-36. **Bet Builder legs are refused (`BUILDER_INVALID`) until phase 6.** The slip shows the tab with an explanation.
+36. ~~Bet Builder legs are refused (`BUILDER_INVALID`) until phase 6.~~ *Superseded by 74–76: Bet Builder is live since phase 6.*
 
 ## Redesign and real data (between phases 2 and 3)
 
@@ -105,8 +105,8 @@ Choices not dictated by the brief, with the reason. Newest last.
 66. **One settlement transaction per match, event row locked.** Selections → markets → legs → tickets → ledger in one `$transaction` (60 s timeout) so a match is either fully settled or not at all; a second run (worker and operator racing) gets `EVENT_ALREADY_SETTLED`. Wallet rows are locked in user-id order to avoid deadlocks between concurrent settlements. Ledger references `WIN:<ticket>` / `REFUND:<ticket>` are the last line of defence against double payment.
 67. **Accumulators settle early on a lost leg** (common sportsbook practice): the player sees the result at once and there is nothing to pay. Otherwise a ticket waits until every leg is graded.
 68. **A selection the rules can't grade is voided**, not left blocking the match (logged via the settlement record). Player markets are void without player stats, so manual results contain team facts only.
-69. **No automatic re-settlement.** `SettlementRecord` is versioned for a future resettle flow, but correcting a settled match (reversing payouts) needs a dedicated, audited admin flow with `VOID_REVERSAL` entries and is out of the MVP.
-70. **Cash-out offer = shared fallback formula on bettable prices** (provider price or active boost, the same function the bet engine uses). Bet Builder legs have no live price yet (phase 6), so such tickets get no offer. Within the 1 % tolerance the *current* offer is paid (it may be a little lower or higher than shown); beyond it the API returns the new offer instead of paying.
+69. ~~No automatic re-settlement.~~ *Superseded by 84: operators can re-settle a match.*
+70. **Cash-out offer = shared fallback formula on bettable prices** (provider price or active boost, the same function the bet engine uses). (In phase 5 Bet Builder legs had no live price and got no offer; since phase 6 the whole combination is re-priced, see 76.) Within the 1 % tolerance the *current* offer is paid (it may be a little lower or higher than shown); beyond it the API returns the new offer instead of paying.
 71. **Cash out and settlement serialise on the ticket row:** cash out locks the ticket (`FOR UPDATE`); settlement only updates tickets still open (`updateMany … status IN open`), so whichever commits first wins and the other skips — never both. Accepting requires an Idempotency-Key, like bets.
 72. **Overdue = unsettled 3 h after kick-off** (90 min + stoppage + half time + margin). Only matches with open bets count: they are listed for operators and the settlement job asks the provider for their result even though the feed never sent full time (worker downtime). Matches without bets are left alone to save provider calls.
 73. **Reconciliation keeps its last report in Redis** (`reconcile:last`) for the dashboard; each run is audited (`LEDGER_RECONCILED`) and every mismatch separately. It only reports — it never changes balances.
@@ -126,3 +126,13 @@ Choices not dictated by the brief, with the reason. Newest last.
 81. **Reality check is a per-player preference** (15/30/60/120 minutes or off, stored on the user) and runs in the browser from the start of the browser session; it shows time played, staked, returned and net since then, with Continue / Set limits / Log out. It never blocks betting by itself.
 82. **The responsible-gambling page lists the Romanian help line (Joc Responsabil, 0800 800 099) and ONJN.** These contacts must be re-checked before launch; they are content, not configuration.
 83. **The provider template is compiled but not wired:** it documents the contract a commercial feed must meet (market keys, odds format, suspensions, official results) and is covered by a unit test so it can't drift from the interface.
+
+## Fixes after phase 7
+
+84. **Re-settlement is all or nothing.** Correcting a match re-grades every selection and leg, then posts only the difference per ticket (`WIN`/`REFUND` up, `VOID_REVERSAL` down, `uniqueRef RESETTLE:<ticket>:v<version>`); accumulators can close or reopen. If any player can no longer cover what must be taken back, the whole correction is refused (`RESETTLE_INSUFFICIENT_FUNDS`, players listed) rather than letting a balance go negative or correcting only some tickets. Cashed-out tickets are never touched. Each correction is a new `SettlementRecord` version (`ADMIN_RESETTLE`) and an `EVENT_RESETTLED` audit entry with every ticket's change.
+85. **Manual results include player stats.** The operator ticks the players who played (only squad players with player markets on the match are offered, those with open bets first) with goals and shots; unticked players' markets are void, and scorers' goals can't exceed their team's score.
+86. **API-Football results are found by day, not by id list.** The free plan refuses `/fixtures?ids=`; each fixture's UTC day is remembered when it is listed (Redis `af:fixture-days`), and a match's result is found by re-reading that day — one call per day for every match on it, at most every 20 minutes. Matches listed before this change use their kick-off day.
+87. **Concurrent market inserts are safe:** after inserting new markets (duplicates skipped), selections are attached to the market rows that actually exist, so two jobs adding the same market at once no longer fail.
+88. **The reality check counts from login across all tabs** (localStorage, reset by logout or a 30-minute break), not per tab.
+89. **Email goes out over SMTP** when `SMTP_URL` is set (any provider); a failed send is logged and never shown to the person who asked for a reset (no account enumeration).
+90. **Production refuses unsafe settings at start-up** (see README); `ALLOW_INSECURE_LOCAL` exists only for the local docker demo.

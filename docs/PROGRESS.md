@@ -13,6 +13,19 @@
 | 6 | Bet Builder (F1.11), sportsbook settings (F3.5), reports + exposure (F3.6) incl. deposits/withdrawals by day and method and queue age; player deposit limits (daily/weekly/monthly) | ✅ Done |
 | 7 | Responsive polish, responsible gambling, provider skeleton, all E2E (incl. deposit/withdrawal flows), README with the licence / KYC / AML notes for real money | ✅ Done |
 
+## Fixes after phase 7
+
+- **API-Football results** are fetched by re-reading the match's day (the free plan refused the old id-list call ~80 times a day, wasting calls; matches older than yesterday never settled automatically).
+- **Odds jobs:** two jobs adding the same new market at once no longer fail (`Selection_marketId_fkey`).
+- **Re-settlement:** Admin → Sportsbook → Matches → *Re-settle* on a settled match corrects its result; extra winnings are paid, winnings no longer due are taken back, accumulators reopen or close; refused as a whole if a player can't cover it.
+- **Scorers in manual settlement:** tick who played with goals and shots; scorer and shots bets are settled for them, void for the others.
+- **Reality check** counts from login across all tabs.
+- **Email** is sent over SMTP when `SMTP_URL` is set.
+- **Production start-up guard** for unsafe settings.
+- Docs: outdated decisions marked superseded; the E2E prepare script restores `next-env.d.ts` itself.
+
+**Tests:** API integration incl. new `resettlement.test.ts` (4), `api-football-results.test.ts` (3), concurrent market sync, `mailer.test.ts` (3), `env.test.ts` (3); E2E admin spec now also re-settles through the UI.
+
 ## Phase 7 — what was built
 
 - **End-to-end tests (Playwright)** on an isolated stack (own database, Redis DB, ports and mock feed; your dev data is never touched): registration with the 18+ check, Romanian → English, pre-match single, accumulator and Bet Builder through the slip, live bet after the bet delay, My Bets, cash out, manual credit, deposit and withdrawal approved by Finance (incl. two-admin approval), manual settlement paying a bet, reports and audit log, admin roles, responsible-gambling tools, and no sideways scrolling on player and admin pages at 1440 px and 375 px (slip as bottom sheet on mobile). Also added as a CI job.

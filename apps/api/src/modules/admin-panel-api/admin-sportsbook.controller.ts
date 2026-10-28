@@ -95,6 +95,25 @@ export class AdminSportsbookController {
     return this.settlement.settleManually(actorOf(admin, meta), id, body);
   }
 
+  /** F2.9 correct a settled match: re-grades it and pays or takes back the difference. */
+  @Post('events/:id/resettle')
+  @Roles('OPERATOR')
+  @HttpCode(200)
+  resettleEvent(
+    @CurrentAdmin() admin: AuthedAdmin,
+    @Param('id', ParseUUIDPipe) id: string,
+    @ZBody(adminSettleEventSchema) body: z.output<typeof adminSettleEventSchema>,
+    @ReqMeta() meta: RequestMeta,
+  ) {
+    return this.settlement.resettle(actorOf(admin, meta), id, body);
+  }
+
+  /** Squad players with player markets on the match, for entering scorers when settling. */
+  @Get('events/:id/players')
+  eventPlayers(@Param('id', ParseUUIDPipe) id: string) {
+    return this.settlement.eventPlayers(id);
+  }
+
   @Get('events/:id/markets')
   markets(@Param('id', ParseUUIDPipe) id: string) {
     return this.sportsbook.markets(id);

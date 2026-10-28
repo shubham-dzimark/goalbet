@@ -103,8 +103,8 @@ export interface OddsProvider {
    * check measures how fresh the scores really are; omitted = fetched just now.
    */
   liveDataTime?(): Promise<number | null>;
-  /** Final result for settlement; null while not finished. */
-  getResult(fixtureRef: string): Promise<ProviderResult | null>;
+  /** Final result for settlement; null while not finished. `kickoff` helps providers find the match day. */
+  getResult(fixtureRef: string, kickoff?: Date): Promise<ProviderResult | null>;
   /** Correlated price for a same-match combination (if supported). */
   priceBetBuilder?(fixtureRef: string, selections: BuilderPriceRequest[]): Promise<OddsMilli | null>;
   /** Provider-side cash-out value for a ticket (if supported). */

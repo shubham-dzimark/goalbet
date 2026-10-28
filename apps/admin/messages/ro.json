@@ -425,7 +425,8 @@
       "suspendedToast": "Meci suspendat",
       "settled": "Decontat",
       "settle": "Decontează",
-      "awaiting": "Așteaptă decontarea"
+      "awaiting": "Așteaptă decontarea",
+      "resettle": "Redecontează"
     },
     "eventMarkets": {
       "none": "Încă nu există piețe pentru acest meci.",
@@ -495,7 +496,7 @@
     },
     "settle": {
       "title": "Decontează {match}",
-      "help": "Introdu rezultatul final. {tickets, plural, one {# pariu deschis este evaluat și plătit} other {# pariuri deschise sunt evaluate și plătite}} imediat. Piețele pe jucători (marcatori, șuturi) sunt anulate.",
+      "help": "Introdu rezultatul final. {tickets, plural, one {# pariu deschis este evaluat și plătit} other {# pariuri deschise sunt evaluate și plătite}} imediat.",
       "cancelHelp": "Meciul este anulat: toate pariurile deschise pe el sunt anulate și mizele returnate.",
       "confirm": "Decontează meciul",
       "confirmCancel": "Anulează toate pariurile",
@@ -506,7 +507,16 @@
       "corners": "cornere",
       "cards": "cartonașe",
       "halfTimeError": "Scorul de la pauză nu poate fi mai mare decât cel final.",
-      "done": "Decontat: {tickets, plural, one {# bilet} other {# bilete}}, {paid} plătiți"
+      "done": "Decontat: {tickets, plural, one {# bilet} other {# bilete}}, {paid} plătiți",
+      "playersTitle": "Jucători",
+      "playersHelp": "Bifează jucătorii care au jucat și introdu golurile și șuturile lor. Pariurile pe jucătorii nebifați sunt anulate (miza returnată).",
+      "goals": "goluri",
+      "shots": "șuturi",
+      "openBets": "{count, plural, one {# pariu} other {# pariuri}}",
+      "resettleTitle": "Corectează rezultatul {match}",
+      "resettleHelp": "Introdu rezultatul corect. Toate pariurile pe acest meci sunt evaluate din nou: câștigurile în plus sunt plătite, cele care nu mai sunt datorate sunt retrase. Dacă un jucător nu mai are acei bani, nu se modifică nimic.",
+      "confirmResettle": "Corectează rezultatul",
+      "resettled": "Corectat: {tickets, plural, one {# bilet modificat} other {# bilete modificate}}, {credited} plătiți, {debited} retrași"
     }
   },
   "reports": {

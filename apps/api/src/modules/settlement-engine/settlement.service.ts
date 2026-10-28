@@ -1,6 +1,8 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { type Prisma } from '@goalbet/db';
+import { type Prisma, type Tx } from '@goalbet/db';
 import {
+  type AdminEventPlayer,
+  type AdminResettlementResult,
   type AdminSettleEventInput,
   type AdminSettlementResult,
   type EventStateMessage,
@@ -78,7 +80,7 @@ export class SettlementService {
           },
         ],
       },
-      select: { id: true, providerRef: true, status: true },
+      select: { id: true, providerRef: true, status: true, startTime: true },
       orderBy: { startTime: 'asc' },
       take: limit,
     });
@@ -86,7 +88,7 @@ export class SettlementService {
     let waiting = 0;
     let failed = 0;
     for (const ev of events) {
-      const result = await this.provider.getResult(ev.providerRef).catch(() => null);
+      const result = await this.provider.getResult(ev.providerRef, ev.startTime).catch(() => null);
       if (!result) {
         waiting++;
         continue;
@@ -106,23 +108,160 @@ export class SettlementService {
 
   /** F2.9 manual settlement: an operator enters the final result (audited with a reason). */
   async settleManually(actor: Actor, eventId: string, input: AdminSettleEventInput): Promise<AdminSettlementResult> {
-    const ev = await this.prisma.event.findUnique({ where: { id: eventId }, select: { startTime: true, settledAt: true } });
+    const ev = await this.prisma.event.findUnique({ where: { id: eventId }, select: { startTime: true, settledAt: true, players: true } });
     if (!ev) throw new DomainError('NOT_FOUND');
     if (ev.settledAt) throw new DomainError('EVENT_ALREADY_SETTLED');
     // a match can be called off before kick-off, but only played matches have a result
     if (!input.cancelled && ev.startTime.getTime() > Date.now()) throw new DomainError('SETTLEMENT_NOT_READY');
-    const outcome: MatchOutcome = {
-      cancelled: !!input.cancelled,
-      ftHome: input.ftHome,
-      ftAway: input.ftAway,
-      htHome: input.htHome,
-      htAway: input.htAway,
-      corners: input.corners,
-      cards: input.cards,
-      // no player stats from an operator: player markets are void
-      players: {},
-    };
-    return this.settleEvent(eventId, { outcome, source: 'ADMIN', actor, reason: input.reason });
+    return this.settleEvent(eventId, { outcome: manualOutcome(input, ev.players), source: 'ADMIN', actor, reason: input.reason });
+  }
+
+  /** Squad players with player markets on the match (for entering scorers), open bets first. */
+  async eventPlayers(eventId: string): Promise<AdminEventPlayer[]> {
+    const ev = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        players: true,
+        markets: {
+          where: { type: { in: ['ANYTIME_SCORER', 'PLAYER_SHOTS'] } },
+          select: {
+            type: true,
+            playerRef: true,
+            selections: {
+              select: {
+                outcome: true,
+                _count: { select: { legSelections: { where: { leg: { ticket: { status: { in: OPEN_TICKET_STATUSES } } } } } } },
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!ev) throw new DomainError('NOT_FOUND');
+    const bets = new Map<string, number>();
+    for (const m of ev.markets) {
+      for (const sel of m.selections) {
+        // scorer outcomes are player refs; shots markets carry the player on the market
+        const ref = m.type === 'ANYTIME_SCORER' ? sel.outcome : m.playerRef;
+        if (ref) bets.set(ref, (bets.get(ref) ?? 0) + sel._count.legSelections);
+      }
+    }
+    return squad(ev.players)
+      .filter((pl) => bets.has(pl.ref))
+      .map((pl) => ({ ...pl, openBets: bets.get(pl.ref) ?? 0 }))
+      .sort((a, b) => b.openBets - a.openBets || (a.team === b.team ? 0 : a.team === 'HOME' ? -1 : 1) || a.name.localeCompare(b.name));
+  }
+
+  /**
+   * F2.9 re-settlement: an operator corrects the result of a settled match. Every selection and
+   * leg is graded again and each affected ticket gets the difference: more winnings are credited,
+   * winnings no longer due are taken back (VOID_REVERSAL), and a ticket reopens when a leg is no
+   * longer lost. One transaction: if a player no longer has the money to take back, nothing
+   * changes and those players are listed. Cashed-out tickets are never touched.
+   */
+  async resettle(actor: Actor, eventId: string, input: AdminSettleEventInput): Promise<AdminResettlementResult> {
+    const changed: { id: string; userId: string; status: TicketMessage['status'] }[] = [];
+    const result = await this.prisma.$transaction(
+      async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Event" WHERE id = ${eventId}::uuid FOR UPDATE`;
+        const ev = await tx.event.findUnique({ where: { id: eventId }, include: { markets: { include: { selections: true } } } });
+        if (!ev) throw new DomainError('NOT_FOUND');
+        if (!ev.settledAt) throw new DomainError('EVENT_NOT_SETTLED');
+        const now = new Date();
+        const outcome = manualOutcome(input, ev.players);
+        const version = (await tx.settlementRecord.count({ where: { eventId } })) + 1;
+        const legs = await this.gradeEvent(tx, ev, outcome, now, false);
+
+        const tickets = await tx.ticket.findMany({
+          where: { id: { in: [...new Set(legs.map((l) => l.ticketId))] }, status: { notIn: ['CASHED_OUT', 'REJECTED'] } },
+          select: {
+            id: true,
+            code: true,
+            userId: true,
+            status: true,
+            stakeBani: true,
+            payoutBani: true,
+            legs: { select: { oddsAtPlacement: true, status: true, event: { select: { status: true } } } },
+          },
+          orderBy: [{ userId: 'asc' }, { id: 'asc' }],
+        });
+        let creditedBani = 0;
+        let debitedBani = 0;
+        const shortfalls: { userId: string; ticket: string; amountBani: number }[] = [];
+        const changes: { ticket: string; from: string; to: string; deltaBani: number }[] = [];
+        for (const t of tickets) {
+          const wasSettled = t.status === 'WON' || t.status === 'LOST' || t.status === 'VOID';
+          const oldPayout = wasSettled ? (t.payoutBani ?? 0) : 0;
+          const decided = t.legs.some((l) => l.status === 'LOST') || t.legs.every((l) => l.status !== 'PENDING');
+          const payout = decided
+            ? settleTicketPayout(t.stakeBani, t.legs.map((l) => ({ oddsMilli: parseOddsMilli(l.oddsAtPlacement), status: l.status })))
+            : null;
+          const newStatus = payout ? payout.outcome : t.legs.some((l) => l.event.status === 'LIVE') ? 'LIVE' : 'ACTIVE';
+          const newPayout = payout?.payoutBani ?? 0;
+          if (newStatus === t.status && newPayout === oldPayout) continue;
+          const delta = newPayout - oldPayout;
+          if (delta !== 0) {
+            try {
+              await this.wallet.apply(tx, {
+                userId: t.userId,
+                type: delta < 0 ? 'VOID_REVERSAL' : newStatus === 'VOID' ? 'REFUND' : 'WIN',
+                amountBani: delta,
+                reason: `Re-settlement v${version} ${t.code}`,
+                actor,
+                ticketId: t.id,
+                uniqueRef: `RESETTLE:${t.id}:v${version}`,
+              });
+            } catch (e) {
+              if (!(e instanceof DomainError) || e.code !== 'NEGATIVE_BALANCE') throw e;
+              shortfalls.push({ userId: t.userId, ticket: t.code, amountBani: -delta });
+              continue;
+            }
+            if (delta > 0) creditedBani += delta;
+            else debitedBani -= delta;
+          }
+          await tx.ticket.update({
+            where: { id: t.id },
+            data: { status: newStatus, payoutBani: payout ? newPayout : null, settledAt: payout ? now : null },
+          });
+          changed.push({ id: t.id, userId: t.userId, status: newStatus });
+          changes.push({ ticket: t.code, from: t.status, to: newStatus, deltaBani: delta });
+        }
+        // all or nothing: a correction that can't be taken back in full changes nothing
+        if (shortfalls.length) throw new DomainError('RESETTLE_INSUFFICIENT_FUNDS', { players: shortfalls });
+
+        const updated = await tx.event.update({ where: { id: eventId }, data: { ...eventResultData(outcome), settledAt: now } });
+        await tx.settlementRecord.create({
+          data: {
+            eventId,
+            version,
+            result: outcome as unknown as Prisma.InputJsonValue,
+            source: 'ADMIN_RESETTLE',
+            adminId: actor.id ?? null,
+            reason: input.reason,
+            ticketsSettled: changed.length,
+          },
+        });
+        await this.audit.log(
+          {
+            category: 'ADMIN',
+            action: 'EVENT_RESETTLED',
+            actor,
+            entityType: 'Event',
+            entityId: eventId,
+            before: ev.result ?? null,
+            after: { cancelled: !!outcome.cancelled, ftHome: outcome.ftHome, ftAway: outcome.ftAway, htHome: outcome.htHome, htAway: outcome.htAway },
+            meta: { match: `${ev.homeTeam} – ${ev.awayTeam}`, version, reason: input.reason, creditedBani, debitedBani, changes },
+          },
+          tx,
+        );
+        return { eventId, version, ticketsChanged: changed.length, creditedBani, debitedBani, ev: updated } as const;
+      },
+      { timeout: 60_000, maxWait: 10_000 },
+    );
+    await this.publishAfter(result.ev, changed);
+    this.logger.log({ resettled: eventId, version: result.version, tickets: result.ticketsChanged });
+    const { ev: _ev, ...summary } = result;
+    return summary;
   }
 
   async settleEvent(eventId: string, opts: SettleOptions): Promise<AdminSettlementResult> {
@@ -138,31 +277,7 @@ export class SettlementService {
         const { outcome } = opts;
         const status = outcome.cancelled ? 'CANCELLED' : 'FINISHED';
 
-        // F2.9 selections and markets
-        const results = new Map<string, Settled>();
-        for (const m of ev.markets) {
-          const spec: MarketSpec = { type: m.type, period: m.period, line: parseLineCenti(m.line), team: m.team, playerRef: m.playerRef };
-          for (const s of m.selections) results.set(s.id, gradeSafely(spec, s.outcome, outcome));
-        }
-        for (const [value, ids] of groupBy(results)) {
-          await tx.selection.updateMany({ where: { id: { in: ids } }, data: { result: value } });
-          await tx.ticketLegSelection.updateMany({ where: { selectionId: { in: ids } }, data: { result: value } });
-        }
-        await tx.market.updateMany({ where: { eventId }, data: { status: 'SETTLED' } });
-
-        // legs on this match
-        const legs = await tx.ticketLeg.findMany({
-          where: { eventId, status: 'PENDING' },
-          select: { id: true, ticketId: true, kind: true, selections: { select: { selectionId: true } } },
-        });
-        const legResults = new Map<string, Settled>();
-        for (const leg of legs) {
-          const parts = leg.selections.map((s) => results.get(s.selectionId) ?? 'VOID');
-          legResults.set(leg.id, leg.kind === 'BET_BUILDER' ? combineBuilderParts(parts) : (parts[0] ?? 'VOID'));
-        }
-        for (const [value, ids] of groupBy(legResults)) {
-          await tx.ticketLeg.updateMany({ where: { id: { in: ids } }, data: { status: value, settledAt: now } });
-        }
+        const legs = await this.gradeEvent(tx, ev, outcome, now, true);
 
         // F2.10 tickets: wallet rows are locked in user order so concurrent settlements cannot deadlock
         const tickets = await tx.ticket.findMany({
@@ -201,19 +316,9 @@ export class SettlementService {
           settled.push({ id: t.id, userId: t.userId, status: payout.outcome });
         }
 
-        const data: Prisma.EventUpdateInput = { status, settledAt: now, result: outcome as unknown as Prisma.InputJsonValue };
-        if (opts.source === 'ADMIN' && !outcome.cancelled) {
-          Object.assign(data, {
-            period: 'FULL_TIME',
-            homeScore: outcome.ftHome,
-            awayScore: outcome.ftAway,
-            htHomeScore: outcome.htHome,
-            htAwayScore: outcome.htAway,
-            corners: outcome.corners,
-            cards: outcome.cards,
-          });
-        }
-        const updated = await tx.event.update({ where: { id: eventId }, data });
+        const data: Prisma.EventUpdateInput =
+          opts.source === 'ADMIN' ? eventResultData(outcome) : { status, result: outcome as unknown as Prisma.InputJsonValue };
+        const updated = await tx.event.update({ where: { id: eventId }, data: { ...data, settledAt: now } });
         const version = (await tx.settlementRecord.count({ where: { eventId } })) + 1;
         await tx.settlementRecord.create({
           data: {
@@ -249,11 +354,55 @@ export class SettlementService {
       { timeout: 60_000, maxWait: 10_000 },
     );
 
-    // tell everyone after commit
-    const e = result.ev;
+    await this.publishAfter(result.ev, settled);
+    this.logger.log({ settled: eventId, version: result.version, tickets: result.ticketsSettled, paidBani: result.paidBani });
+
+    const { ev: _ev, ...summary } = result;
+    return summary;
+  }
+
+  /**
+   * F2.9 grades every selection of the match, then its ticket legs (only the open ones on first
+   * settlement, all of them on a re-settlement). Returns the legs it graded.
+   */
+  private async gradeEvent(
+    tx: Tx,
+    ev: Prisma.EventGetPayload<{ include: { markets: { include: { selections: true } } } }>,
+    outcome: MatchOutcome,
+    now: Date,
+    pendingOnly: boolean,
+  ) {
+    const results = new Map<string, Settled>();
+    for (const m of ev.markets) {
+      const spec: MarketSpec = { type: m.type, period: m.period, line: parseLineCenti(m.line), team: m.team, playerRef: m.playerRef };
+      for (const sel of m.selections) results.set(sel.id, gradeSafely(spec, sel.outcome, outcome));
+    }
+    for (const [value, ids] of groupBy(results)) {
+      await tx.selection.updateMany({ where: { id: { in: ids } }, data: { result: value } });
+      await tx.ticketLegSelection.updateMany({ where: { selectionId: { in: ids } }, data: { result: value } });
+    }
+    await tx.market.updateMany({ where: { eventId: ev.id }, data: { status: 'SETTLED' } });
+
+    const legs = await tx.ticketLeg.findMany({
+      where: { eventId: ev.id, ...(pendingOnly ? { status: 'PENDING' as const } : {}) },
+      select: { id: true, ticketId: true, kind: true, selections: { select: { selectionId: true } } },
+    });
+    const legResults = new Map<string, Settled>();
+    for (const leg of legs) {
+      const parts = leg.selections.map((x) => results.get(x.selectionId) ?? 'VOID');
+      legResults.set(leg.id, leg.kind === 'BET_BUILDER' ? combineBuilderParts(parts) : (parts[0] ?? 'VOID'));
+    }
+    for (const [value, ids] of groupBy(legResults)) {
+      await tx.ticketLeg.updateMany({ where: { id: { in: ids } }, data: { status: value, settledAt: now } });
+    }
+    return legs;
+  }
+
+  /** After commit: the match state to everyone, each changed ticket and balance to its player. */
+  private async publishAfter(e: Prisma.EventGetPayload<object>, tickets: { id: string; userId: string; status: TicketMessage['status'] }[]) {
     const stateMsg: EventStateMessage = {
       type: 'event',
-      eventId,
+      eventId: e.id,
       status: e.status,
       period: e.period,
       minute: e.minute,
@@ -264,15 +413,11 @@ export class SettlementService {
       suspended: true,
     };
     await this.redis.publish(Channels.EVENT_UPDATES, stateMsg);
-    for (const t of settled) {
+    for (const t of tickets) {
       const msg: TicketMessage = { type: 'ticket', userId: t.userId, ticketId: t.id, status: t.status };
       await this.redis.publish(Channels.TICKET_UPDATES, msg);
     }
-    for (const userId of new Set(settled.map((t) => t.userId))) await this.wallet.publishBalance(userId);
-    this.logger.log({ settled: eventId, version: result.version, tickets: result.ticketsSettled, paidBani: result.paidBani });
-
-    const { ev: _ev, ...summary } = result;
-    return summary;
+    for (const userId of new Set(tickets.map((t) => t.userId))) await this.wallet.publishBalance(userId);
   }
 
   /** Rule 6: a match that keeps failing is audited once an hour, not on every run. */
@@ -295,6 +440,57 @@ function gradeSafely(spec: MarketSpec, outcome: string, r: MatchOutcome): Settle
   } catch {
     return 'VOID';
   }
+}
+
+interface SquadPlayer {
+  ref: string;
+  name: string;
+  team: 'HOME' | 'AWAY';
+}
+const squad = (players: Prisma.JsonValue): SquadPlayer[] => (Array.isArray(players) ? (players as unknown as SquadPlayer[]) : []);
+
+/**
+ * The result an operator entered. Listed players appeared (goals and shots as entered); players
+ * left out have no stats, so their markets are void. Scorers' goals can't exceed their team's score.
+ */
+function manualOutcome(input: AdminSettleEventInput, squadJson: Prisma.JsonValue): MatchOutcome {
+  const known = new Map(squad(squadJson).map((pl) => [pl.ref, pl]));
+  const players: MatchOutcome['players'] = {};
+  const goals = { HOME: 0, AWAY: 0 };
+  for (const pl of input.cancelled ? [] : (input.players ?? [])) {
+    const sp = known.get(pl.ref);
+    if (!sp) throw new DomainError('VALIDATION_FAILED', { reason: 'unknown_player', ref: pl.ref }, 400);
+    // a scorer took at least as many shots as goals
+    players[pl.ref] = { appeared: true, goals: pl.goals, shots: Math.max(pl.shots, pl.goals) };
+    goals[sp.team] += pl.goals;
+  }
+  if (goals.HOME > input.ftHome || goals.AWAY > input.ftAway) throw new DomainError('SCORER_GOALS_EXCEED_SCORE', goals);
+  return {
+    cancelled: !!input.cancelled,
+    ftHome: input.ftHome,
+    ftAway: input.ftAway,
+    htHome: input.htHome,
+    htAway: input.htAway,
+    corners: input.corners,
+    cards: input.cards,
+    players,
+  };
+}
+
+/** Event fields for a result entered by an operator. */
+function eventResultData(outcome: MatchOutcome): Prisma.EventUpdateInput {
+  const base = { status: outcome.cancelled ? ('CANCELLED' as const) : ('FINISHED' as const), result: outcome as unknown as Prisma.InputJsonValue };
+  if (outcome.cancelled) return base;
+  return {
+    ...base,
+    period: 'FULL_TIME',
+    homeScore: outcome.ftHome,
+    awayScore: outcome.ftAway,
+    htHomeScore: outcome.htHome,
+    htAwayScore: outcome.htAway,
+    corners: outcome.corners,
+    cards: outcome.cards,
+  };
 }
 
 function groupBy(m: Map<string, Settled>) {

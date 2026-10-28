@@ -425,7 +425,8 @@
       "suspendedToast": "Match suspended",
       "settled": "Settled",
       "settle": "Settle",
-      "awaiting": "Awaiting settlement"
+      "awaiting": "Awaiting settlement",
+      "resettle": "Re-settle"
     },
     "eventMarkets": {
       "none": "No markets for this match yet.",
@@ -495,7 +496,7 @@
     },
     "settle": {
       "title": "Settle {match}",
-      "help": "Enter the final result. {tickets, plural, one {# open bet is} other {# open bets are}} graded and paid at once. Player markets (scorers, shots) are voided.",
+      "help": "Enter the final result. {tickets, plural, one {# open bet is} other {# open bets are}} graded and paid at once.",
       "cancelHelp": "The match is called off: every open bet on it is voided and the stakes are refunded.",
       "confirm": "Settle match",
       "confirmCancel": "Void all bets",
@@ -506,7 +507,16 @@
       "corners": "corners",
       "cards": "cards",
       "halfTimeError": "The half-time score cannot be higher than the full-time score.",
-      "done": "Settled: {tickets, plural, one {# ticket} other {# tickets}}, {paid} paid"
+      "done": "Settled: {tickets, plural, one {# ticket} other {# tickets}}, {paid} paid",
+      "playersTitle": "Players",
+      "playersHelp": "Tick the players who played and enter their goals and shots. Bets on players left unticked are void (stake back).",
+      "goals": "goals",
+      "shots": "shots",
+      "openBets": "{count, plural, one {# bet} other {# bets}}",
+      "resettleTitle": "Correct the result of {match}",
+      "resettleHelp": "Enter the corrected result. Every bet on this match is graded again: extra winnings are paid, winnings no longer due are taken back. If a player no longer has that money, nothing changes.",
+      "confirmResettle": "Correct result",
+      "resettled": "Corrected: {tickets, plural, one {# ticket} other {# tickets}} changed, {credited} paid, {debited} taken back"
     }
   },
   "reports": {

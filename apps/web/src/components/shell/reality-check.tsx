@@ -10,18 +10,30 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-store';
 import { useFormat } from '@/lib/format';
 
-const START_KEY = 'gb-session-start';
+export const PLAY_SESSION_KEY = 'gb-play-session';
 const RETURN_TYPES = new Set(['WIN', 'CASHOUT', 'REFUND']);
+/** a break this long (no tab open) starts a new playing session */
+const IDLE_RESET_MS = 30 * 60_000;
 
-function sessionStart(): number {
+interface PlaySession {
+  userId: string;
+  start: number;
+  lastSeen: number;
+}
+
+/**
+ * Start of the current playing session, shared by every tab of this browser: it begins at login
+ * (or after a 30-minute break) and ends at logout, so opening a new tab does not reset the clock.
+ */
+function playSession(userId: string): PlaySession {
+  const now = Date.now();
   try {
-    const v = Number(sessionStorage.getItem(START_KEY));
-    if (v > 0) return v;
-    const now = Date.now();
-    sessionStorage.setItem(START_KEY, String(now));
-    return now;
+    const saved = JSON.parse(localStorage.getItem(PLAY_SESSION_KEY) ?? 'null') as PlaySession | null;
+    const s = saved && saved.userId === userId && now - saved.lastSeen < IDLE_RESET_MS ? { ...saved, lastSeen: now } : { userId, start: now, lastSeen: now };
+    localStorage.setItem(PLAY_SESSION_KEY, JSON.stringify(s));
+    return s;
   } catch {
-    return Date.now();
+    return { userId, start: now, lastSeen: now };
   }
 }
 
@@ -39,12 +51,14 @@ export function RealityCheck() {
   const [open, setOpen] = useState(false);
   const [summary, setSummary] = useState<{ played: number; staked: number; returned: number } | null>(null);
 
+  const userId = user?.id;
   useEffect(() => {
-    if (!minutes) return;
-    const start = sessionStart();
+    if (!minutes || !userId) return;
+    const { start } = playSession(userId);
     const every = minutes * 60_000;
     let next = start + Math.ceil((Date.now() - start + 1) / every) * every;
     const timer = setInterval(async () => {
+      playSession(userId); // keeps the session alive while a tab is open
       if (Date.now() < next) return;
       next += every;
       const tx = await api<Page<WalletTransactionDto>>('/wallet/transactions?limit=100').catch(() => null);
@@ -57,7 +71,7 @@ export function RealityCheck() {
       setOpen(true);
     }, 15_000);
     return () => clearInterval(timer);
-  }, [minutes]);
+  }, [minutes, userId]);
 
   if (!user || !summary) return null;
   const net = summary.returned - summary.staked;

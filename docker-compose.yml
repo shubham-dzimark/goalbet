@@ -19,6 +19,8 @@ x-api-env: &api-env
   API_FOOTBALL_KEY: ${API_FOOTBALL_KEY:-}
   # Production refuses MOCK_CONTROL_ENABLED=true; the demo stack runs mock control off.
   MOCK_CONTROL_ENABLED: 'false'
+  # local demo over http with example secrets; never set this on a real deployment
+  ALLOW_INSECURE_LOCAL: 'true'
   LOG_LEVEL: info
   SENTRY_DSN: ${SENTRY_DSN:-}
 

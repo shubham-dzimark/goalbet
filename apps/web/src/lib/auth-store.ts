@@ -33,5 +33,13 @@ export const useAuth = create<AuthState>((set) => ({
   setSession: (accessToken, user) => set({ accessToken, user, status: 'authed' }),
   setUser: (user) => set({ user }),
   setBalance: (balanceBani) => set((s) => (s.user ? { user: { ...s.user, balanceBani } } : s)),
-  clear: () => set({ accessToken: null, user: null, status: 'guest' }),
+  clear: () => {
+    // logging out ends the playing session used by the reality check
+    try {
+      localStorage.removeItem('gb-play-session');
+    } catch {
+      /* storage unavailable */
+    }
+    set({ accessToken: null, user: null, status: 'guest' });
+  },
 }));

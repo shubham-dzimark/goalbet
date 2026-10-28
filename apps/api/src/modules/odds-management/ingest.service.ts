@@ -190,10 +190,23 @@ export class IngestService {
     }
 
     if (newMarkets.length > 0) {
-      await this.prisma.$transaction([
-        this.prisma.market.createMany({ data: newMarkets, skipDuplicates: true }),
-        this.prisma.selection.createMany({ data: newSelections, skipDuplicates: true }),
-      ]);
+      // Two jobs can add the same new market at once (fixtures sync and pre-match refresh): the
+      // second insert is skipped, so selections are attached to whichever market row exists.
+      const keyOfTemp = new Map(newMarkets.map((m) => [m.id!, m.key]));
+      const realIds = await this.prisma.$transaction(async (tx) => {
+        await tx.market.createMany({ data: newMarkets, skipDuplicates: true });
+        const rows = await tx.market.findMany({ where: { eventId, key: { in: [...keyOfTemp.values()] } }, select: { id: true, key: true } });
+        const byKey = new Map(rows.map((r) => [r.key, r.id]));
+        await tx.selection.createMany({
+          data: newSelections.map((sel) => ({ ...sel, marketId: byKey.get(keyOfTemp.get(sel.marketId)!)! })),
+          skipDuplicates: true,
+        });
+        return byKey;
+      });
+      for (const c of marketChanges) {
+        const key = keyOfTemp.get(c.marketId);
+        if (key) c.marketId = realIds.get(key) ?? c.marketId;
+      }
     }
 
     // Markets the provider no longer offers (e.g. first-half markets after half time) are suspended.
@@ -277,11 +290,11 @@ export class IngestService {
     const listed = new Set(states.map((s) => s.ref));
     const stale = await this.prisma.event.findMany({
       where: { status: 'LIVE', providerRef: { notIn: [...listed] } },
-      select: { id: true, providerRef: true, status: true, homeScore: true, awayScore: true },
+      select: { id: true, providerRef: true, status: true, startTime: true, homeScore: true, awayScore: true },
       take: 50,
     });
     for (const ev of stale) {
-      const result = await this.provider.getResult(ev.providerRef).catch(() => null);
+      const result = await this.provider.getResult(ev.providerRef, ev.startTime).catch(() => null);
       if (!result) continue;
       await this.applyLiveState(ev.id, ev.status, {
         ref: ev.providerRef,

@@ -66,6 +66,9 @@ export const ErrorCode = {
   // settlement (F2.8–F2.11)
   EVENT_ALREADY_SETTLED: 'EVENT_ALREADY_SETTLED',
   SETTLEMENT_NOT_READY: 'SETTLEMENT_NOT_READY',
+  EVENT_NOT_SETTLED: 'EVENT_NOT_SETTLED',
+  RESETTLE_INSUFFICIENT_FUNDS: 'RESETTLE_INSUFFICIENT_FUNDS',
+  SCORER_GOALS_EXCEED_SCORE: 'SCORER_GOALS_EXCEED_SCORE',
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 export const ERROR_CODES = Object.values(ErrorCode) as ErrorCode[];

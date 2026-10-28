@@ -3,7 +3,7 @@
 //   pnpm --filter @goalbet/e2e prepare-stack            (reuses existing Next builds)
 //   pnpm --filter @goalbet/e2e prepare-stack --rebuild  (after changing web/admin code)
 import { execSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { API_ENV, DB_ADMIN_URL, NEXT_ENV, ROOT } from '../stack.mjs';
@@ -38,6 +38,13 @@ for (const app of ['web', 'admin']) {
     console.log(`e2e: reusing ${app} build (pass --rebuild after UI changes)`);
     continue;
   }
-  run('npx next build', { cwd: dir, env: NEXT_ENV });
+  // `next build` points next-env.d.ts at the build folder; keep the committed version
+  const envFile = join(dir, 'next-env.d.ts');
+  const original = existsSync(envFile) ? readFileSync(envFile, 'utf8') : null;
+  try {
+    run('npx next build', { cwd: dir, env: NEXT_ENV });
+  } finally {
+    if (original !== null) writeFileSync(envFile, original);
+  }
 }
 console.log('e2e: stack ready — run `pnpm --filter @goalbet/e2e e2e`');

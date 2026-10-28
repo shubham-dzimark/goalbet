@@ -48,6 +48,11 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   LOG_PRETTY: bool.default(false),
   SENTRY_DSN: z.string().optional(),
+  /** Outgoing email (password resets), e.g. smtps://user:pass@smtp.example.com:465. Unset = log only. */
+  SMTP_URL: z.string().optional(),
+  MAIL_FROM: z.string().default('GoalBet <no-reply@goalbet.local>'),
+  /** Local production-mode demo only (docker-compose over http): unsafe settings warn instead of failing. */
+  ALLOW_INSECURE_LOCAL: bool.default(false),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -62,11 +67,30 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('\n  ');
     throw new Error(`Invalid environment:\n  ${issues}`);
   }
-  if (parsed.data.NODE_ENV === 'production' && parsed.data.MOCK_CONTROL_ENABLED) {
-    throw new Error('MOCK_CONTROL_ENABLED must be false in production');
-  }
+  if (parsed.data.NODE_ENV === 'production') checkProduction(parsed.data);
   if (source === process.env) cached = parsed.data;
   return parsed.data;
+}
+
+/**
+ * Refuses to start production with settings that are only safe on a laptop; warns about demo
+ * values that still need replacing.
+ */
+export function checkProduction(env: Env) {
+  const problems: string[] = [];
+  if (env.MOCK_CONTROL_ENABLED) problems.push('MOCK_CONTROL_ENABLED must be false');
+  if (!env.COOKIE_SECURE) problems.push('COOKIE_SECURE must be true (HTTPS only)');
+  for (const k of ['JWT_ACCESS_SECRET', 'JWT_ADMIN_SECRET'] as const) {
+    if (/change-me/i.test(env[k])) problems.push(`${k} is still the example value`);
+  }
+  if (env.JWT_ACCESS_SECRET === env.JWT_ADMIN_SECRET) problems.push('JWT_ACCESS_SECRET and JWT_ADMIN_SECRET must differ');
+  if (problems.length && !env.ALLOW_INSECURE_LOCAL) throw new Error(`Unsafe production configuration:\n  ${problems.join('\n  ')}`);
+
+  const warnings = env.ALLOW_INSECURE_LOCAL ? problems.map((p) => `${p} (allowed by ALLOW_INSECURE_LOCAL)`) : [];
+  if (env.PAYMENT_BANK_IBAN === 'RO49AAAA1B31007593840000') warnings.push('PAYMENT_BANK_* still shows the demo bank account');
+  if (!env.SMTP_URL) warnings.push('SMTP_URL is not set: password-reset emails are only logged');
+  if (!env.SENTRY_DSN) warnings.push('SENTRY_DSN is not set: errors are only in the logs');
+  for (const w of warnings) console.warn(`[config] ${w}`);
 }
 
 export const ENV = Symbol('ENV');
