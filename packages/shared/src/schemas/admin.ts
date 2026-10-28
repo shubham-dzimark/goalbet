@@ -188,3 +188,29 @@ export const adminDataProviderTestSchema = z.object({
   /** test this key instead of the stored one (not saved) */
   apiKey: z.string().trim().min(10).max(200).optional(),
 });
+
+// ── outgoing email (SMTP) ──
+export const MAIL_SECURITY = ['tls', 'starttls', 'none'] as const;
+const mailFields = {
+  enabled: z.boolean(),
+  host: z.string().trim().min(1, { message: 'validation.required' }).max(253),
+  port: z.number().int().min(1).max(65535),
+  /** tls = implicit TLS (465), starttls = upgrade (587), none = plain (local relays only) */
+  security: z.enum(MAIL_SECURITY),
+  username: z.string().trim().max(254).default(''),
+  fromName: z.string().trim().min(1, { message: 'validation.required' }).max(80),
+  fromAddress: emailSchema,
+};
+/** `password`: string = replace, null = remove, omitted = keep the stored one. */
+export const adminMailUpdateSchema = z.object({
+  ...mailFields,
+  password: z.string().max(500).nullable().optional(),
+  reason,
+});
+export type AdminMailUpdateInput = z.input<typeof adminMailUpdateSchema>;
+/** Send a test email with these settings (not saved); no password = use the stored one. */
+export const adminMailTestSchema = z.object({
+  ...mailFields,
+  password: z.string().max(500).optional(),
+  to: emailSchema,
+});

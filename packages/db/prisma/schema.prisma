@@ -698,3 +698,22 @@ model DataProviderConfig {
   updatedById String?  @db.Uuid
   updatedAt   DateTime @updatedAt
 }
+
+/// Outgoing email (SMTP) set in the admin panel (single row, id "default"). Until it exists the API
+/// uses SMTP_URL / MAIL_FROM from the environment.
+model MailConfig {
+  id           String   @id @default("default")
+  /// off = emails are only logged
+  enabled      Boolean  @default(true)
+  host         String
+  port         Int
+  /// "tls" (implicit TLS, usually 465) | "starttls" (usually 587) | "none"
+  security     String
+  username     String?
+  /// AES-256-GCM sealed password; never returned to the browser
+  passwordEnc  String?
+  fromName     String
+  fromAddress  String
+  updatedById  String?  @db.Uuid
+  updatedAt    DateTime @updatedAt
+}

@@ -23,7 +23,8 @@
     "pendingApprovals": "{count} aprobări în așteptare",
     "account": "Contul meu",
     "admins": "Administratori",
-    "dataProvider": "Furnizor de date"
+    "dataProvider": "Furnizor de date",
+    "email": "Email"
   },
   "roles": {
     "SUPER_ADMIN": "Super admin",
@@ -831,6 +832,81 @@
       "title": "Salvezi setările furnizorului de date?",
       "help": "API-ul și worker-ul preiau schimbarea în câteva secunde.",
       "switch": "Site-ul trece de la {from} la {to}. Meciurile de la {from} se ascund după următoarea sincronizare (folosește „Încarcă meciurile acum”)."
+    }
+  },
+  "email": {
+    "kicker": "Sistem",
+    "title": "Email",
+    "description": "Serverul de email folosit pentru mesajele trimise, de exemplu resetarea parolei.",
+    "forbiddenTitle": "Doar Super admin",
+    "forbiddenHelp": "Doar un Super admin poate vedea sau modifica setările de email.",
+    "saved": "Setările de email au fost salvate",
+    "noneWarning": "Nu este configurat un server de email: mesajele de resetare a parolei sunt doar scrise în jurnalul serverului. Introdu mai jos datele SMTP.",
+    "stats": {
+      "status": "Email trimis",
+      "on": "Activ",
+      "off": "Oprit",
+      "logOnly": "Doar jurnal",
+      "fromPanel": "Setat în acest panou · {date}",
+      "fromEnv": "Din fișierul serverului (SMTP_URL) până salvezi aici",
+      "none": "Neconfigurat",
+      "server": "Server email",
+      "sender": "Expeditor"
+    },
+    "form": {
+      "title": "Server SMTP",
+      "enabled": "Trimite emailuri",
+      "enabledHelp": "Oprit: emailurile sunt doar scrise în jurnal (nu se trimite nimic).",
+      "host": "Server",
+      "port": "Port",
+      "security": "Securitate",
+      "username": "Utilizator",
+      "usernameHelp": "De obicei adresa de email completă sau utilizatorul API de la furnizor. Lasă gol dacă serverul nu cere autentificare.",
+      "password": "Parolă",
+      "passwordHelp": "Stocată criptat și nu mai este afișată. Pentru a o schimba, alege Înlocuiește.",
+      "stored": "stocată",
+      "replace": "Înlocuiește",
+      "remove": "Șterge",
+      "undo": "Anulează",
+      "willRemove": "va fi ștearsă",
+      "show": "Arată parola",
+      "hide": "Ascunde parola",
+      "fromName": "Nume expeditor",
+      "fromAddress": "Adresă expeditor",
+      "save": "Salvează setările"
+    },
+    "security": {
+      "tls": "SSL/TLS",
+      "tls_help": "Criptat de la început, de obicei portul 465",
+      "starttls": "STARTTLS",
+      "starttls_help": "Trece la criptare, de obicei portul 587",
+      "none": "Fără",
+      "none_help": "Necriptat, doar pentru un releu local"
+    },
+    "errors": {
+      "host": "Introdu adresa serverului de email.",
+      "port": "Introdu un port între 1 și 65535.",
+      "fromName": "Introdu numele expeditorului.",
+      "fromAddress": "Introdu o adresă de expeditor validă.",
+      "password": "Introdu parola pentru acest utilizator.",
+      "testTo": "Introdu adresa la care se trimite emailul de test."
+    },
+    "test": {
+      "title": "Trimite un email de test",
+      "help": "Folosește setările din formular, chiar înainte de salvare. Nu se stochează nimic.",
+      "to": "Trimite la",
+      "send": "Trimite test",
+      "ok": "Trimis la {to}. Verifică inboxul (și dosarul spam).",
+      "failed": "Netrimis: {error}"
+    },
+    "tips": {
+      "title": "Sfaturi",
+      "providers": "Merge orice furnizor cu SMTP: Amazon SES, Postmark, Mailgun, SendGrid, Brevo sau propriul server de email.",
+      "domain": "Folosește o adresă de expeditor pe domeniul tău și configurează SPF, DKIM și DMARC la furnizor, altfel emailurile pot ajunge în spam."
+    },
+    "confirm": {
+      "title": "Salvezi setările de email?",
+      "help": "Noile setări sunt folosite de la următorul email, fără repornire."
     }
   }
 }

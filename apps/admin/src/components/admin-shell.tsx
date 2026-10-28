@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, Database, Gauge, LogOut, ScrollText, Settings2, ShieldCheck, Ticket, UserCog, Users, Wallet } from 'lucide-react';
+import { BarChart3, Database, Gauge, LogOut, Mail, ScrollText, Settings2, ShieldCheck, Ticket, UserCog, Users, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type ReactNode, useEffect } from 'react';
 import { LogoMark, Skeleton, cn } from '@goalbet/ui';
@@ -35,6 +35,7 @@ const GROUPS = [
     items: [
       { href: '/admins', key: 'admins', icon: UserCog },
       { href: '/data-provider', key: 'dataProvider', icon: Database },
+      { href: '/email', key: 'email', icon: Mail },
     ],
   },
 ] as const;

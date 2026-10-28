@@ -16,6 +16,8 @@ export const Channels = {
   PROVIDER_CHANGED: 'gb:provider-changed',
   /** Settings changed by an admin: payload { key } */
   SETTINGS_CHANGED: 'gb:settings-changed',
+  /** Email (SMTP) settings changed by an admin: payload { at } */
+  MAIL_CHANGED: 'gb:mail-changed',
 } as const;
 
 @Injectable()

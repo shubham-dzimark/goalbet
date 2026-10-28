@@ -30,7 +30,7 @@ test.describe('F5.9 responsive', () => {
 
   test('admin pages never scroll sideways', async ({ page }) => {
     await adminLogin(page, admins().superAdmin);
-    for (const path of ['/ro', '/ro/users', '/ro/wallet', '/ro/bets', '/ro/sportsbook', '/ro/reports', '/ro/audit']) {
+    for (const path of ['/ro', '/ro/users', '/ro/wallet', '/ro/bets', '/ro/sportsbook', '/ro/reports', '/ro/audit', '/ro/email']) {
       await page.goto(`${URLS.admin}${path}`);
       await page.waitForLoadState('networkidle');
       await expectNoHorizontalScroll(page);

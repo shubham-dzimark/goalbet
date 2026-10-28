@@ -23,7 +23,8 @@
     "pendingApprovals": "{count} pending approvals",
     "account": "My account",
     "admins": "Admin users",
-    "dataProvider": "Data provider"
+    "dataProvider": "Data provider",
+    "email": "Email"
   },
   "roles": {
     "SUPER_ADMIN": "Super admin",
@@ -831,6 +832,81 @@
       "title": "Save data provider settings?",
       "help": "The API and the worker pick up the change within seconds.",
       "switch": "The site switches from {from} to {to}. Matches from {from} are hidden after the next sync (use “Load fixtures now”)."
+    }
+  },
+  "email": {
+    "kicker": "System",
+    "title": "Email",
+    "description": "The mail server used for outgoing email such as password resets.",
+    "forbiddenTitle": "Super admins only",
+    "forbiddenHelp": "Only a Super admin can see or change the email settings.",
+    "saved": "Email settings saved",
+    "noneWarning": "No mail server is set up: password-reset emails are only written to the server log. Enter your SMTP details below.",
+    "stats": {
+      "status": "Outgoing email",
+      "on": "On",
+      "off": "Off",
+      "logOnly": "Log only",
+      "fromPanel": "Set in this panel · {date}",
+      "fromEnv": "From the server file (SMTP_URL) until you save here",
+      "none": "Not configured",
+      "server": "Mail server",
+      "sender": "Sender"
+    },
+    "form": {
+      "title": "SMTP server",
+      "enabled": "Send emails",
+      "enabledHelp": "Off: emails are only written to the log (nothing is sent).",
+      "host": "Server",
+      "port": "Port",
+      "security": "Security",
+      "username": "Username",
+      "usernameHelp": "Usually your full email address or the API user from your provider. Leave empty if the server needs no login.",
+      "password": "Password",
+      "passwordHelp": "Stored encrypted and never shown again. To change it, choose Replace.",
+      "stored": "stored",
+      "replace": "Replace",
+      "remove": "Remove",
+      "undo": "Undo",
+      "willRemove": "will be removed",
+      "show": "Show password",
+      "hide": "Hide password",
+      "fromName": "Sender name",
+      "fromAddress": "Sender address",
+      "save": "Save settings"
+    },
+    "security": {
+      "tls": "SSL/TLS",
+      "tls_help": "Encrypted from the start, usually port 465",
+      "starttls": "STARTTLS",
+      "starttls_help": "Upgrades to encryption, usually port 587",
+      "none": "None",
+      "none_help": "Unencrypted, only for a local relay"
+    },
+    "errors": {
+      "host": "Enter the mail server address.",
+      "port": "Enter a port between 1 and 65535.",
+      "fromName": "Enter the sender name.",
+      "fromAddress": "Enter a valid sender address.",
+      "password": "Enter the password for this username.",
+      "testTo": "Enter the address to send the test email to."
+    },
+    "test": {
+      "title": "Send a test email",
+      "help": "Uses the settings in the form, even before you save them. Nothing is stored.",
+      "to": "Send to",
+      "send": "Send test",
+      "ok": "Sent to {to}. Check the inbox (and the spam folder).",
+      "failed": "Not sent: {error}"
+    },
+    "tips": {
+      "title": "Tips",
+      "providers": "Any provider with SMTP works: Amazon SES, Postmark, Mailgun, SendGrid, Brevo, or your own mail server.",
+      "domain": "Use a sender address on your own domain and set up SPF, DKIM and DMARC with your provider, or emails may land in spam."
+    },
+    "confirm": {
+      "title": "Save email settings?",
+      "help": "The new settings are used for the next email, without a restart."
     }
   }
 }
