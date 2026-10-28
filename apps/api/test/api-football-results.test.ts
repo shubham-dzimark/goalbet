@@ -1,5 +1,5 @@
 import { Redis } from 'ioredis';
-import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type ApiFootballClient } from '../src/modules/api-integration/api-football/api-football.client.js';
 import { ApiFootballProvider } from '../src/modules/api-integration/api-football/api-football.provider.js';
 
@@ -69,5 +69,40 @@ describe('API-Football results on the free plan', () => {
     const provider = new ApiFootballProvider(client, redis, [283]);
     expect(await provider.getResult('af-301', new Date('2026-10-21T18:00:00Z'))).toMatchObject({ status: 'FINISHED', outcome: { ftHome: 3, ftAway: 2 } });
     expect(calls.filter((c) => c['date'] === '2026-10-21')).toHaveLength(1);
+  });
+
+  it('a date the plan refuses is remembered: no more calls for it, and the refused call is not charged', async () => {
+    const calls: Record<string, string | number>[] = [];
+    const client = {
+      get: async (_path: string, params: Record<string, string | number> = {}) => {
+        calls.push(params);
+        if (params['date'] === '2026-10-23') throw new Error('api-football /fixtures: {"plan":"Free plans do not have access to this date, try from 2026-10-27 to 2026-10-29."}');
+        return [] as never[];
+      },
+      remaining: async () => 90,
+    } as unknown as ApiFootballClient;
+    const provider = new ApiFootballProvider(client, redis, [283]);
+    const kickoff = new Date('2026-10-23T09:30:00Z');
+    expect(await provider.getResult('af-401', kickoff)).toBeNull();
+    const refused = calls.filter((c) => c['date'] === '2026-10-23').length;
+    expect(refused).toBe(1);
+    // the job runs again and again: no further calls for that date
+    for (let i = 0; i < 5; i++) await provider.getResult('af-401', kickoff);
+    expect(calls.filter((c) => c['date'] === '2026-10-23')).toHaveLength(1);
+    expect(JSON.parse((await redis.get('af:date-window'))!)).toEqual({ from: '2026-10-27', to: '2026-10-29' });
+  });
+
+  it('the client gives back a call the plan refused, so our daily count matches API-Football', async () => {
+    const { ApiFootballClient: Client } = await import('../src/modules/api-integration/api-football/api-football.client.js');
+    const client = new Client({ apiKey: 'k', baseUrl: 'https://example.test', dailyBudget: 90, perMinute: 50 }, redis);
+    const respond = (errors: object) =>
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response(JSON.stringify({ errors, response: [] }), { status: 200, headers: { 'x-ratelimit-requests-remaining': '92' } }));
+    const day = new Date().toISOString().slice(0, 10);
+    respond({ plan: 'Free plans do not have access to this date' });
+    await expect(client.get('/fixtures', { date: '2026-10-23' })).rejects.toThrow(/plan/);
+    expect(Number(await redis.get(`af:budget:${day}`))).toBe(0);
+    respond([]);
+    await client.get('/fixtures', { date: '2026-10-28' });
+    expect(Number(await redis.get(`af:budget:${day}`))).toBe(1);
   });
 });

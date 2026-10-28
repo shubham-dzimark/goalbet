@@ -15,6 +15,8 @@ export class ProviderRouter implements OddsProvider {
   private readonly logger = new Logger('ProviderRouter');
   private current: { version: string; provider: OddsProvider; config: EffectiveProviderConfig } | null = null;
   private building: Promise<OddsProvider> | null = null;
+  /** results for demo-feed matches left over after switching to a real provider */
+  private legacyMock: MockProvider | null = null;
 
   constructor(
     private readonly config: ProviderConfigService,
@@ -82,7 +84,13 @@ export class ProviderRouter implements OddsProvider {
   }
 
   async getResult(fixtureRef: string, kickoff?: Date) {
-    return (await this.resolve()).getResult(fixtureRef, kickoff);
+    const p = await this.resolve();
+    // bets placed on the demo feed before a switch are settled with the demo feed's results
+    if (fixtureRef.startsWith('mock-') && !(p instanceof MockProvider)) {
+      this.legacyMock ??= new MockProvider(this.redis);
+      return this.legacyMock.getResult(fixtureRef);
+    }
+    return p.getResult(fixtureRef, kickoff);
   }
 
   async liveDataTime() {

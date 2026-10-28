@@ -38,6 +38,13 @@ interface Prediction {
   };
 }
 
+/** Raised before calling for a day the current plan does not cover (no call is made). */
+class DateOutsidePlanError extends Error {
+  constructor(date: string) {
+    super(`api-football: ${date} is outside the plan's dates`);
+  }
+}
+
 interface Cached<T> {
   at: number;
   data: T;
@@ -86,6 +93,8 @@ const MIN_LIVE_INTERVAL_MS = 2 * MIN;
 const RESULT_RECHECK_MS = 20 * MIN;
 /** Redis hash fixture id → UTC day it was listed on */
 const FIXTURE_DAYS = 'af:fixture-days';
+/** Redis: the dates the plan allows, learned from a refusal ("try from A to B"), JSON { from, to } */
+const DATE_WINDOW = 'af:date-window';
 const RESERVE_CALLS = 12;
 const PREDICTION_HORIZON_MS = 30 * HOUR;
 
@@ -127,7 +136,7 @@ export class ApiFootballProvider implements OddsProvider {
       await this.redis.set(key, JSON.stringify({ at: Date.now(), data } satisfies Cached<T>), 'EX', ttlSec);
       return data;
     } catch (e) {
-      if (!(e instanceof BudgetExceededError)) this.logger.warn((e as Error).message);
+      if (!(e instanceof BudgetExceededError) && !(e instanceof DateOutsidePlanError)) this.logger.warn((e as Error).message);
       return hit?.data ?? null;
     } finally {
       await this.redis.del(`${key}:lock`);
@@ -145,11 +154,32 @@ export class ApiFootballProvider implements OddsProvider {
   private async day(date: string, maxAgeMs?: number): Promise<ApiFixture[]> {
     const today = isoDay(Date.now());
     const maxAge = maxAgeMs ?? (date === today ? 3 * HOUR : date < today ? 24 * HOUR : 6 * HOUR);
-    const data = await this.cached(`af:fx:${date}`, maxAge, async () =>
-      this.ours(await this.client.get<ApiFixture>('/fixtures', { date, timezone: 'UTC' })),
-    );
+    const data = await this.cached(`af:fx:${date}`, maxAge, async () => {
+      // a day the plan refuses is never asked for again (it would only waste the call budget)
+      if (!(await this.dateAllowed(date))) throw new DateOutsidePlanError(date);
+      try {
+        return this.ours(await this.client.get<ApiFixture>('/fixtures', { date, timezone: 'UTC' }));
+      } catch (e) {
+        await this.learnDateWindow(e);
+        throw e;
+      }
+    });
     if (data?.length) await this.redis.hset(FIXTURE_DAYS, Object.fromEntries(data.map((f) => [String(f.fixture.id), date])));
     return data ?? [];
+  }
+
+  /** Free plans only cover a few days around today; outside them API-Football refuses the call. */
+  private async dateAllowed(date: string): Promise<boolean> {
+    const raw = await this.redis.get(DATE_WINDOW);
+    if (!raw) return true;
+    const w = JSON.parse(raw) as { from: string; to: string };
+    return date >= w.from && date <= w.to;
+  }
+
+  private async learnDateWindow(e: unknown) {
+    const m = /try from (\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})/.exec((e as Error)?.message ?? '');
+    // the window moves every day: remember it for a few hours only
+    if (m) await this.redis.set(DATE_WINDOW, JSON.stringify({ from: m[1], to: m[2] }), 'EX', 6 * 3600);
   }
 
   private async knownFixtures(): Promise<ApiFixture[]> {
@@ -258,7 +288,8 @@ export class ApiFootballProvider implements OddsProvider {
     if (!final(f)) {
       // matches listed before days were remembered: the kick-off day is the listing day (UTC)
       const date = (await this.redis.hget(FIXTURE_DAYS, String(id))) ?? (kickoff ? isoDay(kickoff.getTime()) : null);
-      if (date) f = (await this.day(date, RESULT_RECHECK_MS)).find((x) => x.fixture.id === id) ?? f;
+      // outside the plan's dates the result can't be fetched: an operator settles it by hand
+      if (date && (await this.dateAllowed(date))) f = (await this.day(date, RESULT_RECHECK_MS)).find((x) => x.fixture.id === id) ?? f;
       if (final(f)) await this.redis.set(`af:res:${id}`, JSON.stringify(f), 'EX', 7 * 86_400);
     }
     if (!f || !final(f)) return null;
