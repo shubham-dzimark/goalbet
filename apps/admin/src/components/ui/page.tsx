@@ -10,7 +10,7 @@ export function PageHeader({ title, description, actions, kicker }: { title: Rea
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         {kicker ? <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.2em] text-brand">{kicker}</p> : null}
-        <h1 className="font-display text-3xl font-bold uppercase italic leading-none tracking-tight sm:text-4xl">{title}</h1>
+        <h1 className="font-display text-3xl font-semibold leading-none tracking-tight sm:text-4xl">{title}</h1>
         {description ? <p className="mt-2 max-w-2xl text-sm text-ink-muted">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
@@ -55,7 +55,7 @@ export function StatCard({
           </span>
         ) : null}
       </div>
-      <p className="mt-2 font-display text-3xl font-bold tabular-nums leading-none">{value}</p>
+      <p className="mt-2 font-display tracking-tight text-3xl font-semibold tabular-nums leading-none">{value}</p>
       {hint ? <p className="mt-1.5 text-xs text-ink-faint">{hint}</p> : null}
     </div>
   );
@@ -67,7 +67,7 @@ export function Panel({ title, actions, children, className, bodyClassName }: { 
     <section className={cn('glass overflow-hidden rounded-[var(--radius-card)]', className)}>
       {title || actions ? (
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
-          {title ? <h2 className="font-display text-lg font-bold uppercase italic tracking-wide">{title}</h2> : <span />}
+          {title ? <h2 className="font-display text-lg font-semibold tracking-wide">{title}</h2> : <span />}
           {actions}
         </header>
       ) : null}

@@ -16,7 +16,7 @@ export function PageTitle({ children, sub, right }: { children: React.ReactNode;
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
         {sub ? <p className="mb-1 text-xs font-bold uppercase tracking-[0.2em] text-brand">{sub}</p> : null}
-        <h1 className="font-display text-4xl font-extrabold uppercase italic leading-none tracking-tight sm:text-5xl">{children}</h1>
+        <h1 className="font-display text-4xl font-semibold leading-none tracking-tight sm:text-5xl">{children}</h1>
       </div>
       {right}
     </div>
@@ -52,12 +52,12 @@ export function EventList({
     const g =
       groups.get(key) ??
       (groupBy === 'day'
-        ? { head: <span className="font-display text-lg font-bold uppercase italic">{f.day(e.startTime)}</span>, events: [] as EventSummaryDto[] }
+        ? { head: <span className="font-display tracking-tight text-lg font-semibold">{f.day(e.startTime)}</span>, events: [] as EventSummaryDto[] }
         : {
             head: (
               <span className="flex items-center gap-2.5">
                 <Flag code={e.competition.countryCode} />
-                <span className="font-display text-lg font-bold uppercase italic">{e.competition.name}</span>
+                <span className="font-display tracking-tight text-lg font-semibold">{e.competition.name}</span>
                 <span className="text-xs text-ink-faint">{t(`countries.${e.competition.countryCode}`)}</span>
               </span>
             ),

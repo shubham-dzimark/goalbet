@@ -95,7 +95,7 @@ function BlockCard({ block, event }: { block: Block; event: Ev }) {
               ) : null}
               {block.markets.map((m) => (
                 <div key={m.id} className="grid grid-cols-[64px_1fr_1fr] items-center gap-1.5 sm:grid-cols-[minmax(64px,150px)_1fr_1fr]">
-                  <span className="truncate rounded-lg bg-tint/[0.04] px-2 py-1 text-center font-display text-sm font-bold text-ink-muted">
+                  <span className="truncate rounded-lg bg-tint/[0.04] px-2 py-1 text-center font-display tracking-tight text-sm font-semibold text-ink-muted">
                     {m.type === 'PLAYER_SHOTS' ? `${m.playerName} ${formatLine(m.line ?? 0)}` : formatLine(m.line ?? 0, asian)}
                   </span>
                   {m.selections.map((s) => (

@@ -93,7 +93,7 @@ export function TicketPanel({ id, onClose }: { id: string | null; onClose: () =>
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-display text-lg font-bold tabular-nums">{f.odds(l.oddsMilli)}</p>
+                        <p className="font-display tracking-tight text-lg font-semibold tabular-nums">{f.odds(l.oddsMilli)}</p>
                         <LegStatusBadge status={l.status} />
                       </div>
                     </div>
@@ -160,7 +160,7 @@ export function TicketsTable({ params, showPlayer = true, testId }: { params: Re
       hideBelow: 'sm',
     },
     { key: 'stake', header: t('cols.stake'), align: 'right', cell: (x) => <span className="tabular-nums">{f.ron(x.stakeBani)}</span> },
-    { key: 'odds', header: t('cols.odds'), align: 'right', cell: (x) => <span className="font-display font-bold tabular-nums">{f.odds(x.totalOddsMilli)}</span>, hideBelow: 'md' },
+    { key: 'odds', header: t('cols.odds'), align: 'right', cell: (x) => <span className="font-display tracking-tight font-semibold tabular-nums">{f.odds(x.totalOddsMilli)}</span>, hideBelow: 'md' },
     {
       key: 'return',
       header: t('cols.return'),

@@ -100,7 +100,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <Link href="/" className="flex items-center gap-2.5">
             <LogoMark className="size-9" />
             <span className="leading-none">
-              <span className="block font-display text-xl font-bold uppercase italic tracking-wide">GoalBet</span>
+              <span className="block font-display text-xl font-semibold tracking-wide">GoalBet</span>
               <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-brand">{t('nav.backOffice')}</span>
             </span>
           </Link>

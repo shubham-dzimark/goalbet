@@ -84,11 +84,11 @@ export function RealityCheck() {
             <dl className="grid flex-1 grid-cols-3 gap-2 text-center text-xs text-ink-muted">
               <div>
                 <dt>{t('staked')}</dt>
-                <dd className="font-display text-lg font-bold text-ink">{f.ron(summary.staked)}</dd>
+                <dd className="font-display tracking-tight text-lg font-semibold text-ink">{f.ron(summary.staked)}</dd>
               </div>
               <div>
                 <dt>{t('returned')}</dt>
-                <dd className="font-display text-lg font-bold text-ink">{f.ron(summary.returned)}</dd>
+                <dd className="font-display tracking-tight text-lg font-semibold text-ink">{f.ron(summary.returned)}</dd>
               </div>
               <div>
                 <dt>{t('net')}</dt>

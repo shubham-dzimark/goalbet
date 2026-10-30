@@ -170,9 +170,11 @@
   --color-danger: #ff4f5e;
   --color-info: #7fb4ff;
 
-  /* Type: self-hosted via @fontsource (packages/ui/src/brand/fonts.ts) — change both together. */
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Barlow Condensed', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  /* Type: one clean sans family (Apple-like hierarchy: weight and size, not a second typeface).
+     Self-hosted via @fontsource (packages/ui/src/brand/fonts.ts) — change both together.
+     font-display = headings and figures (semibold, tight tracking, tabular numbers). */
+  --font-sans: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
 
   --radius-card: 1.125rem;
   --radius-control: 0.75rem;
@@ -189,6 +191,9 @@
     background-color: var(--color-surface);
     color: var(--color-ink);
     font-family: var(--font-sans);
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   /* Soft emerald + gold floodlight pools over the page colour. */
   body::before {
@@ -198,9 +203,7 @@
     z-index: -1;
     pointer-events: none;
     background:
-      radial-gradient(56rem 36rem at 12% -12%, rgb(var(--brand-rgb) / var(--page-glow)), transparent 62%),
-      radial-gradient(44rem 30rem at 92% -8%, rgb(var(--gold-rgb) / 0.07), transparent 60%),
-      radial-gradient(60rem 30rem at 50% 115%, rgb(var(--brand-rgb) / 0.06), transparent 70%),
+      radial-gradient(60rem 36rem at 15% -15%, rgb(var(--brand-rgb) / calc(var(--page-glow) * 0.55)), transparent 65%),
       var(--color-surface);
   }
   ::selection {
@@ -226,8 +229,8 @@
     background: linear-gradient(180deg, var(--glass-from), var(--glass-to));
     border: 1px solid var(--color-line);
     box-shadow: var(--glass-shadow);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
   }
   /* Emerald → gold headline accent */
   .text-glow {

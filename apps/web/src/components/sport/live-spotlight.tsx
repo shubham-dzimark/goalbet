@@ -64,7 +64,7 @@ export function LiveSpotlight({ live, upcoming }: { live: EventSummaryDto[]; upc
       aria-label={t(mode === 'live' ? 'home.spotlight' : 'home.nextUp')}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      className="relative overflow-hidden rounded-[28px] border border-line-strong bg-chrome-strong"
+      className="relative overflow-hidden rounded-[1.75rem] border border-line bg-card-solid"
       data-theme="dark"
       data-testid="live-spotlight"
     >
@@ -74,25 +74,23 @@ export function LiveSpotlight({ live, upcoming }: { live: EventSummaryDto[]; upc
         className="absolute inset-0 transition-[background] duration-1000"
         style={{
           background:
-            'radial-gradient(42rem 22rem at 0% 0%, rgb(var(--brand-rgb) / 0.22), transparent 60%), radial-gradient(36rem 20rem at 100% 0%, rgb(var(--gold-rgb) / 0.12), transparent 60%), radial-gradient(30rem 16rem at 50% 120%, rgb(var(--brand-rgb) / 0.14), transparent 70%)',
+            'radial-gradient(50rem 26rem at 50% -20%, rgb(var(--brand-rgb) / 0.10), transparent 65%)',
         }}
       />
-      <div aria-hidden="true" className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-tint/10 to-transparent" />
-      <div aria-hidden="true" className="absolute left-1/2 top-1/2 size-40 -translate-x-1/2 -translate-y-1/2 rounded-full border border-tint/[0.06]" />
 
-      <div ref={stage} className="relative px-4 pb-4 pt-5 sm:px-8 sm:pt-6">
-        <div className="mb-5 flex items-center justify-between gap-3">
-          <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-ink-muted" data-spot="text">
+      <div ref={stage} className="relative px-5 pb-6 pt-6 sm:px-12 sm:pb-8 sm:pt-8">
+        <div className="mb-8 flex items-center justify-between gap-3">
+          <span className="flex items-center gap-2 text-[13px] font-medium text-ink-muted" data-spot="text">
             <Flag code={event.competition.countryCode} />
             {event.competition.name}
           </span>
           {mode === 'live' ? (
-            <span className="flex items-center gap-2 rounded-full bg-live px-3 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-[0_0_24px_rgb(var(--live-rgb)/0.6)]">
+            <span className="flex items-center gap-1.5 rounded-full bg-live/15 px-3 py-1 text-[13px] font-semibold text-live">
               <Radio className="size-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">{t('home.spotlight')}</span>
             </span>
           ) : (
-            <span className="flex items-center gap-2 rounded-full bg-accent/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-accent">
+            <span className="flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1 text-[13px] font-semibold text-accent">
               <Timer className="size-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">{t('home.nextUp')}</span>
             </span>
@@ -104,14 +102,14 @@ export function LiveSpotlight({ live, upcoming }: { live: EventSummaryDto[]; upc
             <span data-spot="crest">
               <TeamCrest name={event.homeTeam} logo={event.homeLogo} size={72} className="sm:size-24" />
             </span>
-            <span data-spot="text" className="font-display text-lg font-bold uppercase leading-tight sm:text-2xl">
+            <span data-spot="text" className="font-display tracking-tight text-lg font-semibold leading-tight sm:text-2xl">
               {event.homeTeam}
             </span>
           </div>
           <div className="flex flex-col items-center gap-2" data-spot="text">
             {isLive ? (
               <>
-                <span className="font-display text-5xl font-extrabold tabular-nums tracking-tight sm:text-7xl" data-testid="spotlight-score">
+                <span className="font-display text-5xl font-semibold tabular-nums tracking-tight sm:text-7xl" data-testid="spotlight-score">
                   {event.homeScore}
                   <span className="mx-1 text-ink-faint">:</span>
                   {event.awayScore}
@@ -120,8 +118,8 @@ export function LiveSpotlight({ live, upcoming }: { live: EventSummaryDto[]; upc
               </>
             ) : (
               <>
-                <span className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{f.kickoff(event.startTime)}</span>
-                <Countdown to={event.startTime} className="font-display text-3xl font-bold text-accent sm:text-5xl" />
+                <span className="text-[13px] font-medium text-ink-muted">{f.kickoff(event.startTime)}</span>
+                <Countdown to={event.startTime} className="font-display tracking-tight text-3xl font-semibold text-accent sm:text-5xl" />
               </>
             )}
           </div>
@@ -129,7 +127,7 @@ export function LiveSpotlight({ live, upcoming }: { live: EventSummaryDto[]; upc
             <span data-spot="crest">
               <TeamCrest name={event.awayTeam} logo={event.awayLogo} size={72} className="sm:size-24" />
             </span>
-            <span data-spot="text" className="font-display text-lg font-bold uppercase leading-tight sm:text-2xl">
+            <span data-spot="text" className="font-display tracking-tight text-lg font-semibold leading-tight sm:text-2xl">
               {event.awayTeam}
             </span>
           </div>
@@ -147,7 +145,7 @@ export function LiveSpotlight({ live, upcoming }: { live: EventSummaryDto[]; upc
         ) : null}
 
         {market ? (
-          <div className="mx-auto mt-5 grid max-w-2xl grid-cols-3 gap-2" data-spot="odds">
+          <div className="mx-auto mt-8 grid max-w-2xl grid-cols-3 gap-2" data-spot="odds">
             {market.selections.map((s) => (
               <OddsButton
                 key={s.id}
@@ -163,12 +161,12 @@ export function LiveSpotlight({ live, upcoming }: { live: EventSummaryDto[]; upc
         ) : null}
 
         {list.length > 1 ? (
-          <div className="mt-5 flex items-center gap-2">
+          <div className="mt-8 flex items-center gap-2">
             <button
               type="button"
               aria-label={t('fx.previous')}
               onClick={() => setIndex((i) => (i - 1 + list.length) % list.length)}
-              className="grid size-9 shrink-0 place-items-center rounded-full bg-tint/[0.06] text-ink-muted ring-1 ring-line hover:text-ink"
+              className="grid size-11 shrink-0 place-items-center rounded-full bg-tint/[0.06] text-ink-muted ring-1 ring-line transition-colors hover:bg-tint/10 hover:text-ink"
             >
               <ChevronLeft className="size-4" />
             </button>
@@ -199,7 +197,7 @@ export function LiveSpotlight({ live, upcoming }: { live: EventSummaryDto[]; upc
               type="button"
               aria-label={t('fx.next')}
               onClick={() => setIndex((i) => (i + 1) % list.length)}
-              className="grid size-9 shrink-0 place-items-center rounded-full bg-tint/[0.06] text-ink-muted ring-1 ring-line hover:text-ink"
+              className="grid size-11 shrink-0 place-items-center rounded-full bg-tint/[0.06] text-ink-muted ring-1 ring-line transition-colors hover:bg-tint/10 hover:text-ink"
             >
               <ChevronRight className="size-4" />
             </button>

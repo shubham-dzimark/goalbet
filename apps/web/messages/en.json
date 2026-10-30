@@ -308,6 +308,9 @@
     "point3": "Secure account with betting limits you control"
   },
   "hero": {
+    "stackLabel": "Upcoming matches",
+    "prevMatch": "Previous match",
+    "nextMatch": "Next match",
     "kicker": "{count, plural, =0 {Kick-off soon} one {# match live now} other {# matches live now}}",
     "line1": "Football.",
     "line2": "Every moment.",

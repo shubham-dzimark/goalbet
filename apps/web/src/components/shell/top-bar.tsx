@@ -82,7 +82,7 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
                 className="flex h-10 items-center gap-2 rounded-xl bg-brand/10 px-3 ring-1 ring-brand/30 transition-colors hover:bg-brand/15"
               >
                 <span className="hidden text-[11px] font-semibold uppercase text-ink-muted sm:block">{t('balance')}</span>
-                <AnimatedNumber value={user.balanceBani} format={(n) => formatRon(n, locale)} className="font-display text-lg font-bold tabular-nums text-brand" />
+                <AnimatedNumber value={user.balanceBani} format={(n) => formatRon(n, locale)} className="font-display tracking-tight text-lg font-semibold tabular-nums text-brand" />
               </Link>
               <Link href="/account" aria-label={t('account')} className="hidden size-10 place-items-center rounded-xl bg-tint/[0.05] ring-1 ring-line hover:bg-tint/10 sm:grid">
                 <UserRound className="size-4" />

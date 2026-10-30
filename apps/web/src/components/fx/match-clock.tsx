@@ -29,7 +29,7 @@ export function MinuteRing({ event, size = 56, className }: { event: Pick<EventS
           className="transition-[stroke-dashoffset] duration-1000"
         />
       </svg>
-      <span className="font-display text-sm font-bold leading-none text-live">{clock}</span>
+      <span className="font-display tracking-tight text-sm font-semibold leading-none text-live">{clock}</span>
     </div>
   );
 }

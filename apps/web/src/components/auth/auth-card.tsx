@@ -38,7 +38,7 @@ export function AuthCard({ title, subtitle, children, footer }: { title: string;
         </div>
         <div className="relative" data-auth-in>
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-brand">{t('kicker')}</p>
-          <h2 className="mt-3 font-display text-6xl font-extrabold uppercase italic leading-[0.9]">
+          <h2 className="mt-3 font-display tracking-tight text-6xl font-semibold leading-[0.9]">
             {t('line1')}
             <br />
             <span className="text-glow">{t('line2')}</span>
@@ -62,7 +62,7 @@ export function AuthCard({ title, subtitle, children, footer }: { title: string;
       </aside>
       <div className="flex items-center justify-center">
         <div className="glass w-full max-w-md rounded-[28px] p-6 sm:p-8" data-auth-in>
-          <h1 className="font-display text-4xl font-extrabold uppercase italic leading-none">{title}</h1>
+          <h1 className="font-display tracking-tight text-4xl font-semibold leading-none">{title}</h1>
           {subtitle ? <p className="mb-6 mt-2 text-sm text-ink-muted">{subtitle}</p> : <div className="mb-6" />}
           {children}
           {footer ? <div className="mt-6 border-t border-line pt-4 text-center text-sm text-ink-muted">{footer}</div> : null}

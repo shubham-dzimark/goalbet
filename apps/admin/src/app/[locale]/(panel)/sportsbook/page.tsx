@@ -195,7 +195,7 @@ function Events() {
       header: t('cols.when'),
       cell: (e) =>
         e.status === 'LIVE' ? (
-          <span className="font-display text-lg font-bold tabular-nums">
+          <span className="font-display tracking-tight text-lg font-semibold tabular-nums">
             {e.homeScore}:{e.awayScore} <span className="text-xs font-semibold text-live">{e.minute ?? 0}&apos;</span>
           </span>
         ) : (

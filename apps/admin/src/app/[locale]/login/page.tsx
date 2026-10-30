@@ -80,7 +80,7 @@ export default function AdminLoginPage() {
       <Card className="w-full max-w-md p-6">
         <div className="mb-5 flex items-center gap-2">
           <ShieldCheck className="size-6 text-brand" aria-hidden="true" />
-          <h1 className="font-display text-2xl font-bold">
+          <h1 className="font-display tracking-tight text-2xl font-semibold">
             {step.kind === 'credentials' ? t('title') : step.kind === 'totp' ? t('totpTitle') : t('setupTitle')}
           </h1>
         </div>

@@ -68,7 +68,7 @@ export default function ReportsPage() {
     },
     { key: 'status', header: t('exposure.status'), cell: (r) => <EventStatusBadge status={r.status} /> },
     { key: 'tickets', header: t('exposure.tickets'), align: 'right', cell: (r) => r.tickets },
-    { key: 'payout', header: t('exposure.potential'), align: 'right', cell: (r) => <span className="font-display text-base font-bold text-accent">{f.ron(r.potentialPayoutBani)}</span> },
+    { key: 'payout', header: t('exposure.potential'), align: 'right', cell: (r) => <span className="font-display tracking-tight text-base font-semibold text-accent">{f.ron(r.potentialPayoutBani)}</span> },
   ];
 
   const methodCols: Column<AdminReport['payments']['byMethod'][number]>[] = [
@@ -84,7 +84,7 @@ export default function ReportsPage() {
         </div>
       ),
     },
-    { key: 'amount', header: t('payments.amount'), align: 'right', cell: (r) => <span className="font-display text-base font-bold">{f.ron(r.amountBani)}</span> },
+    { key: 'amount', header: t('payments.amount'), align: 'right', cell: (r) => <span className="font-display tracking-tight text-base font-semibold">{f.ron(r.amountBani)}</span> },
   ];
 
   return (
@@ -159,7 +159,7 @@ export default function ReportsPage() {
                   label: t(`betTypes.${b.type}`),
                   value: (
                     <span data-testid={`bet-type-${b.type}`}>
-                      {t('kpi.tickets', { count: b.tickets })} · <span className="font-display font-bold">{f.ron(b.stakesBani)}</span>
+                      {t('kpi.tickets', { count: b.tickets })} · <span className="font-display tracking-tight font-semibold">{f.ron(b.stakesBani)}</span>
                     </span>
                   ),
                 }))}
@@ -177,7 +177,7 @@ export default function ReportsPage() {
           </div>
 
           <section data-testid="report-payments">
-            <h2 className="mb-3 font-display text-lg font-bold uppercase italic tracking-wide">{t('payments.title')}</h2>
+            <h2 className="mb-3 font-display text-lg font-semibold tracking-wide">{t('payments.title')}</h2>
             <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <StatCard
                 label={t('payments.waiting')}
@@ -213,7 +213,7 @@ export default function ReportsPage() {
 
           <section>
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="font-display text-lg font-bold uppercase italic tracking-wide">{t('exposure.title')}</h2>
+              <h2 className="font-display text-lg font-semibold tracking-wide">{t('exposure.title')}</h2>
               <Link href="/wallet" className="flex items-center gap-1 text-sm font-semibold text-brand hover:underline">
                 {t('transactionLog')}
                 <ArrowRight className="size-4" aria-hidden="true" />

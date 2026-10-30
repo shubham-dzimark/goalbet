@@ -90,7 +90,7 @@ export function WalletAdjustDialog({
           </div>
           <Field label={t('amount')} htmlFor="adjust-amount" hint={after !== null ? t('balanceAfter', { from: f.ron(user.balanceBani), to: f.ron(after) }) : t('balanceNow', { balance: f.ron(user.balanceBani) })}>
             <div className="relative">
-              <Input id="adjust-amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ''))} className="pr-14 text-right font-display text-xl font-bold" autoFocus data-testid="adjust-amount" />
+              <Input id="adjust-amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ''))} className="pr-14 text-right font-display tracking-tight text-xl font-semibold" autoFocus data-testid="adjust-amount" />
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-ink-muted">RON</span>
             </div>
           </Field>

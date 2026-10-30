@@ -13,7 +13,7 @@ export function SiteFooter() {
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <Logo />
-          <span className="grid size-9 place-items-center rounded-full border-2 border-danger/70 font-display text-sm font-bold text-ink" aria-label="18+">
+          <span className="grid size-9 place-items-center rounded-full border-2 border-danger/70 font-display tracking-tight text-sm font-semibold text-ink" aria-label="18+">
             {t('adultsOnly')}
           </span>
           <Suspense>

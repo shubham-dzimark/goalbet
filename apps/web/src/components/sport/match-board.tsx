@@ -1,7 +1,6 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { CalendarDays } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { type CountryGroupDto, type EventSummaryDto } from '@goalbet/shared';
@@ -36,9 +35,8 @@ export function MatchBoard({ initial }: { initial?: EventSummaryDto[] | null }) 
   return (
     <section id="board" aria-labelledby="board-title" className="scroll-mt-6 space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <RevealHeading id="board-title" className="flex items-center gap-2 font-display text-2xl font-bold uppercase italic">
-          <CalendarDays className="size-5 text-brand" aria-hidden="true" />
-          <span data-split>{t('home.board')}</span>
+        <RevealHeading id="board-title" className="font-display text-[28px] font-semibold leading-tight tracking-tight sm:text-[32px]">
+          {t('home.board')}
         </RevealHeading>
         {days.length > 0 ? (
           <Segmented

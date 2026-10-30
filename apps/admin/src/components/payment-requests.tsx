@@ -82,7 +82,7 @@ export function PaymentRequests() {
       header: t('cols.amount'),
       align: 'right',
       cell: (r) => (
-        <span className={cn('font-display text-lg font-bold tabular-nums', r.type === 'DEPOSIT' ? 'text-brand' : '')}>
+        <span className={cn('font-display tracking-tight text-lg font-semibold tabular-nums', r.type === 'DEPOSIT' ? 'text-brand' : '')}>
           {r.type === 'DEPOSIT' ? '+' : '−'}
           {f.ron(r.amountBani)}
         </span>

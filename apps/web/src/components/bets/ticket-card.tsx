@@ -47,7 +47,7 @@ export function TicketCard({ ticket, link = true, cashOut }: { ticket: TicketDto
           <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide', style.chip)} data-testid="ticket-status">
             {t(`ticketStatus.${ticket.status}`)}
           </span>
-          <span className="font-display text-lg font-bold uppercase italic">
+          <span className="font-display tracking-tight text-lg font-semibold">
             {ticket.legs.some((l) => l.kind === 'BET_BUILDER') && ticket.type === 'SINGLE' ? t('ticketType.BET_BUILDER') : t(`ticketType.${ticket.type}`)}
           </span>
         </div>
@@ -98,7 +98,7 @@ export function TicketCard({ ticket, link = true, cashOut }: { ticket: TicketDto
                 )}
               </p>
             </div>
-            <span className="font-display text-lg font-bold tabular-nums">{f.odds(leg.oddsMilli)}</span>
+            <span className="font-display tracking-tight text-lg font-semibold tabular-nums">{f.odds(leg.oddsMilli)}</span>
           </li>
         ))}
       </ul>
@@ -113,17 +113,17 @@ export function TicketCard({ ticket, link = true, cashOut }: { ticket: TicketDto
       <dl className="relative grid grid-cols-3 gap-2 px-4 pb-4 pt-1">
         <div>
           <dt className="text-[11px] uppercase tracking-wide text-ink-faint">{t('bets.stake')}</dt>
-          <dd className="font-display text-lg font-bold tabular-nums">{f.ron(ticket.stakeBani)}</dd>
+          <dd className="font-display tracking-tight text-lg font-semibold tabular-nums">{f.ron(ticket.stakeBani)}</dd>
         </div>
         <div>
           <dt className="text-[11px] uppercase tracking-wide text-ink-faint">{t('bets.totalOdds')}</dt>
-          <dd className="font-display text-lg font-bold tabular-nums">{f.odds(ticket.totalOddsMilli)}</dd>
+          <dd className="font-display tracking-tight text-lg font-semibold tabular-nums">{f.odds(ticket.totalOddsMilli)}</dd>
         </div>
         <div className="text-right">
           <dt className="text-[11px] uppercase tracking-wide text-ink-faint">
             {ticket.status === 'CASHED_OUT' ? t('bets.cashedOut') : settled ? t('bets.payout') : t('bets.potentialWin')}
           </dt>
-          <dd className={cn('font-display text-xl font-bold tabular-nums', style.text)} data-testid="ticket-win">
+          <dd className={cn('font-display tracking-tight text-xl font-semibold tabular-nums', style.text)} data-testid="ticket-win">
             {f.ron(amount)}
           </dd>
         </div>

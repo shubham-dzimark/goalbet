@@ -23,7 +23,7 @@ export default function ResponsibleGamblingPage() {
       <p className="text-ink-muted">{t('intro')}</p>
 
       <section>
-        <h2 className="mb-3 font-display text-xl font-bold uppercase italic">{t('toolsTitle')}</h2>
+        <h2 className="mb-3 font-display tracking-tight text-xl font-semibold">{t('toolsTitle')}</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {TOOLS.map(({ key, icon: Icon, tab }) => (
             <Link
@@ -47,7 +47,7 @@ export default function ResponsibleGamblingPage() {
       </section>
 
       <section className="rounded-2xl bg-warning/[0.07] p-5 ring-1 ring-warning/30">
-        <h2 className="mb-3 flex items-center gap-2 font-display text-xl font-bold uppercase italic">
+        <h2 className="mb-3 flex items-center gap-2 font-display tracking-tight text-xl font-semibold">
           <AlertTriangle className="size-5 text-warning" aria-hidden="true" />
           {t('signsTitle')}
         </h2>
@@ -59,7 +59,7 @@ export default function ResponsibleGamblingPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 flex items-center gap-2 font-display text-xl font-bold uppercase italic">
+        <h2 className="mb-3 flex items-center gap-2 font-display tracking-tight text-xl font-semibold">
           <LifeBuoy className="size-5 text-brand" aria-hidden="true" />
           {t('helpTitle')}
         </h2>
@@ -80,7 +80,7 @@ export default function ResponsibleGamblingPage() {
           </a>
         </div>
         <p className="mt-4 flex items-center gap-2 text-sm font-semibold">
-          <span className="grid size-8 place-items-center rounded-full border-2 border-danger/70 font-display text-xs">18+</span>
+          <span className="grid size-8 place-items-center rounded-full border-2 border-danger/70 font-display tracking-tight text-xs">18+</span>
           {t('adults')}
         </p>
       </section>

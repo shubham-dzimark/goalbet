@@ -42,7 +42,7 @@ export default function UsersPage() {
     },
     { key: 'phone', header: t('cols.phone'), cell: (u) => <span className="tabular-nums text-ink-muted">{u.phone}</span>, hideBelow: 'lg' },
     { key: 'status', header: t('cols.status'), cell: (u) => <UserStatusBadge status={u.status} /> },
-    { key: 'balance', header: t('cols.balance'), align: 'right', cell: (u) => <span className="font-display text-base font-bold tabular-nums">{f.ron(u.balanceBani)}</span> },
+    { key: 'balance', header: t('cols.balance'), align: 'right', cell: (u) => <span className="font-display tracking-tight text-base font-semibold tabular-nums">{f.ron(u.balanceBani)}</span> },
     { key: 'open', header: t('cols.openTickets'), align: 'right', cell: (u) => <span className="tabular-nums">{u.openTickets}</span>, hideBelow: 'md' },
     { key: 'joined', header: t('cols.joined'), cell: (u) => <span className="text-ink-muted">{f.date(u.createdAt)}</span>, hideBelow: 'md' },
     { key: 'lastLogin', header: t('cols.lastLogin'), cell: (u) => <span className="text-ink-muted">{u.lastLoginAt ? f.ago(u.lastLoginAt) : '—'}</span>, hideBelow: 'xl' },

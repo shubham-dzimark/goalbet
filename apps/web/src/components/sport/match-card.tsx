@@ -2,7 +2,6 @@
 
 import { ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useRef } from 'react';
 import { type EventSummaryDto } from '@goalbet/shared';
 import { LiveDot, cn } from '@goalbet/ui';
 import { Flag } from '@/components/fx/flag';
@@ -10,12 +9,11 @@ import { Countdown } from '@/components/fx/match-clock';
 import { TeamCrest } from '@/components/fx/team-crest';
 import { Link } from '@/i18n/navigation';
 import { useFormat, useMatchClock } from '@/lib/format';
-import { useTilt } from '@/lib/use-interactions';
 import { OddsButton } from './odds-button';
 
 const SOON_MS = 3 * 3_600_000;
 
-function KickoffTag({ event }: { event: EventSummaryDto }) {
+export function KickoffTag({ event }: { event: EventSummaryDto }) {
   const f = useFormat();
   const clock = useMatchClock()(event);
   if (event.status === 'LIVE') {
@@ -39,7 +37,7 @@ function TeamLine({ name, logo, score, live }: { name: string; logo: string | nu
     <div className="flex items-center gap-2.5">
       <TeamCrest name={name} logo={logo} size={26} />
       <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{name}</span>
-      {live ? <span className="font-display text-xl font-bold tabular-nums">{score}</span> : null}
+      {live ? <span className="font-display tracking-tight text-xl font-semibold tabular-nums">{score}</span> : null}
     </div>
   );
 }
@@ -49,20 +47,17 @@ export function MatchCard({ event }: { event: EventSummaryDto }) {
   const t = useTranslations();
   const live = event.status === 'LIVE';
   const market = event.mainMarket;
-  const ref = useRef<HTMLElement>(null);
-  useTilt(ref, { max: 5, lift: 5 });
   return (
     <article
-      ref={ref}
       data-reveal
       data-testid="event-row"
       className={cn(
-        'glass spotlight-hover group flex flex-col gap-3 rounded-[var(--radius-card)] p-4 transition-[border-color,box-shadow] duration-300 hover:border-line-strong hover:shadow-[var(--shadow-float)]',
+        'glass group flex flex-col gap-4 rounded-[var(--radius-card)] p-5 transition-[transform,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[var(--shadow-float)]',
         live && 'border-live/25',
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="flex min-w-0 items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
+        <span className="flex min-w-0 items-center gap-2 text-[12px] font-medium text-ink-muted">
           <Flag code={event.competition.countryCode} />
           <span className="truncate">{event.competition.name}</span>
         </span>
@@ -104,7 +99,7 @@ export function MatchRow({ event, active = false, onSelect }: { event: EventSumm
     <div className="flex min-w-0 items-center gap-3">
       <div className="w-12 shrink-0 text-center">
         {live ? (
-          <span className="font-display text-sm font-bold text-live">{clock}</span>
+          <span className="font-display tracking-tight text-sm font-semibold text-live">{clock}</span>
         ) : (
           <span className="flex flex-col text-xs">
             <span className="font-bold">{f.time(event.startTime)}</span>
@@ -120,7 +115,7 @@ export function MatchRow({ event, active = false, onSelect }: { event: EventSumm
           <p key={String(n)} className="flex items-center gap-2 text-sm font-semibold">
             <TeamCrest name={String(n)} logo={logo as string | null} size={18} />
             <span className="min-w-0 flex-1 truncate">{n}</span>
-            {live ? <span className="font-display text-base font-bold tabular-nums">{s}</span> : null}
+            {live ? <span className="font-display tracking-tight text-base font-semibold tabular-nums">{s}</span> : null}
           </p>
         ))}
       </div>

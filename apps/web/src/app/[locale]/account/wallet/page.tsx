@@ -79,7 +79,7 @@ export default function WalletPage() {
               <AnimatedNumber
                 value={balance.data.balanceBani}
                 format={(n) => formatRon(n, locale)}
-                className="mt-1 block font-display text-5xl font-extrabold tabular-nums tracking-tight sm:text-6xl"
+                className="mt-1 block font-display text-5xl font-semibold tabular-nums tracking-tight sm:text-6xl"
                 testId="wallet-balance"
                 duration={1.2}
               />
@@ -95,7 +95,7 @@ export default function WalletPage() {
             ].map((s) => (
               <div key={s.label} className="rounded-2xl bg-tint/[0.05] px-4 py-3 ring-1 ring-line">
                 <p className="text-[11px] uppercase tracking-wide text-ink-faint">{s.label}</p>
-                <p className={cn('font-display text-lg font-bold tabular-nums', s.tone)}>{f.ron(s.value)}</p>
+                <p className={cn('font-display tracking-tight text-lg font-semibold tabular-nums', s.tone)}>{f.ron(s.value)}</p>
               </div>
             ))}
           </div>
@@ -133,7 +133,7 @@ export default function WalletPage() {
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-2xl font-bold uppercase italic">{t('wallet.history')}</h2>
+          <h2 className="font-display tracking-tight text-2xl font-semibold">{t('wallet.history')}</h2>
           <form onSubmit={apply} className="flex flex-wrap items-center gap-2">
             <Input type="date" aria-label={t('wallet.from')} value={draft.from} onChange={(e) => setDraft({ ...draft, from: e.target.value })} className="h-10 w-40" />
             <Input type="date" aria-label={t('wallet.to')} value={draft.to} onChange={(e) => setDraft({ ...draft, to: e.target.value })} className="h-10 w-40" />
@@ -190,7 +190,7 @@ export default function WalletPage() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className={cn('font-display text-lg font-bold tabular-nums', r.amountBani > 0 ? 'text-brand' : 'text-ink')}>
+                      <p className={cn('font-display tracking-tight text-lg font-semibold tabular-nums', r.amountBani > 0 ? 'text-brand' : 'text-ink')}>
                         {r.amountBani > 0 ? '+' : ''}
                         {f.ron(r.amountBani)}
                       </p>

@@ -64,14 +64,14 @@ export function MatchView({ id, initial }: { id: string; initial: EventDetailDto
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-8">
             <div className="flex flex-col items-center gap-3 text-center">
               <TeamCrest name={data.homeTeam} logo={data.homeLogo} size={64} className="sm:size-24" />
-              <h1 className="font-display text-xl font-bold uppercase leading-tight sm:text-3xl" data-testid="match-home">
+              <h1 className="font-display tracking-tight text-xl font-semibold leading-tight sm:text-3xl" data-testid="match-home">
                 {data.homeTeam}
               </h1>
             </div>
             <div className="flex flex-col items-center gap-2">
               {live ? (
                 <>
-                  <p className="font-display text-5xl font-extrabold tabular-nums sm:text-7xl" data-testid="match-score">
+                  <p className="font-display tracking-tight text-5xl font-semibold tabular-nums sm:text-7xl" data-testid="match-score">
                     {data.homeScore}
                     <span className="mx-1 text-ink-faint">:</span>
                     {data.awayScore}
@@ -82,13 +82,13 @@ export function MatchView({ id, initial }: { id: string; initial: EventDetailDto
               ) : (
                 <>
                   <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-muted">{t('fx.kickoffIn')}</span>
-                  <Countdown to={data.startTime} className="font-display text-3xl font-bold text-accent sm:text-5xl" />
+                  <Countdown to={data.startTime} className="font-display tracking-tight text-3xl font-semibold text-accent sm:text-5xl" />
                 </>
               )}
             </div>
             <div className="flex flex-col items-center gap-3 text-center">
               <TeamCrest name={data.awayTeam} logo={data.awayLogo} size={64} className="sm:size-24" />
-              <h1 className="font-display text-xl font-bold uppercase leading-tight sm:text-3xl" data-testid="match-away">
+              <h1 className="font-display tracking-tight text-xl font-semibold leading-tight sm:text-3xl" data-testid="match-away">
                 {data.awayTeam}
               </h1>
             </div>

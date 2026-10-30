@@ -144,7 +144,7 @@ export function DepositDialog({ open, onOpenChange, info }: { open: boolean; onO
             <MethodPicker methods={info.methods} value={method} onChange={setMethod} />
             <Field label={t('amount')} htmlFor="dep-amount" hint={t('limits', { min: f.ron(info.limits.minDepositBani), max: f.ron(info.limits.maxDepositBani) })}>
               <div className="relative">
-                <Input id="dep-amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ''))} className="pr-14 text-right font-display text-xl font-bold" autoFocus data-testid="dep-amount" />
+                <Input id="dep-amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ''))} className="pr-14 text-right font-display tracking-tight text-xl font-semibold" autoFocus data-testid="dep-amount" />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-ink-muted">RON</span>
               </div>
             </Field>
@@ -249,12 +249,12 @@ export function WithdrawDialog({ open, onOpenChange, info }: { open: boolean; on
           <form onSubmit={submit} className="space-y-4" data-testid="withdraw-form">
             <div className="flex items-baseline justify-between rounded-xl bg-tint/[0.04] px-3 py-2 ring-1 ring-line">
               <span className="text-sm text-ink-muted">{t('available')}</span>
-              <span className="font-display text-xl font-bold tabular-nums">{f.ron(info.availableBani)}</span>
+              <span className="font-display tracking-tight text-xl font-semibold tabular-nums">{f.ron(info.availableBani)}</span>
             </div>
             <MethodPicker methods={info.methods} value={method} onChange={setMethod} />
             <Field label={t('amount')} htmlFor="wd-amount" hint={t('withdraw.range', { min: f.ron(info.limits.minWithdrawalBani), max: f.ron(max) })}>
               <div className="relative">
-                <Input id="wd-amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ''))} className="pr-14 text-right font-display text-xl font-bold" autoFocus data-testid="wd-amount" />
+                <Input id="wd-amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ''))} className="pr-14 text-right font-display tracking-tight text-xl font-semibold" autoFocus data-testid="wd-amount" />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-ink-muted">RON</span>
               </div>
             </Field>
@@ -318,7 +318,7 @@ export function PaymentRequestsList({ enabled }: { enabled: boolean }) {
   if (rows.length === 0) return null;
   return (
     <section className="space-y-3" data-testid="payment-requests">
-      <h2 className="font-display text-2xl font-bold uppercase italic">{t('requests')}</h2>
+      <h2 className="font-display tracking-tight text-2xl font-semibold">{t('requests')}</h2>
       {error ? <Alert>{error}</Alert> : null}
       <ul className="glass divide-y divide-line overflow-hidden rounded-[var(--radius-card)]">
         {rows.map((r) => {
@@ -340,7 +340,7 @@ export function PaymentRequestsList({ enabled }: { enabled: boolean }) {
                 {r.awaitingSecondApproval ? <p className="mt-0.5 text-xs text-ink-faint">{t('secondApproval')}</p> : null}
               </div>
               <div className="text-right">
-                <p className={cn('font-display text-lg font-bold tabular-nums', deposit ? 'text-brand' : '')}>
+                <p className={cn('font-display tracking-tight text-lg font-semibold tabular-nums', deposit ? 'text-brand' : '')}>
                   {deposit ? '+' : '−'}
                   {f.ron(r.amountBani)}
                 </p>

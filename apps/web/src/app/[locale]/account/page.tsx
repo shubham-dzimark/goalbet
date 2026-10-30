@@ -57,7 +57,7 @@ function Stat({ label, value, testId }: { label: string; value: string; testId?:
   return (
     <div className="rounded-2xl bg-tint/[0.05] p-4 ring-1 ring-line">
       <p className="text-xs uppercase text-ink-muted">{label}</p>
-      <p className="font-display text-2xl font-bold tabular-nums" data-testid={testId}>
+      <p className="font-display tracking-tight text-2xl font-semibold tabular-nums" data-testid={testId}>
         {value}
       </p>
     </div>
@@ -358,12 +358,12 @@ export default function AccountPage() {
           className="absolute inset-0 bg-[radial-gradient(34rem_16rem_at_0%_0%,rgb(var(--brand-rgb)/0.16),transparent_60%)]"
         />
         <div className="relative flex flex-wrap items-center gap-5">
-          <span className="grid size-20 place-items-center rounded-3xl bg-gradient-to-br from-brand to-accent font-display text-3xl font-extrabold text-brand-ink shadow-[0_0_40px_rgb(var(--brand-rgb)/0.35)]">
+          <span className="grid size-20 place-items-center rounded-3xl bg-gradient-to-br from-brand to-accent font-display tracking-tight text-3xl font-semibold text-brand-ink shadow-[0_0_40px_rgb(var(--brand-rgb)/0.35)]">
             {initials}
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand">{t('account.title')}</p>
-            <h1 className="truncate font-display text-4xl font-extrabold uppercase italic leading-tight">
+            <h1 className="truncate font-display tracking-tight text-4xl font-semibold leading-tight">
               {user.name}
             </h1>
             <p className="truncate text-sm text-ink-muted">{user.email}</p>
@@ -371,7 +371,7 @@ export default function AccountPage() {
           <div className="text-right">
             <p className="text-[11px] uppercase tracking-wide text-ink-faint">{t('account.balance')}</p>
             <p
-              className="font-display text-4xl font-bold tabular-nums text-brand"
+              className="font-display tracking-tight text-4xl font-semibold tabular-nums text-brand"
               data-testid="account-balance"
             >
               {f.ron(user.balanceBani)}
@@ -427,7 +427,7 @@ export default function AccountPage() {
                       </span>
                       <span
                         className={cn(
-                          'font-display text-lg font-bold tabular-nums',
+                          'font-display tracking-tight text-lg font-semibold tabular-nums',
                           r.amountBani > 0 && 'text-brand',
                         )}
                       >

@@ -1,9 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpRight, Trophy, Zap } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useRef } from 'react';
 import { type EventSummaryDto, type HomeFeedDto } from '@goalbet/shared';
 import { Flag } from '@/components/fx/flag';
 import { Reveal, RevealHeading } from '@/components/fx/reveal';
@@ -11,7 +10,6 @@ import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/api';
 import { useFormat } from '@/lib/format';
 import { usePoll, useWatch } from '@/lib/realtime';
-import { useTilt } from '@/lib/use-interactions';
 import { BoostCard } from './boost-card';
 import { LiveSpotlight } from './live-spotlight';
 import { MatchBoard } from './match-board';
@@ -19,21 +17,21 @@ import { StadiumHero } from './stadium-hero';
 
 function CompetitionTile({ competition: c }: { competition: HomeFeedDto['topCompetitions'][number] }) {
   const t = useTranslations();
-  const ref = useRef<HTMLAnchorElement>(null);
-  useTilt(ref, { max: 8, lift: 4 });
   return (
     <Link
-      ref={ref}
       href={`/sport/${c.id}`}
-      className="glass spotlight-hover group overflow-hidden rounded-[var(--radius-card)] p-4 transition-[border-color] duration-300 hover:border-brand/40"
+      className="glass group relative flex min-h-32 flex-col rounded-[var(--radius-card)] p-5 transition-[transform,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[var(--shadow-float)]"
     >
       <Flag code={c.countryCode} className="h-5 w-7" />
-      <p className="mt-3 font-display text-xl font-bold uppercase italic leading-tight">{c.name}</p>
-      <p className="text-xs text-ink-muted">{t('home.matchesCount', { count: c.upcoming })}</p>
-      <ArrowUpRight className="absolute right-3 top-3 size-4 text-ink-faint transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand" aria-hidden="true" />
+      <p className="mt-auto pt-6 font-display text-lg font-semibold leading-tight tracking-tight">{c.name}</p>
+      <p className="mt-0.5 text-[13px] text-ink-muted">{t('home.matchesCount', { count: c.upcoming })}</p>
+      <ChevronRight className="absolute right-4 top-5 size-4 text-ink-faint transition-[transform,color] group-hover:translate-x-0.5 group-hover:text-ink" aria-hidden="true" />
     </Link>
   );
 }
+
+/** Section title: one size, sentence case, no ornament (the content carries the colour). */
+const sectionTitle = 'mb-5 font-display text-[28px] font-semibold leading-tight tracking-tight sm:text-[32px]';
 
 /** F1.1 homepage: stadium hero → live spotlight → power boosts → match board → top competitions. */
 export function HomeView({ initial, upcoming }: { initial: HomeFeedDto | null; upcoming: EventSummaryDto[] | null }) {
@@ -48,22 +46,29 @@ export function HomeView({ initial, upcoming }: { initial: HomeFeedDto | null; u
     refetchInterval: poll,
   });
 
+  // hero stack: live matches first, then the next kick-offs with prices; the spotlight below
+  // already features the top match, so it is left out here
+  const spotlightId = data?.topLive[0]?.id ?? data?.topMatches[0]?.id;
+  const heroMatches = [...(data?.topLive ?? []), ...(upcoming ?? []).filter((e) => e.status === 'SCHEDULED')]
+    .filter((e, i, all) => e.mainMarket && e.id !== spotlightId && all.findIndex((x) => x.id === e.id) === i)
+    .slice(0, 3);
+
   return (
-    <div className="space-y-10">
+    <div className="space-y-12 lg:space-y-24">
       <StadiumHero
         live={data?.liveCount ?? 0}
         today={(upcoming ?? []).filter((e) => f.dayKey(e.startTime) === f.todayKey()).length}
         competitions={data?.topCompetitions.length ?? 0}
         boosted={data?.boosted.length ?? 0}
+        matches={heroMatches}
       />
 
       {data ? <LiveSpotlight live={data.topLive} upcoming={data.topMatches} /> : null}
 
       {data && data.boosted.length > 0 ? (
         <section aria-labelledby="boosted">
-          <RevealHeading id="boosted" className="mb-3 flex items-center gap-2 font-display text-2xl font-bold uppercase italic">
-            <Zap className="size-5 fill-boost text-boost" aria-hidden="true" />
-            <span data-split>{t('home.boosted')}</span>
+          <RevealHeading id="boosted" className={sectionTitle}>
+            {t('home.boosted')}
           </RevealHeading>
           <Reveal className="no-scrollbar -mx-2 -my-3 flex snap-x gap-3 overflow-x-auto px-2 py-3" deps={[data.boosted.length]}>
             {data.boosted.map((b) => (
@@ -77,11 +82,10 @@ export function HomeView({ initial, upcoming }: { initial: HomeFeedDto | null; u
 
       {data && data.topCompetitions.length > 0 ? (
         <section aria-labelledby="top-competitions">
-          <RevealHeading id="top-competitions" className="mb-3 flex items-center gap-2 font-display text-2xl font-bold uppercase italic">
-            <Trophy className="size-5 text-accent" aria-hidden="true" />
-            <span data-split>{t('home.topCompetitions')}</span>
+          <RevealHeading id="top-competitions" className={sectionTitle}>
+            {t('home.topCompetitions')}
           </RevealHeading>
-          <Reveal className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Reveal className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {data.topCompetitions.map((c) => (
               <CompetitionTile key={c.id} competition={c} />
             ))}

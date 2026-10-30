@@ -107,7 +107,7 @@ export function OddsButton({
       ) : (
         <span />
       )}
-      <span className="flex items-center gap-1 font-display text-[17px] font-bold tabular-nums leading-none" data-price>
+      <span className="flex items-center gap-1 font-display tracking-tight text-[17px] font-semibold tabular-nums leading-none" data-price>
         {locked ? (
           <Lock className="size-3.5" aria-label="locked" />
         ) : (

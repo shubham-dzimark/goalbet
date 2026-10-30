@@ -63,7 +63,7 @@ function StakeInput({ value, onChange, id, label, large = false }: { value: stri
         value={value}
         onChange={(e) => onChange(e.target.value.replace(/[^\d.,]/g, '').slice(0, 10))}
         className={cn(
-          'w-full rounded-xl border border-line bg-tint/[0.04] pl-3 pr-12 text-right font-display font-bold tabular-nums text-ink transition-colors focus:border-brand/60 focus:bg-tint/[0.07] focus:outline-none',
+          'w-full rounded-xl border border-line bg-tint/[0.04] pl-3 pr-12 text-right font-display tracking-tight font-semibold tabular-nums text-ink transition-colors focus:border-brand/60 focus:bg-tint/[0.07] focus:outline-none',
           large ? 'h-14 text-3xl' : 'h-10 text-lg',
         )}
         data-testid={id}
@@ -107,7 +107,7 @@ function SlipLine({ item, stake, onStake }: { item: SlipItem; stake?: string; on
             <span className="rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-bold uppercase text-warning">{t('unavailable')}</span>
           ) : (
             <>
-              <p className={cn('flex items-center justify-end gap-0.5 font-display text-xl font-bold tabular-nums', changed && (up ? 'text-odds-up' : 'text-odds-down'))} data-testid="slip-odds">
+              <p className={cn('flex items-center justify-end gap-0.5 font-display tracking-tight text-xl font-semibold tabular-nums', changed && (up ? 'text-odds-up' : 'text-odds-down'))} data-testid="slip-odds">
                 {changed ? up ? <ArrowUp className="size-3.5" aria-hidden="true" /> : <ArrowDown className="size-3.5" aria-hidden="true" /> : null}
                 {f.odds(item.oddsMilli)}
               </p>
@@ -160,7 +160,7 @@ function BuilderPanel({ items, events, quote, loading }: { items: SlipItem[]; ev
         <p className="font-semibold text-ink">{t('builderPicks', { count: items.length })}</p>
         <p>{t('builderHint', { product: f.odds(product) })}</p>
       </div>
-      <motion.span key={quote.oddsMilli} initial={{ scale: 1.25, opacity: 0.4 }} animate={{ scale: 1, opacity: 1 }} className="font-display text-2xl font-bold tabular-nums text-brand" data-testid="builder-odds">
+      <motion.span key={quote.oddsMilli} initial={{ scale: 1.25, opacity: 0.4 }} animate={{ scale: 1, opacity: 1 }} className="font-display tracking-tight text-2xl font-semibold tabular-nums text-brand" data-testid="builder-odds">
         {f.odds(quote.oddsMilli)}
       </motion.span>
     </div>
@@ -187,7 +187,7 @@ function PlacedStamp({ code, count, onDone }: { code: string | null; count: numb
       >
         <Check className="size-6" aria-hidden="true" />
       </motion.span>
-      <p className="font-display text-xl font-bold uppercase italic">{code ? t('placed', { code }) : t('placedMany', { count })}</p>
+      <p className="font-display tracking-tight text-xl font-semibold">{code ? t('placed', { code }) : t('placedMany', { count })}</p>
       <div className="mt-3 flex justify-center gap-2">
         <Button asChild size="sm" variant="secondary">
           <Link href="/my-bets">{tn('myBets')}</Link>
@@ -344,7 +344,7 @@ export function BetSlip({ className }: { className?: string }) {
   return (
     <section className={cn('flex flex-col', className)} aria-label={t('title')} data-testid="bet-slip">
       <header className="flex items-center justify-between gap-2 px-4 pb-3 pt-4">
-        <h2 className="flex items-center gap-2.5 font-display text-2xl font-bold uppercase italic" data-slip-target>
+        <h2 className="flex items-center gap-2.5 font-display tracking-tight text-2xl font-semibold" data-slip-target>
           <span className="grid size-9 place-items-center rounded-xl bg-brand text-brand-ink shadow-[0_0_20px_rgb(var(--brand-rgb)/0.45)]">
             <Ticket className="size-5" aria-hidden="true" />
           </span>
@@ -456,7 +456,7 @@ export function BetSlip({ className }: { className?: string }) {
                 {slip.mode === 'acca' || builderMode ? (
                   <div className="flex justify-between">
                     <dt className="text-ink-muted">{builderMode ? t('builderOdds') : t('totalOdds')}</dt>
-                    <dd className="font-display text-lg font-bold tabular-nums" data-testid="slip-total-odds">
+                    <dd className="font-display tracking-tight text-lg font-semibold tabular-nums" data-testid="slip-total-odds">
                       {builderMode ? (builderOdds ? f.odds(builderOdds) : '—') : f.odds(accaOdds || 1000)}
                     </dd>
                   </div>
@@ -468,7 +468,7 @@ export function BetSlip({ className }: { className?: string }) {
                 <div className="flex items-end justify-between border-t border-line pt-2">
                   <dt className="text-ink-muted">{t('potentialWin')}</dt>
                   <dd>
-                    <AnimatedNumber value={totalWin} format={f.ron} className="font-display text-2xl font-bold tabular-nums text-brand" testId="slip-potential-win" />
+                    <AnimatedNumber value={totalWin} format={f.ron} className="font-display tracking-tight text-2xl font-semibold tabular-nums text-brand" testId="slip-potential-win" />
                   </dd>
                 </div>
               </dl>

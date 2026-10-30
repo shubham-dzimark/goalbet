@@ -71,7 +71,7 @@ export default function UserPage() {
             </span>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="truncate font-display text-3xl font-bold uppercase italic leading-none">{user.name}</h1>
+                <h1 className="truncate font-display tracking-tight text-3xl font-semibold leading-none">{user.name}</h1>
                 <UserStatusBadge status={user.status} />
               </div>
               <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-muted">
@@ -82,7 +82,7 @@ export default function UserPage() {
           </div>
           <div className="text-right">
             <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{t('balance')}</p>
-            <p className="font-display text-4xl font-bold tabular-nums text-brand" data-testid="user-balance">{f.ron(user.balanceBani)}</p>
+            <p className="font-display tracking-tight text-4xl font-semibold tabular-nums text-brand" data-testid="user-balance">{f.ron(user.balanceBani)}</p>
           </div>
         </div>
         <div className="relative mt-5 flex flex-wrap gap-2">
@@ -298,7 +298,7 @@ function LimitsTab({ user, canEdit }: { user: AdminUserDetail; canEdit: boolean 
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-display text-lg font-bold tabular-nums">{f.ron(l.amountBani)}</span>
+                  <span className="font-display tracking-tight text-lg font-semibold tabular-nums">{f.ron(l.amountBani)}</span>
                   {canEdit && l.source === 'ADMIN' ? (
                     <Button size="sm" variant="ghost" onClick={() => setDialog({ type: l.type, amountBani: null })}>
                       {t('lift')}

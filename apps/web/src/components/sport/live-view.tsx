@@ -36,7 +36,7 @@ function LivePanel({ id }: { id: string }) {
             <span className="text-sm font-bold leading-tight">{data.homeTeam}</span>
           </div>
           <div className="flex flex-col items-center gap-2">
-            <span className="font-display text-5xl font-extrabold tabular-nums">
+            <span className="font-display tracking-tight text-5xl font-semibold tabular-nums">
               {data.homeScore}
               <span className="text-ink-faint">:</span>
               {data.awayScore}

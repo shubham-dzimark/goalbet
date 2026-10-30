@@ -98,7 +98,7 @@ function Approvals() {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-accent">{ttx(a.type)}</p>
-                <p className="font-display text-3xl font-bold tabular-nums">{f.ron(a.amountBani)}</p>
+                <p className="font-display tracking-tight text-3xl font-semibold tabular-nums">{f.ron(a.amountBani)}</p>
                 <Link href={`/users/${a.user.id}`} className="text-sm font-semibold text-brand hover:underline">
                   {a.user.name}
                 </Link>
@@ -165,7 +165,7 @@ function Adjust() {
               <p className="truncate text-sm font-semibold">{u.name}</p>
               <p className="truncate text-xs text-ink-muted">{u.email}</p>
             </div>
-            <span className="font-display font-bold tabular-nums">{f.ron(u.balanceBani)}</span>
+            <span className="font-display tracking-tight font-semibold tabular-nums">{f.ron(u.balanceBani)}</span>
             <Button size="sm" variant="secondary" onClick={() => setTarget(u)}>
               {t('choose')}
             </Button>

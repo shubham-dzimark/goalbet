@@ -46,7 +46,7 @@ export function CompetitionView({ id, initial }: { id: string; initial: { compet
             <Flag code={c.countryCode} />
             {t(`countries.${c.countryCode}`)}
           </p>
-          <h1 className="font-display text-5xl font-extrabold uppercase italic leading-none sm:text-6xl">{c.name}</h1>
+          <h1 className="font-display tracking-tight text-5xl font-semibold leading-none sm:text-6xl">{c.name}</h1>
           <div className="mt-4 flex flex-wrap gap-2 text-sm">
             <span className="rounded-full bg-tint/[0.07] px-3 py-1 font-semibold">{t('home.matchesCount', { count: data.events.length })}</span>
             {live.length > 0 ? (
@@ -103,7 +103,7 @@ export function SportView({ countries, upcoming }: { countries: CountryGroupDto[
               <Flag code={country.countryCode} className="h-9 w-12 rounded-md" />
               <span className="min-w-0 flex-1">
                 <span className="block text-[11px] font-bold uppercase tracking-wider text-ink-faint">{t(`countries.${country.countryCode}`)}</span>
-                <span className="block truncate font-display text-xl font-bold uppercase italic">{comp.name}</span>
+                <span className="block truncate font-display tracking-tight text-xl font-semibold">{comp.name}</span>
               </span>
               <span className="text-right text-xs">
                 {comp.live > 0 ? <span className="block font-bold text-live">LIVE {comp.live}</span> : null}
@@ -114,7 +114,7 @@ export function SportView({ countries, upcoming }: { countries: CountryGroupDto[
           )),
         )}
       </Reveal>
-      <h2 className="mb-3 font-display text-2xl font-bold uppercase italic">{t('sport.next24')}</h2>
+      <h2 className="mb-3 font-display tracking-tight text-2xl font-semibold">{t('sport.next24')}</h2>
       <EventList events={data ?? []} groupBy="competition" />
     </>
   );

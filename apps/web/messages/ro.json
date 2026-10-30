@@ -308,6 +308,9 @@
     "point3": "Cont securizat, cu limite de pariere pe care le controlezi"
   },
   "hero": {
+    "stackLabel": "Meciurile următoare",
+    "prevMatch": "Meciul anterior",
+    "nextMatch": "Meciul următor",
     "kicker": "{count, plural, =0 {Începe curând} one {# meci live acum} few {# meciuri live acum} other {# de meciuri live acum}}",
     "line1": "Fotbal.",
     "line2": "Fiecare clipă.",
