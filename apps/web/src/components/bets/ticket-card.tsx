@@ -87,7 +87,7 @@ export function TicketCard({ ticket, link = true, cashOut }: { ticket: TicketDto
                 </p>
               ))}
               <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-ink-faint">
-                <TeamCrest name={leg.event.homeTeam} size={14} />
+                <TeamCrest name={leg.event.homeTeam} logo={leg.event.homeLogo} size={14} />
                 {leg.event.homeTeam} – {leg.event.awayTeam}
                 {leg.event.status === 'LIVE' ? (
                   <span className="font-bold text-live">

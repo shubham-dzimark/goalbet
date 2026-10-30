@@ -55,6 +55,9 @@ export interface EventSummaryDto {
   competition: CompetitionDto;
   homeTeam: string;
   awayTeam: string;
+  /** club badge URLs (null: draw a generated crest) */
+  homeLogo: string | null;
+  awayLogo: string | null;
   startTime: string;
   status: EventStatus;
   period: MatchPeriod;
@@ -118,6 +121,8 @@ export interface TicketLegDto {
     id: string;
     homeTeam: string;
     awayTeam: string;
+    homeLogo: string | null;
+    awayLogo: string | null;
     startTime: string;
     status: EventStatus;
     minute: number | null;

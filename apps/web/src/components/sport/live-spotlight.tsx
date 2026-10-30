@@ -102,7 +102,7 @@ export function LiveSpotlight({ live, upcoming }: { live: EventSummaryDto[]; upc
         <Link href={`/match/${event.id}`} className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-6">
           <div className="flex flex-col items-center gap-3 text-center">
             <span data-spot="crest">
-              <TeamCrest name={event.homeTeam} size={72} className="sm:size-24" />
+              <TeamCrest name={event.homeTeam} logo={event.homeLogo} size={72} className="sm:size-24" />
             </span>
             <span data-spot="text" className="font-display text-lg font-bold uppercase leading-tight sm:text-2xl">
               {event.homeTeam}
@@ -127,7 +127,7 @@ export function LiveSpotlight({ live, upcoming }: { live: EventSummaryDto[]; upc
           </div>
           <div className="flex flex-col items-center gap-3 text-center">
             <span data-spot="crest">
-              <TeamCrest name={event.awayTeam} size={72} className="sm:size-24" />
+              <TeamCrest name={event.awayTeam} logo={event.awayLogo} size={72} className="sm:size-24" />
             </span>
             <span data-spot="text" className="font-display text-lg font-bold uppercase leading-tight sm:text-2xl">
               {event.awayTeam}
@@ -185,8 +185,8 @@ export function LiveSpotlight({ live, upcoming }: { live: EventSummaryDto[]; upc
                   )}
                 >
                   <span className="flex -space-x-1.5">
-                    <TeamCrest name={e.homeTeam} size={20} />
-                    <TeamCrest name={e.awayTeam} size={20} />
+                    <TeamCrest name={e.homeTeam} logo={e.homeLogo} size={20} />
+                    <TeamCrest name={e.awayTeam} logo={e.awayLogo} size={20} />
                   </span>
                   {e.status === 'LIVE' ? `${e.homeScore}:${e.awayScore} · ${clockOf(e)}` : f.time(e.startTime)}
                   {i === index && !paused ? (

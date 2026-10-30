@@ -38,6 +38,8 @@ export function toTicketDto(t: TicketRow): TicketDto {
         id: l.event.id,
         homeTeam: l.event.homeTeam,
         awayTeam: l.event.awayTeam,
+        homeLogo: l.event.homeLogo,
+        awayLogo: l.event.awayLogo,
         startTime: l.event.startTime.toISOString(),
         status: l.event.status,
         minute: l.event.minute,

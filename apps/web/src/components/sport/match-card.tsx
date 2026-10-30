@@ -34,10 +34,10 @@ function KickoffTag({ event }: { event: EventSummaryDto }) {
   );
 }
 
-function TeamLine({ name, score, live }: { name: string; score: number; live: boolean }) {
+function TeamLine({ name, logo, score, live }: { name: string; logo: string | null; score: number; live: boolean }) {
   return (
     <div className="flex items-center gap-2.5">
-      <TeamCrest name={name} size={26} />
+      <TeamCrest name={name} logo={logo} size={26} />
       <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{name}</span>
       {live ? <span className="font-display text-xl font-bold tabular-nums">{score}</span> : null}
     </div>
@@ -69,8 +69,8 @@ export function MatchCard({ event }: { event: EventSummaryDto }) {
         <KickoffTag event={event} />
       </div>
       <Link href={`/match/${event.id}`} className="flex flex-col gap-2">
-        <TeamLine name={event.homeTeam} score={event.homeScore} live={live} />
-        <TeamLine name={event.awayTeam} score={event.awayScore} live={live} />
+        <TeamLine name={event.homeTeam} logo={event.homeLogo} score={event.homeScore} live={live} />
+        <TeamLine name={event.awayTeam} logo={event.awayLogo} score={event.awayScore} live={live} />
       </Link>
       <div className="mt-auto flex items-center gap-1.5">
         <div className="grid flex-1 grid-cols-3 gap-1.5">
@@ -114,11 +114,11 @@ export function MatchRow({ event, active = false, onSelect }: { event: EventSumm
       </div>
       <div className="min-w-0 flex-1 space-y-1">
         {[
-          [event.homeTeam, event.homeScore],
-          [event.awayTeam, event.awayScore],
-        ].map(([n, s]) => (
+          [event.homeTeam, event.homeScore, event.homeLogo],
+          [event.awayTeam, event.awayScore, event.awayLogo],
+        ].map(([n, s, logo]) => (
           <p key={String(n)} className="flex items-center gap-2 text-sm font-semibold">
-            <TeamCrest name={String(n)} size={18} />
+            <TeamCrest name={String(n)} logo={logo as string | null} size={18} />
             <span className="min-w-0 flex-1 truncate">{n}</span>
             {live ? <span className="font-display text-base font-bold tabular-nums">{s}</span> : null}
           </p>

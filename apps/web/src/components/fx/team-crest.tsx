@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import { cn } from '@goalbet/ui';
 
 function hash(s: string) {
@@ -28,10 +31,35 @@ function initials(name: string) {
 }
 
 /**
- * Original, generated team crest: shape, colours and stripe pattern are derived from the
- * team name, so every club gets a stable identity without using real club logos.
+ * Team badge: the club's real logo from the data provider when there is one, otherwise (demo
+ * feed, or the image fails to load) a generated crest.
  */
-export function TeamCrest({ name, size = 32, className }: { name: string; size?: number; className?: string }) {
+export function TeamCrest({ name, logo, size = 32, className }: { name: string; logo?: string | null; size?: number; className?: string }) {
+  const [failed, setFailed] = useState(false);
+  if (logo && !failed) {
+    // plain <img>: small remote badges need no Next.js image optimisation
+    return (
+      <img
+        src={logo}
+        alt={name}
+        width={size}
+        height={size}
+        loading="lazy"
+        decoding="async"
+        referrerPolicy="no-referrer"
+        onError={() => setFailed(true)}
+        className={cn('shrink-0 object-contain drop-shadow-[0_4px_10px_rgb(0_0_0/0.45)]', className)}
+      />
+    );
+  }
+  return <GeneratedCrest name={name} size={size} className={className} />;
+}
+
+/**
+ * Original, generated team crest: shape, colours and stripe pattern are derived from the
+ * team name, so every club gets a stable identity without a real club logo.
+ */
+function GeneratedCrest({ name, size, className }: { name: string; size: number; className?: string | undefined }) {
   const h = hash(name);
   const hue = h % 360;
   const hue2 = (hue + 140 + ((h >>> 9) % 80)) % 360;

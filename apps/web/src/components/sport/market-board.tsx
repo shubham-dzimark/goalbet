@@ -84,11 +84,11 @@ function BlockCard({ block, event }: { block: Block; event: Ev }) {
                 <div className="grid grid-cols-[64px_1fr_1fr] gap-1.5 px-1 text-[11px] font-semibold text-ink-muted">
                   <span />
                   <span className="flex items-center justify-center gap-1.5 truncate">
-                    <TeamCrest name={event.homeTeam} size={14} />
+                    <TeamCrest name={event.homeTeam} logo={event.homeLogo} size={14} />
                     {event.homeTeam}
                   </span>
                   <span className="flex items-center justify-center gap-1.5 truncate">
-                    <TeamCrest name={event.awayTeam} size={14} />
+                    <TeamCrest name={event.awayTeam} logo={event.awayLogo} size={14} />
                     {event.awayTeam}
                   </span>
                 </div>
@@ -115,7 +115,7 @@ function BlockCard({ block, event }: { block: Block; event: Ev }) {
               {(['HOME', 'AWAY'] as const).map((team) => (
                 <div key={team} className="space-y-1.5">
                   <p className="flex items-center gap-2 text-xs font-bold uppercase text-ink-muted">
-                    <TeamCrest name={team === 'HOME' ? event.homeTeam : event.awayTeam} size={16} />
+                    <TeamCrest name={team === 'HOME' ? event.homeTeam : event.awayTeam} logo={team === 'HOME' ? event.homeLogo : event.awayLogo} size={16} />
                     {team === 'HOME' ? event.homeTeam : event.awayTeam}
                   </p>
                   {first.selections

@@ -13,7 +13,7 @@ function dayKeyIn(d: Date, tz: string) {
 export function useFormat() {
   const locale = useLocale() as 'ro' | 'en';
   const t = useTranslations('sport');
-  const tz = useTimeZone((s) => s.tz);
+  const tz = useTimeZone();
   const intl = locale === 'ro' ? 'ro-RO' : 'en-GB';
   const dayKey = (d: Date) => dayKeyIn(d, tz);
 

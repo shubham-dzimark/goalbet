@@ -69,7 +69,7 @@ export class IngestService {
       (
         await this.prisma.event.findMany({
           where: { providerRef: { in: fixtures.map((f) => f.ref) } },
-          select: { id: true, providerRef: true, startTime: true, status: true },
+          select: { id: true, providerRef: true, startTime: true, status: true, homeLogo: true, awayLogo: true },
         })
       ).map((e) => [e.providerRef, e]),
     );
@@ -85,6 +85,8 @@ export class IngestService {
             competitionId,
             homeTeam: f.home,
             awayTeam: f.away,
+            homeLogo: f.homeLogo ?? null,
+            awayLogo: f.awayLogo ?? null,
             startTime: f.startTime,
             isTop: f.isTop,
             players: f.players as unknown as Prisma.InputJsonValue,
@@ -93,8 +95,9 @@ export class IngestService {
         });
         ids.push(created.id);
       } else if (ex.status === 'SCHEDULED') {
-        if (ex.startTime.getTime() !== f.startTime.getTime()) {
-          await this.prisma.event.update({ where: { id: ex.id }, data: { startTime: f.startTime } });
+        const logos = { homeLogo: f.homeLogo ?? ex.homeLogo, awayLogo: f.awayLogo ?? ex.awayLogo };
+        if (ex.startTime.getTime() !== f.startTime.getTime() || logos.homeLogo !== ex.homeLogo || logos.awayLogo !== ex.awayLogo) {
+          await this.prisma.event.update({ where: { id: ex.id }, data: { startTime: f.startTime, ...logos } });
         }
         ids.push(ex.id);
       }

@@ -1,17 +1,24 @@
 'use client';
 
-import { useEffect } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { create } from 'zustand';
+import { DEFAULT_TIME_ZONE, TIME_ZONE_COOKIE } from './time-zone-defaults';
 
-/** Server render and first client render use Romanian time so the markup hydrates identically. */
-export const DEFAULT_TIME_ZONE = 'Europe/Bucharest';
+/** Zone the server rendered with (cookie, else the visitor's IP zone); the first client render matches it. */
+export const TimeZoneContext = createContext(DEFAULT_TIME_ZONE);
 
-export const useTimeZone = create<{ tz: string; setTz: (tz: string) => void }>((set) => ({
-  tz: DEFAULT_TIME_ZONE,
+/** Set only when the browser's zone differs from the one the page was rendered in (e.g. a VPN). */
+const useBrowserTimeZone = create<{ tz: string | null; setTz: (tz: string) => void }>((set) => ({
+  tz: null,
   setTz: (tz) => set({ tz }),
 }));
 
-function isValidTimeZone(tz: string) {
+export function useTimeZone() {
+  const rendered = useContext(TimeZoneContext);
+  return useBrowserTimeZone((s) => s.tz) ?? rendered;
+}
+
+export function isValidTimeZone(tz: string) {
   try {
     new Intl.DateTimeFormat('en', { timeZone: tz });
     return true;
@@ -29,15 +36,21 @@ const LEGACY: Record<string, string> = {
   'Europe/Kiev': 'Europe/Kyiv',
 };
 
-/** Switches every formatted time to the player's own time zone right after mount. */
+/**
+ * Remembers the browser's zone in a cookie for the next server render, and only switches the
+ * current page when it differs from the zone the server guessed (no visible change otherwise).
+ */
 export function useSyncTimeZone() {
-  const setTz = useTimeZone((s) => s.setTz);
+  const rendered = useContext(TimeZoneContext);
+  const setTz = useBrowserTimeZone((s) => s.setTz);
   useEffect(() => {
     const reported = Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (!reported) return;
     const modern = LEGACY[reported];
-    setTz(modern && isValidTimeZone(modern) ? modern : isValidTimeZone(reported) ? reported : DEFAULT_TIME_ZONE);
-  }, [setTz]);
+    const tz = modern && isValidTimeZone(modern) ? modern : isValidTimeZone(reported) ? reported : DEFAULT_TIME_ZONE;
+    document.cookie = `${TIME_ZONE_COOKIE}=${encodeURIComponent(tz)}; path=/; max-age=31536000; samesite=lax`;
+    if (tz !== rendered) setTz(tz);
+  }, [rendered, setTz]);
 }
 
 function zoneName(tz: string, date: Date, locale: string, style: 'short' | 'shortOffset') {

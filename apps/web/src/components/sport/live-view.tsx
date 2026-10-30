@@ -32,7 +32,7 @@ function LivePanel({ id }: { id: string }) {
         <p className="mb-4 text-center text-xs font-semibold uppercase tracking-wider text-ink-muted">{data.competition.name}</p>
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div className="flex flex-col items-center gap-2 text-center">
-            <TeamCrest name={data.homeTeam} size={52} />
+            <TeamCrest name={data.homeTeam} logo={data.homeLogo} size={52} />
             <span className="text-sm font-bold leading-tight">{data.homeTeam}</span>
           </div>
           <div className="flex flex-col items-center gap-2">
@@ -44,7 +44,7 @@ function LivePanel({ id }: { id: string }) {
             <MinuteRing event={data} size={46} />
           </div>
           <div className="flex flex-col items-center gap-2 text-center">
-            <TeamCrest name={data.awayTeam} size={52} />
+            <TeamCrest name={data.awayTeam} logo={data.awayLogo} size={52} />
             <span className="text-sm font-bold leading-tight">{data.awayTeam}</span>
           </div>
         </div>

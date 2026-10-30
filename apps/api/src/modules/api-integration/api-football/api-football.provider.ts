@@ -26,7 +26,7 @@ export const API_FOOTBALL_LEAGUES: Record<number, { name: string; country: strin
 interface ApiFixture {
   fixture: { id: number; date: string; status: { short: string; elapsed: number | null; extra?: number | null } };
   league: { id: number; name: string; country: string };
-  teams: { home: { name: string }; away: { name: string } };
+  teams: { home: { name: string; logo?: string }; away: { name: string; logo?: string } };
   goals: { home: number | null; away: number | null };
   score: { halftime: { home: number | null; away: number | null } };
 }
@@ -215,6 +215,8 @@ export class ApiFootballProvider implements OddsProvider {
         competitionRef: `af-league-${f.league.id}`,
         home: f.teams.home.name,
         away: f.teams.away.name,
+        homeLogo: f.teams.home.logo ?? null,
+        awayLogo: f.teams.away.logo ?? null,
         startTime: new Date(f.fixture.date),
         isTop: API_FOOTBALL_LEAGUES[f.league.id]?.isTop ?? false,
         players: [],

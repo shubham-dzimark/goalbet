@@ -7,6 +7,7 @@ import { routing } from '@/i18n/routing';
 import { AppShell } from '@/components/shell/app-shell';
 import { Providers } from '@/components/providers';
 import { themeScript } from '@/lib/theme';
+import { requestTimeZone } from '@/lib/time-zone-server';
 import '@goalbet/ui/fonts';
 import '../globals.css';
 
@@ -33,6 +34,8 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
+  // render times in the visitor's zone so nothing jumps (or changes day) after hydration
+  const timeZone = await requestTimeZone();
 
   return (
     // data-theme is set before paint by themeScript (saved choice or OS preference)
@@ -42,7 +45,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
       </head>
       <body className="min-h-dvh antialiased">
         <NextIntlClientProvider>
-          <Providers>
+          <Providers timeZone={timeZone}>
             <AppShell>{children}</AppShell>
           </Providers>
         </NextIntlClientProvider>

@@ -70,7 +70,7 @@ export function CommandSearch({ open, onOpenChange }: { open: boolean; onOpenCha
       href: `/match/${e.id}`,
       node: (
         <span className="flex w-full items-center gap-3">
-          <TeamCrest name={e.homeTeam} size={24} />
+          <TeamCrest name={e.homeTeam} logo={e.homeLogo} size={24} />
           <span className="min-w-0 flex-1 truncate font-semibold">
             {e.homeTeam} <span className="text-ink-faint">–</span> {e.awayTeam}
             <span className="block truncate text-xs font-normal text-ink-faint">{e.competition.name}</span>

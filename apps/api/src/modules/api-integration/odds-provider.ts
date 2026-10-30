@@ -33,6 +33,9 @@ export interface ProviderFixture {
   competitionRef: string;
   home: string;
   away: string;
+  /** club badge URLs, when the provider has them */
+  homeLogo?: string | null;
+  awayLogo?: string | null;
   startTime: Date;
   isTop: boolean;
   players: ProviderPlayer[];

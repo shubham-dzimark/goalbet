@@ -63,7 +63,7 @@ export function MatchView({ id, initial }: { id: string; initial: EventDetailDto
           </div>
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-8">
             <div className="flex flex-col items-center gap-3 text-center">
-              <TeamCrest name={data.homeTeam} size={64} className="sm:size-24" />
+              <TeamCrest name={data.homeTeam} logo={data.homeLogo} size={64} className="sm:size-24" />
               <h1 className="font-display text-xl font-bold uppercase leading-tight sm:text-3xl" data-testid="match-home">
                 {data.homeTeam}
               </h1>
@@ -87,7 +87,7 @@ export function MatchView({ id, initial }: { id: string; initial: EventDetailDto
               )}
             </div>
             <div className="flex flex-col items-center gap-3 text-center">
-              <TeamCrest name={data.awayTeam} size={64} className="sm:size-24" />
+              <TeamCrest name={data.awayTeam} logo={data.awayLogo} size={64} className="sm:size-24" />
               <h1 className="font-display text-xl font-bold uppercase leading-tight sm:text-3xl" data-testid="match-away">
                 {data.awayTeam}
               </h1>

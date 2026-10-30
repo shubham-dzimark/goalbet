@@ -29,8 +29,8 @@ export function BoostCard({ boost }: { boost: BoostDto }) {
       </div>
       <Link href={`/match/${event.id}`} className="mb-3 flex items-center gap-2">
         <span className="flex -space-x-2">
-          <TeamCrest name={event.homeTeam} size={30} />
-          <TeamCrest name={event.awayTeam} size={30} />
+          <TeamCrest name={event.homeTeam} logo={event.homeLogo} size={30} />
+          <TeamCrest name={event.awayTeam} logo={event.awayLogo} size={30} />
         </span>
         <span className="min-w-0 truncate text-sm font-bold">
           {event.homeTeam} – {event.awayTeam}

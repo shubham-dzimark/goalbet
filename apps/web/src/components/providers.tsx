@@ -6,6 +6,7 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { refreshSession } from '@/lib/api';
 import { useAuth } from '@/lib/auth-store';
+import { TimeZoneContext } from '@/lib/time-zone';
 
 /** Restores the session from the refresh cookie and applies the user's saved language (F0.3). */
 function SessionBootstrap() {
@@ -26,7 +27,7 @@ function SessionBootstrap() {
   return null;
 }
 
-export function Providers({ children }: { children: ReactNode }) {
+export function Providers({ children, timeZone }: { children: ReactNode; timeZone: string }) {
   const [client] = useState(
     () =>
       new QueryClient({
@@ -35,8 +36,10 @@ export function Providers({ children }: { children: ReactNode }) {
   );
   return (
     <QueryClientProvider client={client}>
-      <SessionBootstrap />
-      {children}
+      <TimeZoneContext.Provider value={timeZone}>
+        <SessionBootstrap />
+        {children}
+      </TimeZoneContext.Provider>
     </QueryClientProvider>
   );
 }

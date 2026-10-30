@@ -384,6 +384,9 @@ model Event {
   competitionId String      @db.Uuid
   homeTeam      String
   awayTeam      String
+  /// Club badge URLs from the provider (null: the web app draws a generated crest)
+  homeLogo      String?
+  awayLogo      String?
   startTime     DateTime
   status        EventStatus @default(SCHEDULED)
   period        MatchPeriod @default(NOT_STARTED)

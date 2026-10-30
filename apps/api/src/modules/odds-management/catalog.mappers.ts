@@ -96,6 +96,8 @@ export interface SummaryRow {
   id: string;
   homeTeam: string;
   awayTeam: string;
+  homeLogo: string | null;
+  awayLogo: string | null;
   startTime: Date;
   status: EventSummaryDto['status'];
   period: EventSummaryDto['period'];
@@ -117,6 +119,8 @@ export function toSummary(e: SummaryRow): EventSummaryDto {
     competition: toCompetition(e.competition),
     homeTeam: e.homeTeam,
     awayTeam: e.awayTeam,
+    homeLogo: e.homeLogo,
+    awayLogo: e.awayLogo,
     startTime: e.startTime.toISOString(),
     status: e.status,
     period: e.period,
