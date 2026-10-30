@@ -70,7 +70,8 @@ export function HomeView({ initial, upcoming }: { initial: HomeFeedDto | null; u
           <RevealHeading id="boosted" className={sectionTitle}>
             {t('home.boosted')}
           </RevealHeading>
-          <Reveal className="no-scrollbar -mx-2 -my-3 flex snap-x gap-3 overflow-x-auto px-2 py-3" deps={[data.boosted.length]}>
+          {/* room inside the scroller for the hover lift and shadow (scroll containers clip overflow) */}
+          <Reveal className="no-scrollbar -mx-4 -mb-16 -mt-4 flex snap-x scroll-px-4 gap-4 overflow-x-auto px-4 pb-16 pt-4" deps={[data.boosted.length]}>
             {data.boosted.map((b) => (
               <BoostCard key={b.selection.id} boost={b} />
             ))}
