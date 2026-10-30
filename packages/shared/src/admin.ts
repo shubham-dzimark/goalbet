@@ -193,7 +193,8 @@ export interface AdminMarketRow {
   status: string;
   enabled: boolean;
   adminSuspended: boolean;
-  selections: { id: string; outcome: string; label: string | null; oddsMilli: number; active: boolean }[];
+  /** `manual`: price set by an operator, kept until handed back to automatic pricing */
+  selections: { id: string; outcome: string; label: string | null; oddsMilli: number; active: boolean; manual: boolean }[];
 }
 
 export interface AdminReport {

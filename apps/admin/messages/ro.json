@@ -430,6 +430,14 @@
       "resettle": "Redecontează"
     },
     "eventMarkets": {
+      "manual": "Manual",
+      "editPrice": "Modifică cota",
+      "setManual": "Setează cota manual",
+      "priceLabel": "Cotă (zecimală, 1,01 – 1000)",
+      "priceHelp": "Cota rămâne până când o predai înapoi prețurilor automate; jucătorii văd schimbarea imediat.",
+      "autoHelp": "Prețurile automate preiau din nou această selecție la următoarea actualizare.",
+      "priceUpdated": "Cotă actualizată",
+      "invalidPrice": "Introdu o cotă între 1,01 și 1000.",
       "none": "Încă nu există piețe pentru acest meci.",
       "byOperator": "Suspendată de operator",
       "byFeed": "Suspendată de flux",

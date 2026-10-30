@@ -430,6 +430,14 @@
       "resettle": "Re-settle"
     },
     "eventMarkets": {
+      "manual": "Manual",
+      "editPrice": "Edit price",
+      "setManual": "Set the price manually",
+      "priceLabel": "Odds (decimal, 1.01 – 1000)",
+      "priceHelp": "This price is kept until you hand it back to automatic pricing; players see the change immediately.",
+      "autoHelp": "Automatic pricing takes this selection back over at the next refresh.",
+      "priceUpdated": "Price updated",
+      "invalidPrice": "Enter odds between 1.01 and 1000.",
       "none": "No markets for this match yet.",
       "byOperator": "Suspended by operator",
       "byFeed": "Suspended by feed",

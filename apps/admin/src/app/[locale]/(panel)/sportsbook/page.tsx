@@ -22,7 +22,7 @@ import { ReasonDialog, toast } from '@/components/ui/feedback';
 import { FilterSelect, PageHeader, Panel, SearchInput, Toggle } from '@/components/ui/page';
 import { useCan, useErrorText, usePaged } from '@/lib/data';
 import { useFmt } from '@/lib/format';
-import { adminApi } from '@/lib/session';
+import { ApiError, adminApi } from '@/lib/session';
 
 /** F3.5 sportsbook settings: leagues, markets, events and limits. */
 export default function SportsbookPage() {
@@ -489,6 +489,19 @@ function EventMarketsPanel({ event, onClose }: { event: AdminEventRow | null; on
   const can = useCan();
   const qc = useQueryClient();
   const [action, setAction] = useState<{ market: AdminMarketRow; patch: { enabled?: boolean; suspended?: boolean } } | null>(null);
+  // price editor: a manual price holds against automatic pricing until it is handed back
+  const [pricing, setPricing] = useState<{ market: AdminMarketRow; selection: AdminMarketRow['selections'][number] } | null>(null);
+  const [priceInput, setPriceInput] = useState('');
+  const [manual, setManual] = useState(true);
+  const editable = (m: AdminMarketRow) => can('OPERATOR') && m.status !== 'SETTLED';
+  const openPricing = (market: AdminMarketRow, selection: AdminMarketRow['selections'][number]) => {
+    setPricing({ market, selection });
+    setPriceInput((selection.oddsMilli / 1000).toFixed(2));
+    setManual(true);
+  };
+  const outcomeLabel = (s: AdminMarketRow['selections'][number]) => s.label ?? (to.has(s.outcome) ? to(s.outcome) : s.outcome);
+  const priceMilli = Math.round(Number(priceInput.replace(',', '.')) * 1000);
+  const priceValid = Number.isFinite(priceMilli) && priceMilli >= 1010 && priceMilli <= 1_000_000;
   const { data, isLoading } = useQuery({
     queryKey: ['event-markets', event?.id],
     queryFn: () => adminApi<AdminMarketRow[]>(`/admin/sportsbook/events/${event!.id}/markets`),
@@ -522,11 +535,35 @@ function EventMarketsPanel({ event, onClose }: { event: AdminEventRow | null; on
                   </div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {m.selections.map((s) => (
-                    <span key={s.id} className={cn('rounded-md bg-tint/[0.06] px-2 py-1 text-xs', !s.active && 'line-through opacity-60')}>
-                      {s.label ?? (to.has(s.outcome) ? to(s.outcome) : s.outcome)} <strong className="tabular-nums">{f.odds(s.oddsMilli)}</strong>
-                    </span>
-                  ))}
+                  {m.selections.map((s) => {
+                    const chip = cn(
+                      'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs',
+                      s.manual ? 'bg-accent/15 ring-1 ring-accent/40' : 'bg-tint/[0.06]',
+                      !s.active && 'line-through opacity-60',
+                    );
+                    const content = (
+                      <>
+                        {outcomeLabel(s)} <strong className="tabular-nums">{f.odds(s.oddsMilli)}</strong>
+                        {s.manual ? <span className="text-[10px] font-semibold text-accent">{t('manual')}</span> : null}
+                      </>
+                    );
+                    return editable(m) ? (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => openPricing(m, s)}
+                        className={cn(chip, 'transition-colors hover:ring-1 hover:ring-brand/50')}
+                        title={t('editPrice')}
+                        data-testid="selection-price"
+                      >
+                        {content}
+                      </button>
+                    ) : (
+                      <span key={s.id} className={chip}>
+                        {content}
+                      </span>
+                    );
+                  })}
                 </div>
                 {can('OPERATOR') && m.status !== 'SETTLED' ? (
                   <div className="mt-3 flex gap-2">
@@ -544,6 +581,41 @@ function EventMarketsPanel({ event, onClose }: { event: AdminEventRow | null; on
             ))}
           </ul>
         )}
+        <ReasonDialog
+          open={!!pricing}
+          onOpenChange={(o) => !o && setPricing(null)}
+          title={pricing ? `${label(pricing.market)} · ${outcomeLabel(pricing.selection)}` : ''}
+          description={t(manual ? 'priceHelp' : 'autoHelp')}
+          confirmLabel={tc('confirm')}
+          onConfirm={async (reason) => {
+            const p = pricing!;
+            if (manual && !priceValid) throw new ApiError('VALIDATION_FAILED', 400);
+            await adminApi(`/admin/sportsbook/selections/${p.selection.id}`, {
+              method: 'PATCH',
+              body: manual ? { manual: true, oddsMilli: priceMilli, reason } : { manual: false, reason },
+            });
+            toast.success(t('priceUpdated'));
+            await qc.invalidateQueries({ queryKey: ['event-markets', event?.id] });
+          }}
+        >
+          <div className="space-y-3">
+            <Toggle checked={manual} onChange={setManual} label={t('setManual')} testId="price-manual" />
+            {manual ? (
+              <label className="block text-sm">
+                <span className="mb-1 block text-ink-muted">{t('priceLabel')}</span>
+                <Input
+                  inputMode="decimal"
+                  value={priceInput}
+                  onChange={(e) => setPriceInput(e.target.value)}
+                  aria-invalid={!priceValid}
+                  className={cn('w-32 tabular-nums', !priceValid && 'border-danger')}
+                  data-testid="price-input"
+                />
+                {!priceValid ? <span className="mt-1 block text-xs text-danger">{t('invalidPrice')}</span> : null}
+              </label>
+            ) : null}
+          </div>
+        </ReasonDialog>
         <ReasonDialog
           open={!!action}
           onOpenChange={(o) => !o && setAction(null)}

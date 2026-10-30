@@ -12,6 +12,7 @@ import {
   type OddsMessage,
   SETTING_DEFAULTS,
   type SettingKey,
+  oddsToDecimalString,
   parseLineCenti,
   parseOddsMilli,
 } from '@goalbet/shared';
@@ -217,8 +218,51 @@ export class AdminSportsbookService {
       status: m.status,
       enabled: m.enabled,
       adminSuspended: m.adminSuspended,
-      selections: m.selections.map((s) => ({ id: s.id, outcome: s.outcome, label: s.label, oddsMilli: parseOddsMilli(s.odds), active: s.active })),
+      selections: m.selections.map((s) => ({ id: s.id, outcome: s.outcome, label: s.label, oddsMilli: parseOddsMilli(s.odds), active: s.active, manual: s.manual })),
     }));
+  }
+
+  /**
+   * Set one selection's price by hand, or hand it back to automatic pricing. A manual price holds
+   * against the feed (ingest skips it); handing back keeps the current price until the next refresh.
+   */
+  async updateSelection(actor: Actor, id: string, patch: { manual: boolean; oddsMilli?: number | undefined; reason: string }) {
+    const s = await this.prisma.selection.findUnique({
+      where: { id },
+      include: { market: { include: { event: { select: { id: true, homeTeam: true, awayTeam: true, status: true } } } } },
+    });
+    if (!s) throw new DomainError('NOT_FOUND');
+    const { market } = s;
+    if (market.status === 'SETTLED' || market.event.status === 'FINISHED' || market.event.status === 'CANCELLED') throw new DomainError('MARKET_SUSPENDED');
+    const prev = parseOddsMilli(s.odds);
+    const next = patch.manual && patch.oddsMilli !== undefined ? patch.oddsMilli : prev;
+    await this.prisma.$transaction(async (tx) => {
+      await tx.selection.update({ where: { id }, data: { manual: patch.manual, ...(next !== prev ? { odds: oddsToDecimalString(next) } : {}) } });
+      if (next !== prev) await tx.oddsHistory.create({ data: { selectionId: id, odds: oddsToDecimalString(next) } });
+      await this.audit.log(
+        {
+          category: 'ADMIN',
+          action: patch.manual ? 'SELECTION_PRICE_SET' : 'SELECTION_PRICE_AUTO',
+          actor,
+          entityType: 'Selection',
+          entityId: id,
+          before: { oddsMilli: prev, manual: s.manual },
+          after: { oddsMilli: next, manual: patch.manual },
+          meta: { reason: patch.reason, market: market.key, outcome: s.outcome, match: `${market.event.homeTeam} – ${market.event.awayTeam}` },
+        },
+        tx,
+      );
+    });
+    if (next !== prev) {
+      const msg: OddsMessage = {
+        type: 'odds',
+        eventId: market.eventId,
+        selections: [{ selectionId: id, marketId: market.id, oddsMilli: next, prevOddsMilli: prev, active: s.active }],
+        markets: [],
+      };
+      await this.redis.publish(Channels.EVENT_UPDATES, msg);
+    }
+    return (await this.markets(market.eventId)).find((x) => x.id === market.id);
   }
 
   /** Hide/show (enabled) or suspend/resume one market; an operator suspension holds against the feed. */

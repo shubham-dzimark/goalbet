@@ -125,6 +125,16 @@ export const adminMarketUpdateSchema = z
   })
   .refine((v) => v.enabled !== undefined || v.suspended !== undefined, { message: 'validation.required' });
 
+/** Set a selection's price by hand (`manual: true` + `oddsMilli`), or hand it back to automatic pricing. */
+export const adminSelectionUpdateSchema = z
+  .object({
+    manual: z.boolean(),
+    // 1.01 – 1000.00
+    oddsMilli: z.number().int().min(1010).max(1_000_000).optional(),
+    reason,
+  })
+  .refine((v) => !v.manual || v.oddsMilli !== undefined, { message: 'validation.required', path: ['oddsMilli'] });
+
 export const adminSettingUpdateSchema = z.object({
   key: z.enum(SETTING_KEYS as [string, ...string[]]),
   value: z.union([z.number().int().min(0), z.boolean()]),

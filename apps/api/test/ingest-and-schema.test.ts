@@ -124,3 +124,60 @@ describe('concurrent market syncs (fixtures sync and pre-match refresh racing)',
     expect(markets.every((m) => m._count.selections > 0)).toBe(true);
   });
 });
+
+describe('manual odds (admin pricing)', () => {
+  it('a manual price holds against automatic pricing until it is handed back; only operators set it', async () => {
+    const { adminLogin, createAdmin } = await import('./helpers.js');
+    const { parseOddsMilli } = await import('@goalbet/shared');
+    await ingest.syncCompetitions();
+    const now = Date.now();
+    const ids = await ingest.syncFixtures(new Date(now - 4 * 3600_000), new Date(now + 7 * 24 * 3600_000));
+    // the first upcoming match the feed prices with a full-time 1X2 market
+    let eventId = '';
+    for (const id of ids) {
+      await ingest.syncMarkets(id);
+      const priced = await ctx.prisma.selection.count({ where: { market: { eventId: id, type: 'MATCH_RESULT', period: 'FT', event: { status: 'SCHEDULED' } } } });
+      if (priced > 0) {
+        eventId = id;
+        break;
+      }
+    }
+    expect(eventId).not.toBe('');
+    const where = { market: { eventId, type: 'MATCH_RESULT' as const, period: 'FT' as const }, outcome: 'HOME' };
+    const before = await ctx.prisma.selection.findFirstOrThrow({ where });
+    const autoMilli = parseOddsMilli(before.odds);
+    const manualMilli = autoMilli + 450;
+
+    const op = await createAdmin(ctx, 'OPERATOR');
+    const opAuth = { Authorization: `Bearer ${await adminLogin(ctx, op)}` };
+    const fin = await createAdmin(ctx, 'FINANCE');
+    const finAuth = { Authorization: `Bearer ${await adminLogin(ctx, fin)}` };
+    const url = `/admin/sportsbook/selections/${before.id}`;
+
+    // finance cannot price; a manual price needs odds in range
+    await ctx.http().patch(url).set(finAuth).send({ manual: true, oddsMilli: manualMilli, reason: 'Trader view' }).expect(403);
+    const missing = await ctx.http().patch(url).set(opAuth).send({ manual: true, reason: 'Trader view' });
+    expect(missing.body.error.code).toBe('VALIDATION_FAILED');
+    const tooLow = await ctx.http().patch(url).set(opAuth).send({ manual: true, oddsMilli: 1000, reason: 'Trader view' });
+    expect(tooLow.body.error.code).toBe('VALIDATION_FAILED');
+
+    const set = await ctx.http().patch(url).set(opAuth).send({ manual: true, oddsMilli: manualMilli, reason: 'Trader view' }).expect(200);
+    expect(set.body.selections.find((s: { id: string }) => s.id === before.id)).toMatchObject({ manual: true, oddsMilli: manualMilli });
+
+    // automatic pricing runs again and leaves the manual price alone
+    await ingest.syncMarkets(eventId);
+    const held = await ctx.prisma.selection.findUniqueOrThrow({ where: { id: before.id } });
+    expect(held).toMatchObject({ manual: true });
+    expect(parseOddsMilli(held.odds)).toBe(manualMilli);
+    expect(await ctx.prisma.oddsHistory.count({ where: { selectionId: before.id } })).toBeGreaterThan(0);
+    expect(await ctx.prisma.auditLog.count({ where: { action: 'SELECTION_PRICE_SET', entityId: before.id } })).toBe(1);
+
+    // handed back: the next refresh takes the selection over again
+    await ctx.http().patch(url).set(opAuth).send({ manual: false, reason: 'Back to model' }).expect(200);
+    await ingest.syncMarkets(eventId);
+    const back = await ctx.prisma.selection.findUniqueOrThrow({ where: { id: before.id } });
+    expect(back.manual).toBe(false);
+    expect(parseOddsMilli(back.odds)).not.toBe(manualMilli);
+    expect(await ctx.prisma.auditLog.count({ where: { action: 'SELECTION_PRICE_AUTO', entityId: before.id } })).toBe(1);
+  });
+});

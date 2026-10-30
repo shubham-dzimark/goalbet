@@ -180,7 +180,8 @@ export class IngestService {
       const sels = new Map(existing.selections.map((s) => [s.outcome, s]));
       for (const ps of pm.selections) {
         const s = sels.get(ps.outcome);
-        if (!s) continue;
+        // an operator-set price holds against automatic pricing until it is handed back
+        if (!s || s.manual) continue;
         const prev = parseOddsMilli(s.odds);
         const next = ps.oddsMilli ?? prev;
         const active = ps.oddsMilli !== null;

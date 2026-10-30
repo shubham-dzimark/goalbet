@@ -9,6 +9,7 @@ import {
   adminEventSuspendSchema,
   adminMarketTypeUpdateSchema,
   adminMarketUpdateSchema,
+  adminSelectionUpdateSchema,
   adminSettingUpdateSchema,
   adminSettleEventSchema,
 } from '@goalbet/shared';
@@ -128,6 +129,17 @@ export class AdminSportsbookController {
     @ReqMeta() meta: RequestMeta,
   ) {
     return this.sportsbook.updateMarket(actorOf(admin, meta), id, body);
+  }
+
+  @Patch('selections/:id')
+  @Roles('OPERATOR')
+  updateSelection(
+    @CurrentAdmin() admin: AuthedAdmin,
+    @Param('id', ParseUUIDPipe) id: string,
+    @ZBody(adminSelectionUpdateSchema) body: z.output<typeof adminSelectionUpdateSchema>,
+    @ReqMeta() meta: RequestMeta,
+  ) {
+    return this.sportsbook.updateSelection(actorOf(admin, meta), id, body);
   }
 
   @Get('settings')

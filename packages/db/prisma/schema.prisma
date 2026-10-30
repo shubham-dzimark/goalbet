@@ -464,6 +464,8 @@ model Selection {
   /// Team of the player (scorer selections).
   team      Team?
   odds      Decimal         @db.Decimal(8, 3)
+  /// Price set by an operator: automatic pricing leaves it alone until it is handed back.
+  manual    Boolean         @default(false)
   active    Boolean         @default(true)
   result    SelectionResult @default(PENDING)
   sortOrder Int             @default(0)
