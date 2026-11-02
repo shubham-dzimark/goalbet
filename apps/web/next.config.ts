@@ -22,6 +22,16 @@ const config: NextConfig = {
   // the E2E stack builds into its own folder (other API port baked into the rewrites)
   distDir: process.env.NEXT_DIST_DIR ?? '.next',
   transpilePackages: ['@goalbet/ui'],
+  // styles arrive inside the HTML: no render-blocking stylesheet request before the first paint
+  // (Tailwind keeps the CSS small enough to inline)
+  experimental: { inlineCss: true },
+  // Club badges come from API-Football as large PNGs with short cache headers. next/image fetches
+  // each one once, serves it resized to the displayed size as AVIF/WebP, and caches it for 30 days.
+  images: {
+    remotePatterns: [{ protocol: 'https', hostname: 'media.api-sports.io' }],
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 2_592_000,
+  },
   poweredByHeader: false,
   // The browser talks to the API through this origin, so auth cookies stay first-party.
   async rewrites() {

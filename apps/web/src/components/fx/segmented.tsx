@@ -43,7 +43,9 @@ export function Segmented<T extends string>({
       if (!animate || prefersReducedMotion()) gsap.set(pill.current, vars);
       else gsap.to(pill.current, { ...vars, duration: 0.45, ease: 'expo.out' });
     };
-    place(placed.current);
+    // value changes glide straight away; the first placement comes from the observer's initial
+    // callback, which runs after layout (reading offsets here at mount would force a reflow)
+    if (placed.current) place(true);
     placed.current = true;
     const ro = new ResizeObserver(() => place(false));
     ro.observe(root);

@@ -33,7 +33,7 @@ export function MatchBoard({ initial }: { initial?: EventSummaryDto[] | null }) 
   const filtered = (events ?? []).filter((e) => f.dayKey(e.startTime) === day && (league === 'all' || e.competition.id === league));
 
   return (
-    <section id="board" aria-labelledby="board-title" className="scroll-mt-6 space-y-4">
+    <section id="board" aria-labelledby="board-title" className="defer-render scroll-mt-6 space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <RevealHeading id="board-title" className="font-display text-[28px] font-semibold leading-tight tracking-tight sm:text-[32px]">
           {t('home.board')}

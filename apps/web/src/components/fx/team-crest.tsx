@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { cn } from '@goalbet/ui';
 
@@ -31,22 +32,29 @@ function initials(name: string) {
 }
 
 /**
+ * `sizes` for the badge: its pixel size, plus the larger one from a responsive `sm:size-N` class,
+ * so the browser picks the right resolution (1x/2x screens) at every breakpoint.
+ */
+function badgeSizes(size: number, className?: string) {
+  const sm = className && /\bsm:size-(\d+)\b/.exec(className);
+  return sm ? `(min-width: 640px) ${Number(sm[1]) * 4}px, ${size}px` : `${size}px`;
+}
+
+/**
  * Team badge: the club's real logo from the data provider when there is one, otherwise (demo
- * feed, or the image fails to load) a generated crest.
+ * feed, or the image fails to load) a generated crest. Logos go through next/image (sharp): fetched
+ * once by our server, resized to the displayed size, served as AVIF/WebP with a long cache life.
  */
 export function TeamCrest({ name, logo, size = 32, className }: { name: string; logo?: string | null; size?: number; className?: string }) {
   const [failed, setFailed] = useState(false);
   if (logo && !failed) {
-    // plain <img>: small remote badges need no Next.js image optimisation
     return (
-      <img
+      <Image
         src={logo}
         alt={name}
         width={size}
         height={size}
-        loading="lazy"
-        decoding="async"
-        referrerPolicy="no-referrer"
+        sizes={badgeSizes(size, className)}
         onError={() => setFailed(true)}
         className={cn('shrink-0 object-contain drop-shadow-[0_4px_10px_rgb(0_0_0/0.45)]', className)}
       />

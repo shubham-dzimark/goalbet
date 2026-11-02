@@ -10,7 +10,7 @@ import { Countdown, MinuteRing } from '@/components/fx/match-clock';
 import { TeamCrest } from '@/components/fx/team-crest';
 import { Link } from '@/i18n/navigation';
 import { useFormat, useMatchClock } from '@/lib/format';
-import { gsap, prefersReducedMotion, useGSAP } from '@/lib/gsap';
+import { gsap, onceInView, prefersReducedMotion, useGSAP } from '@/lib/gsap';
 import { OddsButton } from './odds-button';
 
 const ROTATE_MS = 8_000;
@@ -44,13 +44,22 @@ export function LiveSpotlight({ live, upcoming }: { live: EventSummaryDto[]; upc
     return () => clearInterval(id);
   }, [paused, list.length]);
 
+  // the first entrance waits until the spotlight is about to scroll into view (GSAP's reads then
+  // happen after layout, never as a start-up reflow); later rotations animate straight away
+  const entered = useRef(false);
   useGSAP(
-    () => {
-      if (!stage.current || prefersReducedMotion()) return;
-      const tl = gsap.timeline();
-      tl.fromTo('[data-spot="crest"]', { scale: 0.6, opacity: 0, rotate: -8 }, { scale: 1, opacity: 1, rotate: 0, stagger: 0.08, duration: 0.6, ease: 'back.out(1.6)' })
-        .fromTo('[data-spot="text"]', { y: 14, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.05, duration: 0.45 }, '<0.1')
-        .fromTo('[data-spot="odds"] > *', { y: 16, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.06, duration: 0.4 }, '<0.15');
+    (_ctx, contextSafe) => {
+      const el = stage.current;
+      if (!el || prefersReducedMotion() || !contextSafe) return;
+      const play = contextSafe(() => {
+        entered.current = true;
+        const tl = gsap.timeline();
+        tl.fromTo('[data-spot="crest"]', { scale: 0.6, opacity: 0, rotate: -8 }, { scale: 1, opacity: 1, rotate: 0, stagger: 0.08, duration: 0.6, ease: 'back.out(1.6)' })
+          .fromTo('[data-spot="text"]', { y: 14, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.05, duration: 0.45 }, '<0.1')
+          .fromTo('[data-spot="odds"] > *', { y: 16, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.06, duration: 0.4 }, '<0.15');
+      });
+      if (entered.current) return play();
+      return onceInView(el, play);
     },
     { scope: stage, dependencies: [event?.id] },
   );

@@ -18,4 +18,27 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+  /* Below-the-fold sections: the browser skips their style/layout/paint until they near the
+     viewport (less work at load); `auto` remembers the real height once rendered, so no jumps. */
+  /* GSAP entrance start states, set in CSS instead of JavaScript: GSAP then only animates TO the
+     final state after the first paint, so it never writes-then-reads layout during start-up
+     (no forced reflows). Reduced motion and no-JS (layout <noscript>) show the final state. */
+  .gsap-in {
+    opacity: 0;
+    transform: translateY(var(--gsap-y, 20px));
+  }
+  .gsap-rise {
+    transform: translateY(16px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gsap-in,
+    .gsap-rise {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .defer-render {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 720px;
+  }
 }

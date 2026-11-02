@@ -173,8 +173,8 @@
   /* Type: one clean sans family (Apple-like hierarchy: weight and size, not a second typeface).
      Self-hosted via @fontsource (packages/ui/src/brand/fonts.ts) — change both together.
      font-display = headings and figures (semibold, tight tracking, tabular numbers). */
-  --font-sans: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter, 'Inter Variable'), -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-inter, 'Inter Variable'), -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
 
   --radius-card: 1.125rem;
   --radius-control: 0.75rem;

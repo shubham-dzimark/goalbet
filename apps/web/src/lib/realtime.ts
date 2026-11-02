@@ -104,6 +104,10 @@ export function useRealtimeConnection() {
   useEffect(() => {
     // serverless API (Vercel Functions) has no socket server: the pages poll instead
     if (process.env.NEXT_PUBLIC_REALTIME === 'off') return;
+    let stop: (() => void) | undefined;
+    // connect once the page has loaded and the browser is idle, so the socket's first messages are
+    // handled outside the start-up window (pages poll until it is up)
+    const start = () => {
     const s = io({
       // through the web app's /api proxy; Next.js strips trailing slashes, so the server uses none either
       path: '/api/socket.io',
@@ -173,11 +177,33 @@ export function useRealtimeConnection() {
       if (state.accessToken !== prev.accessToken) s.emit('auth', state.accessToken);
     });
 
-    return () => {
+    stop = () => {
       unsub();
       s.close();
       socket = null;
       useRealtime.setState({ connected: false });
     };
+    };
+    const cancelStart = afterLoadIdle(start);
+    return () => {
+      cancelStart();
+      stop?.();
+    };
   }, [qc]);
+}
+
+/** Runs `fn` after the window load event once the browser is idle (at most 3 s later); returns a canceller. */
+function afterLoadIdle(fn: () => void) {
+  let id: number | undefined;
+  const schedule = () => {
+    id = typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback(fn, { timeout: 3000 }) : window.setTimeout(fn, 1500);
+  };
+  if (document.readyState === 'complete') schedule();
+  else window.addEventListener('load', schedule, { once: true });
+  return () => {
+    window.removeEventListener('load', schedule);
+    if (id === undefined) return;
+    if (typeof window.cancelIdleCallback === 'function') window.cancelIdleCallback(id);
+    else window.clearTimeout(id);
+  };
 }

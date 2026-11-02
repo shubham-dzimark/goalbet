@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
@@ -8,8 +9,11 @@ import { AppShell } from '@/components/shell/app-shell';
 import { Providers } from '@/components/providers';
 import { themeScript } from '@/lib/theme';
 import { requestTimeZone } from '@/lib/time-zone-server';
-import '@goalbet/ui/fonts';
 import '../globals.css';
+
+// Self-hosted at build time, preloaded, with a size-matched fallback so text does not shift when it
+// loads; the shared tokens read --font-inter (latin-ext covers Romanian ă, ș, ț)
+const inter = Inter({ subsets: ['latin', 'latin-ext'], variable: '--font-inter', display: 'swap' });
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -39,9 +43,13 @@ export default async function LocaleLayout({ children, params }: { children: Rea
 
   return (
     // data-theme is set before paint by themeScript (saved choice or OS preference)
-    <html lang={locale} data-theme="dark" suppressHydrationWarning>
+    <html lang={locale} data-theme="dark" className={inter.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* without JavaScript the GSAP entrance start states would never be animated in */}
+        <noscript>
+          <style>{'.gsap-in,.gsap-rise{opacity:1;transform:none}'}</style>
+        </noscript>
       </head>
       <body className="min-h-dvh antialiased">
         <NextIntlClientProvider>

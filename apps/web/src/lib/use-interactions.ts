@@ -11,12 +11,22 @@ export function useTilt<T extends HTMLElement>(ref: RefObject<T | null>, { max =
   useEffect(() => {
     const el = ref.current;
     if (!el || prefersReducedMotion() || !hasFinePointer()) return;
-    gsap.set(el, { transformPerspective: 900, transformStyle: 'preserve-3d' });
-    const rx = gsap.quickTo(el, 'rotationX', { duration: 0.5, ease: 'power3.out' });
-    const ry = gsap.quickTo(el, 'rotationY', { duration: 0.5, ease: 'power3.out' });
-    const y = gsap.quickTo(el, 'y', { duration: 0.5, ease: 'power3.out' });
+    // set up on the first hover, not at mount: creating GSAP setters reads the element's transform,
+    // which during page start-up would force a layout
+    let rx: ReturnType<typeof gsap.quickTo> | undefined;
+    let ry: ReturnType<typeof gsap.quickTo> | undefined;
+    let y: ReturnType<typeof gsap.quickTo> | undefined;
+    const ready = () => {
+      if (rx && ry && y) return { rx, ry, y };
+      gsap.set(el, { transformPerspective: 900, transformStyle: 'preserve-3d' });
+      rx = gsap.quickTo(el, 'rotationX', { duration: 0.5, ease: 'power3.out' });
+      ry = gsap.quickTo(el, 'rotationY', { duration: 0.5, ease: 'power3.out' });
+      y = gsap.quickTo(el, 'y', { duration: 0.5, ease: 'power3.out' });
+      return { rx, ry, y };
+    };
 
     const move = (e: PointerEvent) => {
+      const { rx, ry } = ready();
       const r = el.getBoundingClientRect();
       const px = (e.clientX - r.left) / r.width;
       const py = (e.clientY - r.top) / r.height;
@@ -25,8 +35,9 @@ export function useTilt<T extends HTMLElement>(ref: RefObject<T | null>, { max =
       el.style.setProperty('--mx', `${px * 100}%`);
       el.style.setProperty('--my', `${py * 100}%`);
     };
-    const enter = () => y(-lift);
+    const enter = () => ready().y(-lift);
     const leave = () => {
+      if (!rx || !ry || !y) return;
       rx(0);
       ry(0);
       y(0);

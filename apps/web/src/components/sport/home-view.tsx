@@ -66,7 +66,7 @@ export function HomeView({ initial, upcoming }: { initial: HomeFeedDto | null; u
       {data ? <LiveSpotlight live={data.topLive} upcoming={data.topMatches} /> : null}
 
       {data && data.boosted.length > 0 ? (
-        <section aria-labelledby="boosted">
+        <section aria-labelledby="boosted" className="defer-render">
           <RevealHeading id="boosted" className={sectionTitle}>
             {t('home.boosted')}
           </RevealHeading>
@@ -82,7 +82,7 @@ export function HomeView({ initial, upcoming }: { initial: HomeFeedDto | null; u
       <MatchBoard initial={upcoming} />
 
       {data && data.topCompetitions.length > 0 ? (
-        <section aria-labelledby="top-competitions">
+        <section aria-labelledby="top-competitions" className="defer-render">
           <RevealHeading id="top-competitions" className={sectionTitle}>
             {t('home.topCompetitions')}
           </RevealHeading>

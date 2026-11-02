@@ -3,12 +3,12 @@
 import { ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
-import { useRef } from 'react';
+import { type CSSProperties, useRef } from 'react';
 import { type EventSummaryDto } from '@goalbet/shared';
 import { cn } from '@goalbet/ui';
 import { AnimatedNumber } from '@/components/fx/animated-number';
 import { Link } from '@/i18n/navigation';
-import { gsap, prefersReducedMotion, useGSAP } from '@/lib/gsap';
+import { gsap, prefersReducedMotion, settleEntrance, useGSAP, whenIdle } from '@/lib/gsap';
 import { HeroMatchStack } from './hero-match-stack';
 
 const MotionLink = motion.create(Link);
@@ -36,19 +36,29 @@ export function StadiumHero({
   const root = useRef<HTMLElement>(null);
 
   useGSAP(
-    () => {
+    (_ctx, contextSafe) => {
       const el = root.current;
-      if (!el || prefersReducedMotion()) return;
-      gsap.from('[data-hero-in]', { y: 20, opacity: 0, duration: 0.8, stagger: 0.08, ease: 'power2.out' });
-      gsap.from('[data-hero-visual]', { y: 24, opacity: 0, duration: 1, delay: 0.25, ease: 'power2.out' });
+      if (!el || prefersReducedMotion() || !contextSafe) return;
+      // Start states come from CSS (gsap-in / gsap-rise in the markup); GSAP animates TO the final
+      // state once layout has settled, so the entrance never forces a reflow during start-up.
+      const enter = contextSafe(() => {
+        const copy = [...el.querySelectorAll('[data-hero-in]')];
+        const title = [...el.querySelectorAll('[data-hero-title]')];
+        const visual = [...el.querySelectorAll('[data-hero-visual]')];
+        gsap.to(copy, { opacity: 1, y: 0, duration: 0.8, stagger: 0.08, ease: 'power2.out', onComplete: () => settleEntrance(copy) });
+        // the headline is the page's largest element (LCP): it rises but never starts transparent
+        gsap.to(title, { y: 0, duration: 0.8, ease: 'power2.out', onComplete: () => settleEntrance(title) });
+        gsap.to(visual, { opacity: 1, y: 0, duration: 1, delay: 0.15, ease: 'power2.out', onComplete: () => settleEntrance(visual) });
 
-      // the copy eases out as the hero scrolls away
-      gsap.to('[data-hero-copy]', {
-        yPercent: -10,
-        opacity: 0.3,
-        ease: 'none',
-        scrollTrigger: { trigger: el, start: 'top top', end: 'bottom top', scrub: true },
+        // the copy eases out as the hero scrolls away
+        gsap.to(el.querySelector('[data-hero-copy]'), {
+          yPercent: -10,
+          opacity: 0.3,
+          ease: 'none',
+          scrollTrigger: { trigger: el, start: 'top top', end: 'bottom top', scrub: true },
+        });
       });
+      return whenIdle(enter, 300);
     },
     { scope: root },
   );
@@ -69,7 +79,7 @@ export function StadiumHero({
     >
       <div className="relative grid items-center gap-12 px-6 py-12 sm:px-12 sm:py-16 lg:grid-cols-[1.1fr_1fr] lg:gap-8 lg:py-20">
         <div data-hero-copy className="relative z-10">
-          <p data-hero-in className="flex items-center gap-2 text-[13px] font-medium text-ink-muted">
+          <p data-hero-in className="gsap-in flex items-center gap-2 text-[13px] font-medium text-ink-muted">
             <span className="relative flex size-2">
               <span className="absolute inset-0 animate-ping rounded-full bg-live opacity-60" />
               <span className="relative size-2 rounded-full bg-live" />
@@ -77,17 +87,17 @@ export function StadiumHero({
             {t('kicker', { count: live })}
           </p>
 
-          <h1 id="hero-title" data-hero-in className="mt-4 font-display text-5xl font-semibold leading-[1.04] tracking-[-0.035em] sm:text-6xl 2xl:text-7xl">
+          <h1 id="hero-title" data-hero-title className="gsap-rise mt-4 font-display text-5xl font-semibold leading-[1.04] tracking-[-0.035em] sm:text-6xl 2xl:text-7xl">
             {t('line1')}
             <br />
             <span className="text-glow">{t('line2')}</span>
           </h1>
 
-          <p data-hero-in className="mt-5 max-w-md text-[17px] leading-relaxed text-ink-muted">
+          <p data-hero-in className="gsap-in mt-5 max-w-md text-[17px] leading-relaxed text-ink-muted">
             {t('subtitle')}
           </p>
 
-          <div data-hero-in className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <div data-hero-in className="gsap-in mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
             <MotionLink
               href="/live"
               whileHover={{ scale: 1.02 }}
@@ -104,7 +114,7 @@ export function StadiumHero({
             </a>
           </div>
 
-          <dl data-hero-in className="mt-12 grid max-w-lg grid-cols-4 gap-6">
+          <dl data-hero-in className="gsap-in mt-12 grid max-w-lg grid-cols-4 gap-6">
             {stats.map((s) => (
               <div key={s.label}>
                 <dd className={cn('font-display text-[28px] font-semibold leading-none tracking-tight tabular-nums', s.live && s.value > 0 && 'text-live')}>
@@ -118,7 +128,7 @@ export function StadiumHero({
 
         {/* desktop only: below lg the live spotlight right under the hero shows the same matches */}
         {matches.length > 0 ? (
-          <div data-hero-visual className="relative hidden h-[26rem] lg:block">
+          <div data-hero-visual className="gsap-in relative hidden h-[26rem] lg:block" style={{ '--gsap-y': '24px' } as CSSProperties}>
             <HeroMatchStack events={matches} className="h-full w-full" />
           </div>
         ) : null}
