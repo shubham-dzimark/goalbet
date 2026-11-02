@@ -1,0 +1,30 @@
+# Front door for the VPS stack (docker-compose.prod.yml).
+# /api/* goes straight to the API with the real client address in X-Forwarded-For (Caddy replaces
+# any client-supplied value), so per-IP rate limits, admin lockouts and audit IPs see real visitors;
+# everything else goes to the matching frontend.
+# With a domain: replace ":80" / ":8080" with the host names and remove `auto_https off`;
+# Caddy then fetches and renews HTTPS certificates itself.
+{
+	auto_https off
+	admin off
+}
+
+:80 {
+	encode zstd gzip
+	handle_path /api/* {
+		reverse_proxy api:4000
+	}
+	handle {
+		reverse_proxy web:3000
+	}
+}
+
+:8080 {
+	encode zstd gzip
+	handle_path /api/* {
+		reverse_proxy api:4000
+	}
+	handle {
+		reverse_proxy admin:3001
+	}
+}
