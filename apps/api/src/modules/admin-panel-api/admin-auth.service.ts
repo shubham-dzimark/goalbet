@@ -1,11 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { generateSecret, generateURI, verify } from 'otplib';
-import QRCode from 'qrcode';
+import { verify } from 'otplib';
 import { type AdminUser } from '@goalbet/db';
-import { brandName } from '../../config/brand.js';
 import { ENV, type Env } from '../../config/env.js';
 import { AuditService } from '../../common/audit.service.js';
-import { decryptSecret, encryptSecret, verifyAgainstDummy, verifyPassword } from '../../common/auth/crypto.js';
+import { decryptSecret, verifyAgainstDummy, verifyPassword } from '../../common/auth/crypto.js';
 import { SessionService } from '../../common/auth/session.service.js';
 import { TokensService } from '../../common/auth/tokens.service.js';
 import { DomainError } from '../../common/errors.js';
@@ -40,7 +38,7 @@ export type AdminLoginResult =
   | { status: 'TOTP_REQUIRED' }
   | { status: 'TOTP_SETUP'; setupToken: string; otpauthUrl: string; qrDataUrl: string; secret: string };
 
-/** F3.1 — admin login: email + password + TOTP, lockout, idle timeout, every attempt audited. */
+/** F3.1 — admin login: email + password (+ TOTP for admins who turned 2FA on), lockout, idle timeout, every attempt audited. */
 @Injectable()
 export class AdminAuthService {
   constructor(
@@ -77,10 +75,10 @@ export class AdminAuthService {
     return checkAdminTotp(secret, code, admin.totpLastStep);
   }
 
-  private async succeed(admin: AdminUser, meta: RequestMeta, timeStep: number): Promise<AdminLoginResult> {
+  private async succeed(admin: AdminUser, meta: RequestMeta, timeStep: number | null): Promise<AdminLoginResult> {
     const updated = await this.prisma.adminUser.update({
       where: { id: admin.id },
-      data: { failedLogins: 0, lockedUntil: null, lastLoginAt: new Date(), totpLastStep: timeStep },
+      data: { failedLogins: 0, lockedUntil: null, lastLoginAt: new Date(), ...(timeStep !== null ? { totpLastStep: timeStep } : {}) },
     });
     const session = await this.sessions.create('ADMIN', admin.id, meta, this.policy);
     await this.audit.log({
@@ -118,25 +116,8 @@ export class AdminAuthService {
       throw new DomainError('ACCOUNT_SUSPENDED');
     }
 
-    // First login: enrol an authenticator before any session is issued.
-    if (!admin.totpEnabled || !admin.totpSecret) {
-      const secret = generateSecret();
-      const otpauthUrl = generateURI({ issuer: `${brandName} Admin`, label: admin.email, secret });
-      await this.audit.log({
-        category: 'ADMIN',
-        action: 'ADMIN_TOTP_SETUP_STARTED',
-        actor: { type: 'ADMIN', id: admin.id, label: admin.email, ...meta },
-        entityType: 'AdminUser',
-        entityId: admin.id,
-      });
-      return {
-        status: 'TOTP_SETUP',
-        setupToken: this.tokens.signTotpSetup(admin.id, encryptSecret(secret, this.env.JWT_ADMIN_SECRET)),
-        otpauthUrl,
-        qrDataUrl: await QRCode.toDataURL(otpauthUrl),
-        secret,
-      } satisfies AdminLoginResult;
-    }
+    // 2FA is optional (each admin turns it on in Account): without it the password is enough.
+    if (!admin.totpEnabled || !admin.totpSecret) return this.succeed(admin, meta, null);
 
     if (!input.totp) return { status: 'TOTP_REQUIRED' } satisfies AdminLoginResult;
     const step = await this.checkTotp(admin, decryptSecret(admin.totpSecret, this.env.JWT_ADMIN_SECRET), input.totp);

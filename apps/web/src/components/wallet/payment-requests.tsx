@@ -9,6 +9,7 @@ import { Alert, Badge, Button, Dialog, DialogContent, Field, Input, Skeleton, cn
 import { ApiError, api } from '@/lib/api';
 import { useFormat } from '@/lib/format';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { copyText } from '@/lib/clipboard';
 
 const STATUS_TONE = { PENDING: 'warning', APPROVED: 'success', REJECTED: 'danger', CANCELLED: 'neutral' } as const;
 const METHOD_ICON = { BANK_TRANSFER: Building2, CASH_AT_SHOP: Store } as const;
@@ -34,7 +35,7 @@ function CopyValue({ value, label }: { value: string; label: string }) {
       <button
         type="button"
         onClick={() => {
-          void navigator.clipboard.writeText(value.replace(/\s/g, ''));
+          void copyText(value.replace(/\s/g, ''));
           setCopied(true);
           setTimeout(() => setCopied(false), 1500);
         }}

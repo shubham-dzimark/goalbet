@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "GoalBet — Pariuri fotbal",
+    "title": "Betuno — Pariuri fotbal",
     "description": "Pariuri pe fotbal pre-meci și live, în RON."
   },
   "nav": {
@@ -70,7 +70,7 @@
     "responsible": "Jocurile de noroc pot crea dependență. Joacă responsabil.",
     "adultsOnly": "18+",
     "currencyNote": "Toate sumele sunt în RON. Creditul din portofel este gestionat de operator.",
-    "rights": "© {year} GoalBet. Brand provizoriu.",
+    "rights": "© {year} Betuno.",
     "rgLink": "Joc responsabil"
   },
   "language": {
@@ -157,7 +157,7 @@
     "builderOneMatch": "Bet Builder combină selecții de la un singur meci. Păstrează selecțiile unui singur meci.",
     "builderNeedTwo": "Adaugă cel puțin 2 selecții de la același meci.",
     "builderPicks": "{count} selecții, un singur pariu",
-    "builderHint": "Toate trebuie să câștige. Cotă calculată împreună (separat {product}), pentru că rezultatele aceluiași meci sunt legate.",
+    "builderHint": "Un singur bilet: toate selecțiile trebuie să câștige. Cotele se înmulțesc ({product}).",
     "useBuilder": "Combină-le într-un Bet Builder",
     "builderReason": {
       "TOO_FEW": "Adaugă cel puțin 2 selecții de la același meci.",
@@ -403,7 +403,7 @@
   "rg": {
     "kicker": "Joacă în siguranță",
     "title": "Joc responsabil",
-    "intro": "Pariurile trebuie să fie o distracție, nu o sursă de bani sau o evadare din probleme. Iată cum te ajută GoalBet să păstrezi controlul și unde găsești ajutor.",
+    "intro": "Pariurile trebuie să fie o distracție, nu o sursă de bani sau o evadare din probleme. Iată cum te ajută Betuno să păstrezi controlul și unde găsești ajutor.",
     "toolsTitle": "Instrumentele tale",
     "tools": {
       "limits": {

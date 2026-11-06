@@ -54,7 +54,7 @@ describe('F3.6 reports: bet types, payout breakdown, payments', () => {
     const bet = (body: object) => ctx.http().post('/bets').set(auth).set('Idempotency-Key', idemKey()).send({ oddsChangePreference: 'ANY', ...body }).expect(201);
     const single = await bet({ type: 'SINGLE', stakeBani: 1000, legs: [{ kind: 'SELECTION', selectionId: m.home.id, oddsMilli: 2000 }] });
     await bet({ type: 'ACCA', stakeBani: 500, legs: [{ kind: 'SELECTION', selectionId: m.draw.id, oddsMilli: 3200 }, { kind: 'SELECTION', selectionId: other.home.id, oddsMilli: 2000 }] });
-    await bet({ type: 'SINGLE', stakeBani: 300, legs: [{ kind: 'BET_BUILDER', eventId: m.event.id, selectionIds: [m.home.id, goals.over.id], oddsMilli: 3230 }] });
+    await bet({ type: 'SINGLE', stakeBani: 300, legs: [{ kind: 'BET_BUILDER', eventId: m.event.id, selectionIds: [m.home.id, goals.over.id], oddsMilli: 3800 }] });
     await ctx.http().post(`/tickets/${single.body.id}/cashout`).set(auth).set('Idempotency-Key', idemKey()).send({ offerBani: 950 }).expect(200);
 
     const fin = await createAdmin(ctx, 'FINANCE');

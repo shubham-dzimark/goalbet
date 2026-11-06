@@ -5,7 +5,7 @@ import cookieParser from 'cookie-parser';
 import type { Express } from 'express';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
-import { type Env } from './config/env.js';
+import { allowedOrigins, type Env } from './config/env.js';
 
 /** HTTP hardening + docs shared by main.ts and the integration tests. */
 export function configureApp(app: INestApplication, env: Env, opts: { logger?: boolean } = {}) {
@@ -31,11 +31,11 @@ export function configureApp(app: INestApplication, env: Env, opts: { logger?: b
     }),
   );
   app.use(cookieParser());
-  app.enableCors({ origin: [env.WEB_ORIGIN, env.ADMIN_ORIGIN], credentials: true });
+  app.enableCors({ origin: allowedOrigins(env), credentials: true });
   app.enableShutdownHooks();
 
   const config = new DocumentBuilder()
-    .setTitle('GoalBet Betting Engine API')
+    .setTitle('Betuno Betting Engine API')
     .setDescription('Football-only sportsbook, RON wallet (integer bani), RO/EN. Errors: { error: { code, message, details } }.')
     .setVersion('0.1.0')
     .addBearerAuth()

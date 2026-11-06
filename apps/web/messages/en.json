@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "GoalBet — Football betting",
+    "title": "Betuno — Football betting",
     "description": "Pre-match and live football betting in RON."
   },
   "nav": {
@@ -70,7 +70,7 @@
     "responsible": "Gambling can be addictive. Play responsibly.",
     "adultsOnly": "18+",
     "currencyNote": "All amounts are in RON. Wallet credit is managed by the operator.",
-    "rights": "© {year} GoalBet. Placeholder brand.",
+    "rights": "© {year} Betuno.",
     "rgLink": "Responsible gambling"
   },
   "language": {
@@ -157,7 +157,7 @@
     "builderOneMatch": "A Bet Builder combines selections from one match. Keep the selections of a single match.",
     "builderNeedTwo": "Add at least 2 selections from the same match.",
     "builderPicks": "{count} selections, one bet",
-    "builderHint": "All must win. Priced together (separately {product}), because results on one match are linked.",
+    "builderHint": "One ticket: every pick must win. Odds are multiplied ({product}).",
     "useBuilder": "Combine them in a Bet Builder",
     "builderReason": {
       "TOO_FEW": "Add at least 2 selections from the same match.",
@@ -403,7 +403,7 @@
   "rg": {
     "kicker": "Play safe",
     "title": "Responsible gambling",
-    "intro": "Betting should be fun, never a way to make money or escape problems. Here is how GoalBet helps you stay in control, and where to find help.",
+    "intro": "Betting should be fun, never a way to make money or escape problems. Here is how Betuno helps you stay in control, and where to find help.",
     "toolsTitle": "Your tools",
     "tools": {
       "limits": {

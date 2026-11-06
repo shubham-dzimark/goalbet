@@ -36,12 +36,12 @@ async function match() {
 }
 
 describe('F1.11 Bet Builder', () => {
-  it('prices a combination of one match: product × correlation factor when the provider has no price', async () => {
+  it('prices a combination of one match: product of the odds × builder factor when the provider has no price', async () => {
     const m = await match();
-    // 2.00 × 1.90 × 0.85
-    expect(await quote(m.event.id, [m.home.id, m.over.id])).toMatchObject({ available: true, oddsMilli: 3230, source: 'MODEL' });
-    // 2.00 × 1.90 × 1.80 × 0.85
-    expect(await quote(m.event.id, [m.home.id, m.over.id, m.bttsYes.id])).toMatchObject({ available: true, oddsMilli: 5814 });
+    // 2.00 × 1.90 (factor 100% by default: the plain product)
+    expect(await quote(m.event.id, [m.home.id, m.over.id])).toMatchObject({ available: true, oddsMilli: 3800, source: 'MODEL' });
+    // 2.00 × 1.90 × 1.80
+    expect(await quote(m.event.id, [m.home.id, m.over.id, m.bttsYes.id])).toMatchObject({ available: true, oddsMilli: 6840 });
 
     await setSetting(ctx, 'builder.factorBps', 9000);
     expect(await quote(m.event.id, [m.home.id, m.over.id])).toMatchObject({ oddsMilli: 3420 });
@@ -73,12 +73,12 @@ describe('F1.11 Bet Builder', () => {
     const m = await match();
     // the price moved since the slip showed it: rejected with the new price when the player wants exact odds
     const changed = await placeBuilder(m.event.id, [m.home.id, m.over.id], 3300, 'NONE').expect(422);
-    expect(changed.body.error).toMatchObject({ code: 'ODDS_CHANGED', details: { changes: [{ eventId: m.event.id, builder: true, currentOddsMilli: 3230 }] } });
+    expect(changed.body.error).toMatchObject({ code: 'ODDS_CHANGED', details: { changes: [{ eventId: m.event.id, builder: true, currentOddsMilli: 3800 }] } });
 
-    const placed = await placeBuilder(m.event.id, [m.home.id, m.over.id], 3230, 'NONE').expect(201);
-    expect(placed.body).toMatchObject({ type: 'SINGLE', totalOddsMilli: 3230, potentialWinBani: 3230, status: 'ACTIVE' });
+    const placed = await placeBuilder(m.event.id, [m.home.id, m.over.id], 3800, 'NONE').expect(201);
+    expect(placed.body).toMatchObject({ type: 'SINGLE', totalOddsMilli: 3800, potentialWinBani: 3800, status: 'ACTIVE' });
     expect(placed.body.legs).toHaveLength(1);
-    expect(placed.body.legs[0]).toMatchObject({ kind: 'BET_BUILDER', oddsMilli: 3230 });
+    expect(placed.body.legs[0]).toMatchObject({ kind: 'BET_BUILDER', oddsMilli: 3800 });
     expect(placed.body.legs[0].selections.map((s: { oddsMilli: number }) => s.oddsMilli)).toEqual([2000, 1900]);
     expect(await balance()).toBe(9_000);
 
@@ -89,13 +89,13 @@ describe('F1.11 Bet Builder', () => {
     await ctx.prisma.event.update({ where: { id: m.event.id }, data: { status: 'FINISHED', startTime: new Date(Date.now() - 2 * 3600_000) } });
     const result: MatchOutcome = { ftHome: 2, ftAway: 1, htHome: 1, htAway: 0, corners: 9, cards: 2, players: {} };
     await ctx.app.get(SettlementService).settleEvent(m.event.id, { outcome: result, source: 'PROVIDER', actor: { type: 'SYSTEM' } });
-    expect(await ctx.prisma.ticket.findUniqueOrThrow({ where: { id: placed.body.id } })).toMatchObject({ status: 'WON', payoutBani: 3230 });
-    expect(await balance()).toBe(12_230);
+    expect(await ctx.prisma.ticket.findUniqueOrThrow({ where: { id: placed.body.id } })).toMatchObject({ status: 'WON', payoutBani: 3800 });
+    expect(await balance()).toBe(12_800);
   });
 
   it('a builder loses when any part loses', async () => {
     const m = await match();
-    const placed = await placeBuilder(m.event.id, [m.home.id, m.over.id], 3230).expect(201);
+    const placed = await placeBuilder(m.event.id, [m.home.id, m.over.id], 3800).expect(201);
     await ctx.prisma.event.update({ where: { id: m.event.id }, data: { status: 'FINISHED', startTime: new Date(Date.now() - 2 * 3600_000) } });
     const result: MatchOutcome = { ftHome: 1, ftAway: 0, htHome: 0, htAway: 0, corners: 4, cards: 1, players: {} };
     await ctx.app.get(SettlementService).settleEvent(m.event.id, { outcome: result, source: 'PROVIDER', actor: { type: 'SYSTEM' } });

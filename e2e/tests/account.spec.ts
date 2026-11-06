@@ -28,6 +28,5 @@ test.describe('F1.2 registration, F5.7 Romanian & English', () => {
     await expect(page).toHaveURL(/\/en\/my-bets/);
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.getByRole('heading', { name: /my bets/i })).toBeVisible();
-    await expect(page.getByTestId('footer-rg')).toHaveText('Responsible gambling');
   });
 });

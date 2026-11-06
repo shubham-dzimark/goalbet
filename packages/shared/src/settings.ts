@@ -7,7 +7,8 @@ export const SETTING_DEFAULTS = {
   'betting.liveDelayMs': 5_000,
   'cashout.marginBps': 500,
   'cashout.enabled': true,
-  'builder.factorBps': 8_500,
+  /** Bet Builder price = product of the picks' odds × this (100% = plain product; lower it to discount correlation). */
+  'builder.factorBps': 10_000,
   'wallet.approvalThresholdBani': 500_000,
   'wallet.minDepositBani': 1_000,
   'wallet.maxDepositBani': 2_000_000,

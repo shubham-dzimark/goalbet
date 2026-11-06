@@ -368,7 +368,7 @@ export default function AccountPage() {
             </h1>
             <p className="truncate text-sm text-ink-muted">{user.email}</p>
           </div>
-          <div className="text-right">
+          <div className="w-full sm:w-auto sm:text-right">
             <p className="text-[11px] uppercase tracking-wide text-ink-faint">{t('account.balance')}</p>
             <p
               className="font-display tracking-tight text-4xl font-semibold tabular-nums text-brand"

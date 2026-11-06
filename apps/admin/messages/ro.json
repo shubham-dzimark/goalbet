@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "GoalBet Admin"
+    "title": "Betuno Admin"
   },
   "nav": {
     "dashboard": "Panou",
@@ -24,7 +24,8 @@
     "account": "Contul meu",
     "admins": "Administratori",
     "dataProvider": "Furnizor de date",
-    "email": "Email"
+    "email": "Email",
+    "odds": "Cote"
   },
   "roles": {
     "SUPER_ADMIN": "Super admin",
@@ -427,31 +428,8 @@
       "settled": "Decontat",
       "settle": "Decontează",
       "awaiting": "Așteaptă decontarea",
-      "resettle": "Redecontează"
-    },
-    "eventMarkets": {
-      "manual": "Manual",
-      "editPrice": "Modifică cota",
-      "setManual": "Setează cota manual",
-      "priceLabel": "Cotă (zecimală, 1,01 – 1000)",
-      "priceHelp": "Cota rămâne până când o predai înapoi prețurilor automate; jucătorii văd schimbarea imediat.",
-      "autoHelp": "Prețurile automate preiau din nou această selecție la următoarea actualizare.",
-      "priceUpdated": "Cotă actualizată",
-      "invalidPrice": "Introdu o cotă între 1,01 și 1000.",
-      "none": "Încă nu există piețe pentru acest meci.",
-      "byOperator": "Suspendată de operator",
-      "byFeed": "Suspendată de flux",
-      "settled": "Decontată",
-      "hidden": "Ascunsă",
-      "resume": "Reia",
-      "suspend": "Suspendă",
-      "hide": "Ascunde",
-      "show": "Afișează",
-      "suspendHelp": "Piața rămâne vizibilă, dar blocată. Actualizările din flux nu o redeschid.",
-      "resumeHelp": "Piața se redeschide (dacă fluxul nu o are suspendată).",
-      "hideHelp": "Piața dispare de pe site și nu mai primește pariuri.",
-      "showHelp": "Piața este din nou afișată pe site.",
-      "updated": "Piață actualizată"
+      "resettle": "Redecontează",
+      "editOdds": "Cote"
     },
     "limits": {
       "groups": {
@@ -672,8 +650,8 @@
       "title": "Autentificare în doi pași",
       "app": "Aplicație de autentificare",
       "on": "Activă",
-      "off": "Neconfigurată",
-      "help": "Ai telefon nou? Mută codurile aici. Ai nevoie mai întâi de un cod din aplicația actuală.",
+      "off": "Dezactivată",
+      "help": "Autentificarea în doi pași este activă: la conectare ai nevoie de un cod din aplicația de autentificare. Telefon nou? Mută codurile aici.",
       "move": "Mută pe un telefon nou",
       "step1": "Pasul 1 din 2: introdu un cod din aplicația actuală.",
       "step2": "Pasul 2 din 2: scanează codul QR cu noul telefon, apoi introdu codul afișat.",
@@ -682,7 +660,17 @@
       "newCode": "Cod din aplicația nouă",
       "continue": "Continuă",
       "confirm": "Treci pe noul telefon",
-      "changed": "Autentificarea a fost mutată pe noul telefon. Celelalte dispozitive au fost deconectate."
+      "changed": "Autentificarea a fost mutată pe noul telefon. Celelalte dispozitive au fost deconectate.",
+      "offHelp": "Opțional. Activeaz-o pentru a cere la fiecare conectare un cod dintr-o aplicație de autentificare (Google Authenticator, Microsoft Authenticator, Authy…).",
+      "enable": "Activează autentificarea în doi pași",
+      "enableStep1": "Pasul 1 din 2: confirmă parola.",
+      "enableStep2": "Pasul 2 din 2: scanează codul QR cu aplicația de autentificare, apoi introdu codul afișat.",
+      "enableConfirm": "Activează",
+      "enabled": "Autentificarea în doi pași este activă. Celelalte dispozitive au fost deconectate.",
+      "disable": "Dezactivează autentificarea în doi pași",
+      "disableHelp": "Introdu parola și un cod din aplicația de autentificare. După aceea te conectezi doar cu parola.",
+      "disabled": "Autentificarea în doi pași a fost dezactivată.",
+      "password": "Parolă"
     },
     "sessions": {
       "title": "Conectat pe",
@@ -702,7 +690,7 @@
     "never": "Niciodată",
     "locked": "Blocat",
     "totpOn": "Activă",
-    "totpPending": "QR la următoarea autentificare",
+    "totpPending": "Dezactivată",
     "forbiddenTitle": "Doar pentru Super admini",
     "forbiddenHelp": "Cere unui Super admin să creeze sau să modifice conturi de administrator.",
     "status": {
@@ -736,7 +724,7 @@
     },
     "create": {
       "title": "Adaugă un administrator",
-      "help": "Primește o parolă temporară și configurează autentificarea în doi pași cu un cod QR la prima autentificare.",
+      "help": "Primește o parolă temporară pentru conectare. Autentificarea în doi pași este opțională: o poate activa din Contul meu.",
       "submit": "Creează administrator"
     },
     "edit": {
@@ -752,21 +740,21 @@
       "passwordTitle": "Resetezi parola lui {name}?",
       "passwordHelp": "O parolă temporară nouă este afișată o singură dată; este deconectat peste tot.",
       "totpTitle": "Resetezi autentificarea în doi pași pentru {name}?",
-      "totpHelp": "Aplicația de autentificare este deconectată; la următoarea autentificare scanează un cod QR nou. Folosește când telefonul s-a pierdut."
+      "totpHelp": "Aplicația de autentificare este deconectată și autentificarea în doi pași dezactivată: se conectează cu parola și o poate reactiva din Contul meu. Folosește când telefonul s-a pierdut."
     },
     "temp": {
       "title": "Parolă temporară",
       "copy": "Copiază",
       "copied": "Copiat",
       "once": "Parola este afișată doar acum. Copiaz-o și trimite-o administratorului pe un canal sigur.",
-      "next": "La următoarea autentificare configurează autentificarea în doi pași cu un cod QR, apoi pot schimba parola din Contul meu.",
+      "next": "Se conectează cu această parolă, apoi o poate schimba (și poate activa autentificarea în doi pași) din Contul meu.",
       "done": "Gata"
     },
     "toast": {
       "saved": "Administrator actualizat",
       "suspended": "Administrator suspendat și deconectat",
       "activated": "Administrator activat",
-      "totpReset": "Autentificare resetată: QR la următoarea autentificare"
+      "totpReset": "Autentificarea în doi pași a fost dezactivată pentru acest administrator"
     }
   },
   "dataProvider": {
@@ -916,5 +904,68 @@
       "title": "Salvezi setările de email?",
       "help": "Noile setări sunt folosite de la următorul email, fără repornire."
     }
+  },
+  "odds": {
+    "kicker": "Prețuri",
+    "title": "Cote",
+    "description": "Alege un meci pentru a vedea toate piețele și cotele. Apasă pe orice cotă pentru a o seta manual sau a o reda prețuirii automate.",
+    "pickTitle": "Alege un meci",
+    "pickHelp": "Selectează un meci din stânga pentru a-i vedea piețele și a edita cotele.",
+    "suspendedShort": "Suspendat",
+    "more": "Încarcă mai multe",
+    "back": "Toate meciurile",
+    "matchSuspended": "Meci suspendat",
+    "matchSettings": "Setări meci →",
+    "notFound": "Meciul nu a fost găsit.",
+    "stats": {
+      "markets": "Piețe",
+      "manualPrices": "Cote manuale",
+      "suspendedMarkets": "Piețe suspendate",
+      "openBets": "Pariuri deschise"
+    },
+    "groupsLabel": "Grupuri de piețe",
+    "groups": {
+      "all": "Toate",
+      "main": "Principale",
+      "goals": "Goluri",
+      "handicaps": "Handicap",
+      "specials": "Cornere și cartonașe",
+      "players": "Jucători"
+    },
+    "filter": "Caută o piață…",
+    "manualOnly": "Doar cote manuale",
+    "legendAuto": "Cotă automată",
+    "legendManual": "Setată manual (păstrată până este redată)",
+    "legendClick": "Apasă pe o cotă pentru a o modifica.",
+    "noMarkets": "Nu există încă piețe pentru acest meci.",
+    "noMatch": "Nicio piață nu corespunde filtrelor.",
+    "byOperator": "Suspendată de operator",
+    "byFeed": "Suspendată de flux",
+    "settled": "Decontată",
+    "hidden": "Ascunsă",
+    "manual": "Cotă manuală",
+    "editPrice": "Editează cota",
+    "resume": "Reia",
+    "suspend": "Suspendă",
+    "hide": "Ascunde",
+    "show": "Arată",
+    "suspendHelp": "Piața rămâne vizibilă, dar blocată. Actualizările fluxului nu o redeschid.",
+    "resumeHelp": "Piața se redeschide (dacă fluxul nu o are suspendată).",
+    "hideHelp": "Piața dispare de pe site și nu mai acceptă pariuri.",
+    "showHelp": "Piața este afișată din nou pe site.",
+    "updated": "Piață actualizată",
+    "priceHelp": "Cota ta este păstrată până o redai prețuirii automate. Jucătorii văd schimbarea imediat.",
+    "autoHelp": "Prețuirea automată preia din nou această selecție la următoarea actualizare.",
+    "mode": "Mod de prețuire",
+    "modeManual": "Setează cota",
+    "modeAuto": "Înapoi la automat",
+    "currentAuto": "Cota actuală (automată)",
+    "currentManual": "Cota actuală (manuală)",
+    "newPrice": "Cotă nouă (1,01 – 1000)",
+    "implied": "Probabilitate {pct}%",
+    "invalidPrice": "Introdu o cotă între 1,01 și 1000.",
+    "savePrice": "Salvează cota",
+    "handBack": "Redă automat",
+    "priceUpdated": "Cotă actualizată"
   }
 }

@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
+import { brand } from '@goalbet/ui';
 import { routing } from '@/i18n/routing';
 import { AppShell } from '@/components/shell/app-shell';
 import { Providers } from '@/components/providers';
@@ -22,14 +23,16 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'meta' });
-  return { title: { default: t('title'), template: `%s · GoalBet` }, description: t('description') };
+  return {
+    title: { default: t('title'), template: `%s · ${brand.name}` },
+    description: t('description'),
+    icons: { icon: [{ url: '/favicon.ico', sizes: '48x48' }, { url: '/icon-192.png', type: 'image/png', sizes: '192x192' }], apple: '/apple-touch-icon.png' },
+  };
 }
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#08111f' },
-    { media: '(prefers-color-scheme: light)', color: '#f2f5f9' },
-  ],
+  // the site defaults to dark whatever the device setting (light only by the visitor's own choice)
+  themeColor: '#08111f',
   width: 'device-width',
   initialScale: 1,
 };

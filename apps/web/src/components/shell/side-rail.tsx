@@ -43,7 +43,7 @@ export function SideRail({ liveCount, betsCount }: { liveCount?: number | undefi
 
   return (
     <nav aria-label={t('menu')} className="glass sticky top-3 hidden h-[calc(100dvh-1.5rem)] w-[84px] shrink-0 flex-col items-center rounded-3xl py-4 lg:flex">
-      <Link href="/" aria-label="GoalBet" className="mb-6 transition-transform hover:scale-110">
+      <Link href="/" aria-label="Betuno" className="mb-6 transition-transform hover:scale-110">
         <LogoMark className="h-10 w-10" />
       </Link>
       <ul ref={listRef} className="relative flex w-full flex-col gap-1 px-2">

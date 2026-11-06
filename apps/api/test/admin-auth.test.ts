@@ -10,7 +10,7 @@ beforeAll(async () => {
 afterAll(async () => ctx.close());
 beforeEach(async () => resetDb(ctx));
 
-describe('F3.1 Admin login (email + password + TOTP)', () => {
+describe('F3.1 Admin login (email + password, + TOTP when the admin turned it on)', () => {
   it('requires the TOTP code after a correct password and rejects bad / replayed codes', async () => {
     const a = await createAdmin(ctx, 'OPERATOR');
     const step1 = await ctx.http().post('/admin/auth/login').send({ email: a.email, password: a.password }).expect(200);
@@ -36,21 +36,41 @@ describe('F3.1 Admin login (email + password + TOTP)', () => {
     expect(actions).toEqual(['ADMIN_LOGIN_FAILED', 'ADMIN_LOGIN', 'ADMIN_LOGIN_FAILED']);
   });
 
-  it('enrols an authenticator on first login before issuing a session', async () => {
+  it('signs in with the password alone when the admin has not turned 2FA on', async () => {
     const a = await createAdmin(ctx, 'FINANCE', { totp: false });
     const res = await ctx.http().post('/admin/auth/login').send({ email: a.email, password: a.password }).expect(200);
-    expect(res.body.status).toBe('TOTP_SETUP');
-    expect(res.body.otpauthUrl).toMatch(/^otpauth:\/\/totp\//);
-    expect(res.body.qrDataUrl).toMatch(/^data:image\/png;base64,/);
+    expect(res.body.status).toBe('OK');
+    expect(res.headers['set-cookie']?.[0]).toMatch(/^gb_admin_rt=.*HttpOnly/);
+  });
 
-    const wrong = await ctx.http().post('/admin/auth/totp/enable').send({ setupToken: res.body.setupToken, totp: '123456' });
-    expect(wrong.body.error.code).toBe('TOTP_INVALID');
-    const totp = await generate({ secret: res.body.secret });
-    const ok = await ctx.http().post('/admin/auth/totp/enable').send({ setupToken: res.body.setupToken, totp }).expect(200);
-    expect(ok.body.status).toBe('OK');
+  it('lets an admin turn 2FA on (password → QR → code) and off again (password + code)', async () => {
+    const a = await createAdmin(ctx, 'FINANCE', { totp: false });
+    const token = await (await ctx.http().post('/admin/auth/login').send({ email: a.email, password: a.password })).body.accessToken;
+    const auth = { Authorization: `Bearer ${token}` };
+
+    const badPw = await ctx.http().post('/admin/account/totp/start').set(auth).send({ password: 'wrong' });
+    expect(badPw.body.error.code).toBe('INVALID_CREDENTIALS');
+    const start = await ctx.http().post('/admin/account/totp/start').set(auth).send({ password: a.password }).expect(200);
+    expect(start.body.qrDataUrl).toMatch(/^data:image\/png;base64,/);
+    const on = await ctx.http().post('/admin/account/totp/confirm').set(auth).send({ setupToken: start.body.setupToken, totp: await generate({ secret: start.body.secret }) }).expect(200);
+    expect(on.body.totpEnabled).toBe(true);
     const stored = await ctx.prisma.adminUser.findUniqueOrThrow({ where: { id: a.id } });
-    expect(stored.totpEnabled).toBe(true);
-    expect(stored.totpSecret).not.toContain(res.body.secret); // encrypted at rest
+    expect(stored.totpSecret).not.toContain(start.body.secret); // encrypted at rest
+
+    // now a code is required to sign in
+    const step1 = await ctx.http().post('/admin/auth/login').send({ email: a.email, password: a.password }).expect(200);
+    expect(step1.body).toEqual({ status: 'TOTP_REQUIRED' });
+
+    await ctx.prisma.adminUser.update({ where: { id: a.id }, data: { totpLastStep: null } });
+    const noCode = await ctx.http().post('/admin/account/totp/disable').set(auth).send({ password: a.password, totp: '000000' });
+    expect(noCode.body.error.code).toBe('TOTP_INVALID');
+    const off = await ctx.http().post('/admin/account/totp/disable').set(auth).send({ password: a.password, totp: await generate({ secret: start.body.secret }) }).expect(200);
+    expect(off.body.totpEnabled).toBe(false);
+    const again = await ctx.http().post('/admin/auth/login').send({ email: a.email, password: a.password }).expect(200);
+    expect(again.body.status).toBe('OK');
+
+    const actions = (await ctx.prisma.auditLog.findMany({ where: { entityId: a.id } })).map((l) => l.action);
+    expect(actions).toEqual(expect.arrayContaining(['ADMIN_TOTP_SETUP_STARTED', 'ADMIN_TOTP_ENABLED', 'ADMIN_TOTP_DISABLED']));
   });
 
   it('locks the account after 5 failed attempts', async () => {

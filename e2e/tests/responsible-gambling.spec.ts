@@ -3,8 +3,7 @@ import { api, balanceOf, findMatch, fund, loginPlayer, newPlayer, pick } from '.
 
 test.describe('Responsible gambling', () => {
   test('the help page links the tools and Romanian help line', async ({ page }) => {
-    await page.goto('/ro');
-    await page.getByTestId('footer-rg').click();
+    await page.goto('/ro/responsible-gambling');
     await expect(page.getByTestId('rg-page')).toBeVisible();
     await expect(page.getByText('0800 800 099')).toBeVisible();
     await expect(page.locator('a[href="https://onjn.gov.ro"]')).toBeVisible();

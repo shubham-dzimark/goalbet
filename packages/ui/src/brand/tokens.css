@@ -1,5 +1,5 @@
 /*
- * GoalBet design tokens — "Emerald Pitch". The single place to rebrand colours and fonts.
+ * Betuno design tokens — "Emerald Pitch". The single place to rebrand colours and fonts.
  * (Brand name and logo live next to this file in brand.ts.)
  * Palette: deep navy · emerald · gold · live red · white. Keep it to these.
  * Tailwind 4 turns everything in @theme into utilities: bg-brand, text-ink-muted, font-display, …
@@ -314,3 +314,10 @@
     animation: none;
   }
 }
+
+/* Betuno wordmark: white "BET" on dark surfaces, black "BET" on light ones */
+.logo-on-light { display: none; }
+[data-theme='light'] .logo-on-dark { display: none; }
+[data-theme='light'] .logo-on-light { display: inline-block; }
+[data-theme='light'] [data-theme='dark'] .logo-on-dark { display: inline-block; }
+[data-theme='light'] [data-theme='dark'] .logo-on-light { display: none; }

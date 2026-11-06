@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, Database, Gauge, LogOut, Mail, ScrollText, Settings2, ShieldCheck, Ticket, UserCog, Users, Wallet } from 'lucide-react';
+import { BarChart3, Database, Gauge, LogOut, Mail, ScrollText, Settings2, ShieldCheck, Ticket, TrendingUp, UserCog, Users, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type ReactNode, useEffect } from 'react';
 import { LogoMark, Skeleton, cn } from '@goalbet/ui';
@@ -19,6 +19,7 @@ const GROUPS = [
       { href: '/users', key: 'users', icon: Users },
       { href: '/wallet', key: 'wallet', icon: Wallet },
       { href: '/bets', key: 'bets', icon: Ticket },
+      { href: '/odds', key: 'odds', icon: TrendingUp },
       { href: '/sportsbook', key: 'sportsbook', icon: Settings2 },
     ],
   },
@@ -100,7 +101,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <Link href="/" className="flex items-center gap-2.5">
             <LogoMark className="size-9" />
             <span className="leading-none">
-              <span className="block font-display text-xl font-semibold tracking-wide">GoalBet</span>
+              <span className="block font-display text-xl font-semibold tracking-wide">Betuno</span>
               <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-brand">{t('nav.backOffice')}</span>
             </span>
           </Link>
@@ -157,13 +158,21 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 </span>
               </span>
             </Link>
-            <button type="button" onClick={logout} aria-label={t('nav.logout')} className="rounded-lg p-2 text-ink-muted hover:bg-tint/10 hover:text-ink" data-testid="logout">
-              <LogOut className="size-4" aria-hidden="true" />
-            </button>
           </div>
-          <div className="mt-3 flex items-center justify-between">
+          <p className="mt-1 truncate pl-1 text-[11px] text-ink-faint" title={admin.email}>
+            {admin.email}
+          </p>
+          <div className="mt-3 flex items-center justify-between gap-2">
             <LanguageSwitcher />
-            <span className="truncate pl-2 text-[11px] text-ink-faint">{admin.email}</span>
+            <button
+              type="button"
+              onClick={logout}
+              className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-ink-muted ring-1 ring-line transition-colors hover:bg-danger/10 hover:text-danger hover:ring-danger/40"
+              data-testid="logout"
+            >
+              <LogOut className="size-4" aria-hidden="true" />
+              {t('nav.logout')}
+            </button>
           </div>
         </div>
       </aside>

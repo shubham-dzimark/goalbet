@@ -9,6 +9,7 @@ import {
   adminStatusSchema,
   adminTotpCodeSchema,
   adminTotpConfirmSchema,
+  adminTotpDisableSchema,
   adminUpdateSchema,
 } from '@goalbet/shared';
 import { AdminAuthGuard, type AuthedAdmin, CurrentAdmin, Roles } from '../../common/auth/guards.js';
@@ -19,7 +20,7 @@ import { actorOf } from './admin-actor.js';
 
 const me = (a: AuthedAdmin, meta: RequestMeta) => ({ ...actorOf(a, meta), id: a.id });
 
-/** The signed-in admin's own account: name, password, moving 2FA, active sessions. */
+/** The signed-in admin's own account: name, password, optional 2FA (on / off / new phone), active sessions. */
 @ApiTags('admin-account')
 @ApiBearerAuth()
 @UseGuards(AdminAuthGuard)
@@ -46,13 +47,19 @@ export class AdminAccountController {
   @Post('totp/start')
   @HttpCode(200)
   startTotp(@CurrentAdmin() admin: AuthedAdmin, @ZBody(adminTotpCodeSchema) body: z.output<typeof adminTotpCodeSchema>, @ReqMeta() meta: RequestMeta) {
-    return this.accounts.startTotpChange(me(admin, meta), body.totp);
+    return this.accounts.startTotpChange(me(admin, meta), body);
   }
 
   @Post('totp/confirm')
   @HttpCode(200)
   confirmTotp(@CurrentAdmin() admin: AuthedAdmin, @ZBody(adminTotpConfirmSchema) body: z.output<typeof adminTotpConfirmSchema>, @ReqMeta() meta: RequestMeta) {
     return this.accounts.confirmTotpChange(me(admin, meta), admin.sessionId, body.setupToken, body.totp);
+  }
+
+  @Post('totp/disable')
+  @HttpCode(200)
+  disableTotp(@CurrentAdmin() admin: AuthedAdmin, @ZBody(adminTotpDisableSchema) body: z.output<typeof adminTotpDisableSchema>, @ReqMeta() meta: RequestMeta) {
+    return this.accounts.disableTotp(me(admin, meta), admin.sessionId, body);
   }
 
   @Delete('sessions/others')

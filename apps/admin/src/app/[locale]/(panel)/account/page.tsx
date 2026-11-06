@@ -49,7 +49,7 @@ export default function AccountPage() {
         </Panel>
 
         <Panel title={<span className="flex items-center gap-2"><KeyRound className="size-4 text-brand" aria-hidden="true" />{t('password.title')}</span>}>
-          <PasswordForm />
+          <PasswordForm needsCode={data.totpEnabled} />
         </Panel>
 
         <Panel title={<span className="flex items-center gap-2"><ShieldCheck className="size-4 text-brand" aria-hidden="true" />{t('totp.title')}</span>}>
@@ -100,7 +100,7 @@ function ProfileForm({ account }: { account: AdminAccount }) {
   );
 }
 
-function PasswordForm() {
+function PasswordForm({ needsCode }: { needsCode: boolean }) {
   const t = useTranslations('account.password');
   const tv = useTranslations('validation');
   const qc = useQueryClient();
@@ -121,7 +121,7 @@ function PasswordForm() {
     setBusy(true);
     setError(null);
     try {
-      const acc = await adminApi<AdminAccount>('/admin/account/password', { method: 'POST', body: { currentPassword: current, newPassword: next, totp: code } });
+      const acc = await adminApi<AdminAccount>('/admin/account/password', { method: 'POST', body: { currentPassword: current, newPassword: next, ...(needsCode ? { totp: code } : {}) } });
       qc.setQueryData(['account'], acc);
       setCurrent('');
       setNext('');
@@ -148,9 +148,11 @@ function PasswordForm() {
           <Input id="pw-confirm" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
         </Field>
       </div>
-      <Field label={t('code')} htmlFor="pw-code">
-        <Input id="pw-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} required className="block w-40 font-mono tracking-[0.3em]" />
-      </Field>
+      {needsCode ? (
+        <Field label={t('code')} htmlFor="pw-code">
+          <Input id="pw-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} required className="block w-40 font-mono tracking-[0.3em]" />
+        </Field>
+      ) : null}
       {error ? <Alert>{error}</Alert> : null}
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-ink-faint">{t('note')}</p>
@@ -162,38 +164,55 @@ function PasswordForm() {
   );
 }
 
-/** Moving 2FA: code from the current app → new QR → code from the new app. */
+type TotpMode = 'enable' | 'move' | 'disable';
+
+/**
+ * Optional 2FA, the admin's own choice. Turn on: password → scan QR → code. Move to a new phone:
+ * current code → scan QR → code. Turn off: password + current code.
+ */
 function TotpSection({ enabled }: { enabled: boolean }) {
   const t = useTranslations('account.totp');
   const tc = useTranslations('common2');
   const qc = useQueryClient();
   const errorText = useErrorText();
-  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<TotpMode | null>(null);
   const [setup, setSetup] = useState<AdminTotpSetup | null>(null);
+  const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!open) {
+    if (!mode) {
       setSetup(null);
+      setPassword('');
       setCode('');
       setError(null);
     }
-  }, [open]);
+  }, [mode]);
+
+  const needsPassword = !setup && (mode === 'enable' || mode === 'disable');
+  const needsCode = setup !== null || mode === 'move' || mode === 'disable';
+  const ready = (!needsPassword || password.length > 0) && (!needsCode || code.length === 6);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      if (!setup) {
-        setSetup(await adminApi<AdminTotpSetup>('/admin/account/totp/start', { method: 'POST', body: { totp: code } }));
+      if (mode === 'disable') {
+        qc.setQueryData(['account'], await adminApi<AdminAccount>('/admin/account/totp/disable', { method: 'POST', body: { password, totp: code } }));
+        toast.success(t('disabled'));
+        setMode(null);
+      } else if (!setup) {
+        const body = mode === 'enable' ? { password } : { totp: code };
+        setSetup(await adminApi<AdminTotpSetup>('/admin/account/totp/start', { method: 'POST', body }));
+        setPassword('');
         setCode('');
       } else {
         qc.setQueryData(['account'], await adminApi<AdminAccount>('/admin/account/totp/confirm', { method: 'POST', body: { setupToken: setup.setupToken, totp: code } }));
-        toast.success(t('changed'));
-        setOpen(false);
+        toast.success(t(mode === 'enable' ? 'enabled' : 'changed'));
+        setMode(null);
       }
     } catch (err) {
       setError(errorText(err));
@@ -201,6 +220,10 @@ function TotpSection({ enabled }: { enabled: boolean }) {
       setBusy(false);
     }
   };
+
+  const title = mode === 'enable' ? t('enable') : mode === 'disable' ? t('disable') : t('move');
+  const description =
+    mode === 'disable' ? t('disableHelp') : mode === 'enable' ? (setup ? t('enableStep2') : t('enableStep1')) : setup ? t('step2') : t('step1');
 
   return (
     <div className="space-y-4">
@@ -210,16 +233,27 @@ function TotpSection({ enabled }: { enabled: boolean }) {
         </span>
         <div>
           <p className="font-semibold">{t('app')}</p>
-          <Badge tone={enabled ? 'success' : 'warning'}>{t(enabled ? 'on' : 'off')}</Badge>
+          <Badge tone={enabled ? 'success' : 'neutral'}>{t(enabled ? 'on' : 'off')}</Badge>
         </div>
       </div>
-      <p className="text-sm text-ink-muted">{t('help')}</p>
-      <Button variant="outline" onClick={() => setOpen(true)} data-testid="totp-move">
-        {t('move')}
-      </Button>
+      <p className="text-sm text-ink-muted">{t(enabled ? 'help' : 'offHelp')}</p>
+      {enabled ? (
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setMode('move')} data-testid="totp-move">
+            {t('move')}
+          </Button>
+          <Button variant="ghost" onClick={() => setMode('disable')} data-testid="totp-disable">
+            {t('disable')}
+          </Button>
+        </div>
+      ) : (
+        <Button onClick={() => setMode('enable')} data-testid="totp-enable">
+          {t('enable')}
+        </Button>
+      )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent title={t('move')} description={setup ? t('step2') : t('step1')} closeLabel={tc('close')}>
+      <Dialog open={mode !== null} onOpenChange={(o) => !o && setMode(null)}>
+        <DialogContent title={title} description={description} closeLabel={tc('close')}>
           <form onSubmit={submit} className="space-y-4">
             {setup ? (
               <div className="space-y-2 text-center">
@@ -228,16 +262,23 @@ function TotpSection({ enabled }: { enabled: boolean }) {
                 <code className="block break-all rounded-lg bg-chrome-strong px-2 py-1.5 font-mono text-xs">{setup.secret}</code>
               </div>
             ) : null}
-            <Field label={setup ? t('newCode') : t('currentCode')} htmlFor="totp-code">
-              <Input id="totp-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} autoFocus value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} className="font-mono tracking-[0.3em]" data-testid="totp-code" />
-            </Field>
+            {needsPassword ? (
+              <Field label={t('password')} htmlFor="totp-password">
+                <Input id="totp-password" type="password" autoComplete="current-password" autoFocus value={password} onChange={(e) => setPassword(e.target.value)} data-testid="totp-password" />
+              </Field>
+            ) : null}
+            {needsCode ? (
+              <Field label={setup ? t('newCode') : t('currentCode')} htmlFor="totp-code">
+                <Input id="totp-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} autoFocus={!needsPassword} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} className="font-mono tracking-[0.3em]" data-testid="totp-code" />
+              </Field>
+            ) : null}
             {error ? <Alert>{error}</Alert> : null}
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+              <Button type="button" variant="ghost" onClick={() => setMode(null)}>
                 {tc('cancel')}
               </Button>
-              <Button type="submit" loading={busy} disabled={code.length !== 6}>
-                {setup ? t('confirm') : t('continue')}
+              <Button type="submit" loading={busy} disabled={!ready} variant={mode === 'disable' ? 'danger' : 'primary'}>
+                {mode === 'disable' ? t('disable') : setup ? t(mode === 'enable' ? 'enableConfirm' : 'confirm') : t('continue')}
               </Button>
             </div>
           </form>

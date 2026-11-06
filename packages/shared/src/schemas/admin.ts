@@ -79,6 +79,8 @@ export const adminMarketTypeUpdateSchema = z.object({
 });
 
 export const adminEventQuerySchema = z.object({
+  /** one match by id (deep links), ignoring the other filters */
+  id: z.uuid().optional(),
   competitionId: z.uuid().optional(),
   status: z.enum(['SCHEDULED', 'LIVE', 'FINISHED', 'CANCELLED']).optional(),
   q: z.string().trim().max(100).optional(),
@@ -163,16 +165,21 @@ const adminRole = z.enum(['SUPER_ADMIN', 'OPERATOR', 'FINANCE']);
 
 export const adminAccountUpdateSchema = z.object({ name: adminName });
 
-/** Changing the password needs the current one and a fresh 2FA code; other sessions end. */
+/** Changing the password needs the current one (and a 2FA code if the admin has 2FA on); other sessions end. */
 export const adminPasswordChangeSchema = z.object({
   currentPassword: z.string().min(1, { message: 'validation.required' }),
   newPassword: passwordSchema,
-  totp: totpCode,
+  totp: totpCode.optional(),
 });
 
-/** Moving 2FA to a new phone: prove the current authenticator, then confirm the new one. */
-export const adminTotpCodeSchema = z.object({ totp: totpCode });
+/**
+ * 2FA is each admin's own choice. Turning it on (or moving it to a new phone) starts with proof of
+ * identity: a code from the current authenticator when 2FA is on, else the account password.
+ */
+export const adminTotpCodeSchema = z.object({ totp: totpCode.optional(), password: z.string().min(1).optional() });
 export const adminTotpConfirmSchema = z.object({ setupToken: z.string().min(10), totp: totpCode });
+/** Turning 2FA off needs the password and a current code. */
+export const adminTotpDisableSchema = z.object({ password: z.string().min(1, { message: 'validation.required' }), totp: totpCode });
 
 export const adminCreateSchema = z.object({ name: adminName, email: emailSchema, role: adminRole });
 

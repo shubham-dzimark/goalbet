@@ -58,7 +58,7 @@ function Content({ data }: { data: AdminMailStatus }) {
   const [mode, setMode] = useState<PasswordMode>(data.password.set ? 'keep' : 'replace');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [fromName, setFromName] = useState(data.fromName || 'GoalBet');
+  const [fromName, setFromName] = useState(data.fromName || 'Betuno');
   const [fromAddress, setFromAddress] = useState(data.fromAddress);
   const [testTo, setTestTo] = useState('');
   const [test, setTest] = useState<AdminMailTestResult | null>(null);
@@ -75,7 +75,7 @@ function Content({ data }: { data: AdminMailStatus }) {
     setUsername(data.username);
     setMode(data.password.set ? 'keep' : 'replace');
     setPassword('');
-    setFromName(data.fromName || 'GoalBet');
+    setFromName(data.fromName || 'Betuno');
     setFromAddress(data.fromAddress);
   }, [data]);
 

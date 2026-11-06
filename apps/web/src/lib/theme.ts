@@ -8,10 +8,11 @@ export type Theme = 'dark' | 'light';
 const KEY = 'gb-theme';
 
 /**
- * Runs in <head> before first paint: saved choice, else the OS preference. Keeps the page from
- * flashing the wrong theme and needs no server knowledge, so pages stay statically rendered.
+ * Runs in <head> before first paint: dark by default, light only when the visitor chose it with the
+ * theme toggle (saved in localStorage). Keeps the page from flashing the wrong theme and needs no
+ * server knowledge, so pages stay statically rendered.
  */
-export const themeScript = `(function(){try{var t=localStorage.getItem('${KEY}');if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='dark';}})();`;
+export const themeScript = `(function(){var t='dark';try{if(localStorage.getItem('${KEY}')==='light')t='light';}catch(e){}document.documentElement.dataset.theme=t;})();`;
 
 const current = (): Theme => (typeof document !== 'undefined' && document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
 

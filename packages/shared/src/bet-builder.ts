@@ -5,7 +5,7 @@ import { type MatchOutcome, settleSelection } from './settlement.js';
 
 export const BET_BUILDER_MIN_SELECTIONS = 2;
 export const BET_BUILDER_MAX_SELECTIONS = 12;
-export const DEFAULT_BET_BUILDER_FACTOR_BPS = 8500;
+export const DEFAULT_BET_BUILDER_FACTOR_BPS = 10_000;
 export const BET_BUILDER_MIN_ODDS_MILLI = 1010;
 
 export interface BuilderSelection {

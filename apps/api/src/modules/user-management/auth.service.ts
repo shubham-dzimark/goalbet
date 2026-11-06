@@ -1,3 +1,4 @@
+import { brandName } from '../../config/brand.js';
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@goalbet/db';
 import { type z } from 'zod';
@@ -145,7 +146,7 @@ export class AuthService {
     const link = `${this.env.WEB_ORIGIN}/${lang}/reset-password?token=${token}`;
     await this.mailer.send({
       to: user.email,
-      subject: lang === 'en' ? 'Reset your GoalBet password' : 'Resetează parola GoalBet',
+      subject: lang === 'en' ? `Reset your ${brandName} password` : `Resetează parola ${brandName}`,
       text: link,
     });
     await this.audit.log({

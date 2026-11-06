@@ -1,3 +1,4 @@
+import { brandName } from '../config/brand.js';
 import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { type Transporter, createTransport } from 'nodemailer';
 import { type AdminMailStatus, type AdminMailTestResult, type AdminMailUpdateInput } from '@goalbet/shared';
@@ -29,7 +30,7 @@ export interface EffectiveMailConfig extends Omit<AdminMailStatus, 'password'> {
 
 const CACHE_MS = 15_000;
 
-/** "GoalBet <no-reply@x.ro>" → name + address */
+/** "Betuno <no-reply@x.ro>" → name + address */
 function parseFrom(from: string) {
   const m = /^\s*(.*?)\s*<([^>]+)>\s*$/.exec(from);
   return m ? { fromName: m[1]!.replace(/^"|"$/g, ''), fromAddress: m[2]! } : { fromName: '', fromAddress: from.trim() };
@@ -213,8 +214,8 @@ export class MailConfigService implements OnModuleInit {
       await transport.sendMail({
         from: formatFrom(settings.fromName, settings.fromAddress),
         to: input.to,
-        subject: 'GoalBet test email',
-        text: 'This is a test email from the GoalBet admin panel. If you can read it, outgoing email works.',
+        subject: `${brandName} test email`,
+        text: `This is a test email from the ${brandName} admin panel. If you can read it, outgoing email works.`,
       });
       result = { ok: true };
     } catch (e) {

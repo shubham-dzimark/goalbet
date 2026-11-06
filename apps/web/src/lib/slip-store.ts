@@ -47,9 +47,15 @@ interface SlipState {
 
 const distinctEvents = (items: SlipItem[]) => new Set(items.map((i) => i.eventId)).size;
 
-function autoMode(s: SlipState, items: SlipItem[]): SlipMode {
-  if (s.modeChosen) return s.mode;
-  return distinctEvents(items) >= 2 ? 'acca' : 'single';
+/**
+ * The slip type follows the picks every time they change: several matches → accumulator; several
+ * picks on ONE match → Bet Builder (one ticket, odds multiplied); one pick → single. A tab the player
+ * taps applies until the next pick is added or removed (an old choice must not keep same-match picks
+ * as separate singles).
+ */
+function autoMode(items: SlipItem[]): SlipMode {
+  if (distinctEvents(items) >= 2) return 'acca';
+  return items.length >= 2 ? 'builder' : 'single';
 }
 
 /**
@@ -73,17 +79,17 @@ export const useSlip = create<SlipState>()(
           const items = exists
             ? s.items.filter((i) => i.selectionId !== item.selectionId)
             : [...s.items, { ...item, prevOddsMilli: null, available: true }];
-          return { items, mode: autoMode(s, items), modeChosen: items.length === 0 ? false : s.modeChosen };
+          return { items, mode: autoMode(items), modeChosen: false };
         }),
       remove: (id) =>
         set((s) => {
           const items = s.items.filter((i) => i.selectionId !== id);
-          return { items, mode: autoMode(s, items), modeChosen: items.length === 0 ? false : s.modeChosen };
+          return { items, mode: autoMode(items), modeChosen: false };
         }),
       removeMany: (ids) =>
         set((s) => {
           const items = s.items.filter((i) => !ids.includes(i.selectionId));
-          return { items, mode: autoMode(s, items), modeChosen: items.length === 0 ? false : s.modeChosen };
+          return { items, mode: autoMode(items), modeChosen: false };
         }),
       clear: () => set({ items: [], singleStakes: {}, modeChosen: false, mode: 'single' }),
       setMode: (mode) => set({ mode, modeChosen: true }),

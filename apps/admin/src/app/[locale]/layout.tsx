@@ -8,7 +8,11 @@ import { Providers } from '@/components/providers';
 import '@goalbet/ui/fonts';
 import '../globals.css';
 
-export const metadata: Metadata = { title: 'GoalBet Admin', robots: { index: false, follow: false } };
+export const metadata: Metadata = {
+  title: 'Betuno Admin',
+  robots: { index: false, follow: false },
+  icons: { icon: [{ url: '/favicon.ico', sizes: '48x48' }, { url: '/icon-192.png', type: 'image/png', sizes: '192x192' }], apple: '/apple-touch-icon.png' },
+};
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));

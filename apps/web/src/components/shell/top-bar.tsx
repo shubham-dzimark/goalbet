@@ -7,12 +7,12 @@ import { formatRon } from '@goalbet/shared';
 import { Button, LogoMark } from '@goalbet/ui';
 import { AnimatedNumber } from '@/components/fx/animated-number';
 import { LanguageSwitcher } from '@/components/language-switcher';
-import { Link, useRouter } from '@/i18n/navigation';
-import { api } from '@/lib/api';
+import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/lib/auth-store';
 import { ThemeToggle } from './theme-toggle';
 import { useFormat } from '@/lib/format';
 import { useRealtime } from '@/lib/realtime';
+import { useLogout } from '@/lib/use-logout';
 import { utcOffset } from '@/lib/time-zone';
 
 /** Top bar: brand (mobile), command search trigger, language, balance or log in / register. */
@@ -20,22 +20,17 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
   const t = useTranslations('nav');
   const locale = useLocale() as 'ro' | 'en';
   const { status, user } = useAuth();
-  const router = useRouter();
   const f = useFormat();
   const connected = useRealtime((s) => s.connected);
   const zone = f.zone();
   const zoneTitle = t('timeZone', { zone: `${f.tz.replace(/_/g, ' ')} (${utcOffset(f.tz)})` });
 
-  const logout = async () => {
-    await api('/auth/logout', { method: 'POST' }).catch(() => undefined);
-    useAuth.getState().clear();
-    router.push('/');
-  };
+  const logout = useLogout();
 
   return (
     <header className="sticky top-0 z-40 -mx-3 mb-4 px-3 pt-3 lg:static lg:mx-0 lg:px-0">
       <div className="glass flex h-14 items-center gap-2 rounded-2xl px-2.5 sm:gap-3 sm:px-3">
-        <Link href="/" className="flex items-center gap-2 lg:hidden" aria-label="GoalBet">
+        <Link href="/" className="flex items-center gap-2 lg:hidden" aria-label="Betuno">
           <LogoMark className="h-8 w-8" />
         </Link>
         <button
@@ -79,16 +74,22 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
               <Link
                 href="/account/wallet"
                 data-testid="balance-chip"
-                className="flex h-10 items-center gap-2 rounded-xl bg-brand/10 px-3 ring-1 ring-brand/30 transition-colors hover:bg-brand/15"
+                className="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-brand/10 px-2.5 ring-1 ring-brand/30 sm:px-3 transition-colors hover:bg-brand/15"
               >
                 <span className="hidden text-[11px] font-semibold uppercase text-ink-muted sm:block">{t('balance')}</span>
-                <AnimatedNumber value={user.balanceBani} format={(n) => formatRon(n, locale)} className="font-display tracking-tight text-lg font-semibold tabular-nums text-brand" />
+                <AnimatedNumber value={user.balanceBani} format={(n) => formatRon(n, locale)} className="whitespace-nowrap font-display tracking-tight text-base font-semibold tabular-nums text-brand sm:text-lg" />
               </Link>
               <Link href="/account" aria-label={t('account')} className="hidden size-10 place-items-center rounded-xl bg-tint/[0.05] ring-1 ring-line hover:bg-tint/10 sm:grid">
                 <UserRound className="size-4" />
               </Link>
-              <button type="button" onClick={logout} aria-label={t('logout')} className="hidden size-10 place-items-center rounded-xl text-ink-muted hover:bg-tint/10 hover:text-ink md:grid">
-                <LogOut className="size-4" />
+              <button
+                type="button"
+                onClick={logout}
+                data-testid="logout"
+                className="flex h-10 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-2 text-[10px] font-semibold leading-none text-ink-muted ring-1 ring-line transition-colors hover:bg-danger/10 hover:text-danger hover:ring-danger/40 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm"
+              >
+                <LogOut className="size-4" aria-hidden="true" />
+                <span className="whitespace-nowrap">{t('logout')}</span>
               </button>
             </>
           ) : (

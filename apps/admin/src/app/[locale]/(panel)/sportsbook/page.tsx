@@ -1,13 +1,12 @@
 'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Flag, Lock, Pause, Play, RotateCcw, Star } from 'lucide-react';
+import { Flag, RotateCcw, Star, TrendingUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import {
   type AdminCompetitionRow,
   type AdminEventRow,
-  type AdminMarketRow,
   type AdminMarketTypeRow,
   type AdminSettings,
   type AdminEventPlayer,
@@ -15,14 +14,15 @@ import {
   type AdminSettlementResult,
   type SettingKey,
 } from '@goalbet/shared';
-import { Badge, Button, Dialog, Input, SidePanelContent, Skeleton, Tabs, TabsContent, TabsList, TabsTrigger, cn } from '@goalbet/ui';
+import { Badge, Button, Input, Skeleton, Tabs, TabsContent, TabsList, TabsTrigger, cn } from '@goalbet/ui';
 import { EventStatusBadge } from '@/components/ui/badges';
 import { type Column, DataTable } from '@/components/ui/data-table';
 import { ReasonDialog, toast } from '@/components/ui/feedback';
 import { FilterSelect, PageHeader, Panel, SearchInput, Toggle } from '@/components/ui/page';
 import { useCan, useErrorText, usePaged } from '@/lib/data';
 import { useFmt } from '@/lib/format';
-import { ApiError, adminApi } from '@/lib/session';
+import { Link, useRouter } from '@/i18n/navigation';
+import { adminApi } from '@/lib/session';
 
 /** F3.5 sportsbook settings: leagues, markets, events and limits. */
 export default function SportsbookPage() {
@@ -172,7 +172,7 @@ function Events() {
   const [competitionId, setCompetitionId] = useState('');
   const [suspendedOnly, setSuspendedOnly] = useState(false);
   const [target, setTarget] = useState<AdminEventRow | null>(null);
-  const [open, setOpen] = useState<AdminEventRow | null>(null);
+  const router = useRouter();
   const [settling, setSettling] = useState<{ event: AdminEventRow; mode: 'settle' | 'resettle' } | null>(null);
   const { data: comps } = useQuery({ queryKey: ['competitions'], queryFn: () => adminApi<AdminCompetitionRow[]>('/admin/sportsbook/competitions') });
   const list = usePaged<AdminEventRow>(['events'], '/admin/sportsbook/events', { q, status: status === 'AWAITING' ? undefined : status, awaitingSettlement: status === 'AWAITING' ? 'true' : undefined, competitionId, suspendedOnly: suspendedOnly ? 'true' : undefined }, { refetchInterval: 15_000 });
@@ -203,7 +203,24 @@ function Events() {
         ),
     },
     { key: 'status', header: t('cols.status'), cell: (e) => <EventStatusBadge status={e.status} />, hideBelow: 'sm' },
-    { key: 'markets', header: t('cols.markets'), align: 'right', cell: (e) => <span className="tabular-nums">{e.markets}</span>, hideBelow: 'md' },
+    {
+      key: 'markets',
+      header: t('cols.markets'),
+      align: 'right',
+      cell: (e) => (
+        <Link
+          href={`/odds?event=${e.id}`}
+          onClick={(ev) => ev.stopPropagation()}
+          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1 text-sm font-semibold text-brand ring-1 ring-brand/30 transition-colors hover:bg-brand-soft"
+          data-testid={`event-odds-${e.id}`}
+        >
+          <TrendingUp className="size-3.5" aria-hidden="true" />
+          <span className="tabular-nums">{e.markets}</span>
+          {t('editOdds')}
+        </Link>
+      ),
+      hideBelow: 'md',
+    },
     { key: 'tickets', header: t('cols.tickets'), align: 'right', cell: (e) => <span className="tabular-nums">{e.openTickets}</span>, hideBelow: 'md' },
     {
       key: 'suspended',
@@ -293,7 +310,7 @@ function Events() {
         rows={list.items}
         rowKey={(e) => e.id}
         loading={list.isLoading}
-        onRowClick={setOpen}
+        onRowClick={(e) => router.push(`/odds?event=${e.id}`)}
         hasMore={list.hasNextPage}
         loadingMore={list.isFetchingNextPage}
         onLoadMore={() => void list.fetchNextPage()}
@@ -312,7 +329,6 @@ function Events() {
           await qc.invalidateQueries({ queryKey: ['events'] });
         }}
       />
-      <EventMarketsPanel event={open} onClose={() => setOpen(null)} />
       <SettleDialog event={settling?.event ?? null} mode={settling?.mode ?? 'settle'} onClose={() => setSettling(null)} />
     </>
   );
@@ -475,162 +491,6 @@ function SettleDialog({ event, mode, onClose }: { event: AdminEventRow | null; m
         </fieldset>
       ) : null}
     </ReasonDialog>
-  );
-}
-
-/** Markets of one event: suspend/resume (held against the feed) or hide/show. */
-function EventMarketsPanel({ event, onClose }: { event: AdminEventRow | null; onClose: () => void }) {
-  const t = useTranslations('sportsbook.eventMarkets');
-  const tc = useTranslations('common2');
-  const tm = useTranslations('markets');
-  const to = useTranslations('outcomes');
-  const tp = useTranslations('periods');
-  const f = useFmt();
-  const can = useCan();
-  const qc = useQueryClient();
-  const [action, setAction] = useState<{ market: AdminMarketRow; patch: { enabled?: boolean; suspended?: boolean } } | null>(null);
-  // price editor: a manual price holds against automatic pricing until it is handed back
-  const [pricing, setPricing] = useState<{ market: AdminMarketRow; selection: AdminMarketRow['selections'][number] } | null>(null);
-  const [priceInput, setPriceInput] = useState('');
-  const [manual, setManual] = useState(true);
-  const editable = (m: AdminMarketRow) => can('OPERATOR') && m.status !== 'SETTLED';
-  const openPricing = (market: AdminMarketRow, selection: AdminMarketRow['selections'][number]) => {
-    setPricing({ market, selection });
-    setPriceInput((selection.oddsMilli / 1000).toFixed(2));
-    setManual(true);
-  };
-  const outcomeLabel = (s: AdminMarketRow['selections'][number]) => s.label ?? (to.has(s.outcome) ? to(s.outcome) : s.outcome);
-  const priceMilli = Math.round(Number(priceInput.replace(',', '.')) * 1000);
-  const priceValid = Number.isFinite(priceMilli) && priceMilli >= 1010 && priceMilli <= 1_000_000;
-  const { data, isLoading } = useQuery({
-    queryKey: ['event-markets', event?.id],
-    queryFn: () => adminApi<AdminMarketRow[]>(`/admin/sportsbook/events/${event!.id}/markets`),
-    enabled: !!event,
-  });
-
-  const label = (m: AdminMarketRow) =>
-    `${tm(m.type)}${m.lineCenti !== null ? ` ${m.lineCenti / 100}` : ''}${m.playerName ? ` · ${m.playerName}` : ''}${m.period === 'H1' ? ` (${tp('H1')})` : ''}`;
-
-  return (
-    <Dialog open={!!event} onOpenChange={(o) => !o && onClose()}>
-      <SidePanelContent title={event ? `${event.homeTeam} – ${event.awayTeam}` : ''} description={event ? `${event.competition.name} · ${f.dateTime(event.startTime)}` : undefined} closeLabel={tc('close')}>
-        {isLoading || !data ? (
-          <div className="space-y-2">
-            {Array.from({ length: 5 }, (_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
-        ) : data.length === 0 ? (
-          <p className="text-sm text-ink-muted">{t('none')}</p>
-        ) : (
-          <ul className="space-y-2" data-testid="event-markets">
-            {data.map((m) => (
-              <li key={m.id} className={cn('rounded-xl p-3 ring-1 ring-line', m.adminSuspended ? 'bg-danger/[0.06]' : 'bg-tint/[0.03]', !m.enabled && 'opacity-60')}>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="min-w-0 truncate text-sm font-semibold">{label(m)}</p>
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    {m.status === 'SUSPENDED' ? <Badge tone={m.adminSuspended ? 'danger' : 'warning'}>{t(m.adminSuspended ? 'byOperator' : 'byFeed')}</Badge> : null}
-                    {m.status === 'SETTLED' ? <Badge>{t('settled')}</Badge> : null}
-                    {!m.enabled ? <Badge>{t('hidden')}</Badge> : null}
-                  </div>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {m.selections.map((s) => {
-                    const chip = cn(
-                      'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs',
-                      s.manual ? 'bg-accent/15 ring-1 ring-accent/40' : 'bg-tint/[0.06]',
-                      !s.active && 'line-through opacity-60',
-                    );
-                    const content = (
-                      <>
-                        {outcomeLabel(s)} <strong className="tabular-nums">{f.odds(s.oddsMilli)}</strong>
-                        {s.manual ? <span className="text-[10px] font-semibold text-accent">{t('manual')}</span> : null}
-                      </>
-                    );
-                    return editable(m) ? (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => openPricing(m, s)}
-                        className={cn(chip, 'transition-colors hover:ring-1 hover:ring-brand/50')}
-                        title={t('editPrice')}
-                        data-testid="selection-price"
-                      >
-                        {content}
-                      </button>
-                    ) : (
-                      <span key={s.id} className={chip}>
-                        {content}
-                      </span>
-                    );
-                  })}
-                </div>
-                {can('OPERATOR') && m.status !== 'SETTLED' ? (
-                  <div className="mt-3 flex gap-2">
-                    <Button size="sm" variant={m.adminSuspended ? 'secondary' : 'outline'} onClick={() => setAction({ market: m, patch: { suspended: !m.adminSuspended } })}>
-                      {m.adminSuspended ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
-                      {t(m.adminSuspended ? 'resume' : 'suspend')}
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setAction({ market: m, patch: { enabled: !m.enabled } })}>
-                      <Lock aria-hidden="true" />
-                      {t(m.enabled ? 'hide' : 'show')}
-                    </Button>
-                  </div>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-        <ReasonDialog
-          open={!!pricing}
-          onOpenChange={(o) => !o && setPricing(null)}
-          title={pricing ? `${label(pricing.market)} · ${outcomeLabel(pricing.selection)}` : ''}
-          description={t(manual ? 'priceHelp' : 'autoHelp')}
-          confirmLabel={tc('confirm')}
-          onConfirm={async (reason) => {
-            const p = pricing!;
-            if (manual && !priceValid) throw new ApiError('VALIDATION_FAILED', 400);
-            await adminApi(`/admin/sportsbook/selections/${p.selection.id}`, {
-              method: 'PATCH',
-              body: manual ? { manual: true, oddsMilli: priceMilli, reason } : { manual: false, reason },
-            });
-            toast.success(t('priceUpdated'));
-            await qc.invalidateQueries({ queryKey: ['event-markets', event?.id] });
-          }}
-        >
-          <div className="space-y-3">
-            <Toggle checked={manual} onChange={setManual} label={t('setManual')} testId="price-manual" />
-            {manual ? (
-              <label className="block text-sm">
-                <span className="mb-1 block text-ink-muted">{t('priceLabel')}</span>
-                <Input
-                  inputMode="decimal"
-                  value={priceInput}
-                  onChange={(e) => setPriceInput(e.target.value)}
-                  aria-invalid={!priceValid}
-                  className={cn('w-32 tabular-nums', !priceValid && 'border-danger')}
-                  data-testid="price-input"
-                />
-                {!priceValid ? <span className="mt-1 block text-xs text-danger">{t('invalidPrice')}</span> : null}
-              </label>
-            ) : null}
-          </div>
-        </ReasonDialog>
-        <ReasonDialog
-          open={!!action}
-          onOpenChange={(o) => !o && setAction(null)}
-          title={action ? label(action.market) : ''}
-          description={action ? t(action.patch.suspended !== undefined ? (action.patch.suspended ? 'suspendHelp' : 'resumeHelp') : action.patch.enabled ? 'showHelp' : 'hideHelp') : undefined}
-          confirmLabel={tc('confirm')}
-          tone={action?.patch.suspended || action?.patch.enabled === false ? 'danger' : 'primary'}
-          onConfirm={async (reason) => {
-            await adminApi(`/admin/sportsbook/markets/${action!.market.id}`, { method: 'PATCH', body: { ...action!.patch, reason } });
-            toast.success(t('updated'));
-            await qc.invalidateQueries({ queryKey: ['event-markets', event?.id] });
-          }}
-        />
-      </SidePanelContent>
-    </Dialog>
   );
 }
 

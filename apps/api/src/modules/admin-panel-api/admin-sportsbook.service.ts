@@ -107,6 +107,7 @@ export class AdminSportsbookService {
 
   // ── events ──
   async events(q: {
+    id?: string | undefined;
     competitionId?: string | undefined;
     status?: EventStatus | undefined;
     q?: string | undefined;
@@ -117,7 +118,7 @@ export class AdminSportsbookService {
   }) {
     const term = q.q?.trim();
     const contains = { contains: term, mode: 'insensitive' as const };
-    const where: Prisma.EventWhereInput = {
+    const where: Prisma.EventWhereInput = q.id ? { id: q.id } : {
       // leagues of the current provider only (switching provider leaves the old leagues inactive)
       ...(q.competitionId ? { competitionId: q.competitionId } : { competition: { active: true } }),
       ...(q.suspendedOnly ? { suspended: true } : {}),

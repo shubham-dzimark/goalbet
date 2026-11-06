@@ -34,6 +34,7 @@ ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0 NEXT_TELEMETRY_DISABLED=1
 WORKDIR /app
 COPY --from=build /repo/apps/web/.next/standalone ./
 COPY --from=build /repo/apps/web/.next/static ./apps/web/.next/static
+COPY --from=build /repo/apps/web/public ./apps/web/public
 EXPOSE 3000
 CMD ["node", "apps/web/server.js"]
 
@@ -43,5 +44,6 @@ ENV NODE_ENV=production PORT=3001 HOSTNAME=0.0.0.0 NEXT_TELEMETRY_DISABLED=1
 WORKDIR /app
 COPY --from=build /repo/apps/admin/.next/standalone ./
 COPY --from=build /repo/apps/admin/.next/static ./apps/admin/.next/static
+COPY --from=build /repo/apps/admin/public ./apps/admin/public
 EXPOSE 3001
 CMD ["node", "apps/admin/server.js"]

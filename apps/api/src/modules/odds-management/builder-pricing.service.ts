@@ -26,7 +26,7 @@ export interface BuilderPrice {
 /**
  * F1.11 Bet Builder pricing. Several selections on one match form a single leg with one
  * correlated price: the provider's price when it can price the combination, otherwise the
- * product of the selection prices × `builder.factorBps` (default 0.85), never below 1.01.
+ * product of the selection prices × `builder.factorBps` (default 1.00 = plain product), never below 1.01.
  * Contradictions (e.g. Home win + Away win) are refused by the shared rules, which are the same
  * rules settlement uses.
  */

@@ -95,13 +95,13 @@ describe('F3.1 managing admins (Super admin)', () => {
     await ctx.http().get('/admin/admins').set(op.auth).expect(403);
   });
 
-  it('creates an admin with a one-time password; first login asks for the QR enrolment', async () => {
+  it('creates an admin with a one-time password; 2FA is optional, so the password signs in', async () => {
     const sa = await as('SUPER_ADMIN');
     const res = await ctx.http().post('/admin/admins').set(sa.auth).send({ name: 'New Finance', email: 'New.Fin@GoalBet.test', role: 'FINANCE' }).expect(201);
     expect(res.body.admin).toMatchObject({ email: 'new.fin@goalbet.test', role: 'FINANCE', totpEnabled: false, status: 'ACTIVE' });
     expect(res.body.temporaryPassword.length).toBeGreaterThanOrEqual(10);
     const login = await ctx.http().post('/admin/auth/login').send({ email: 'new.fin@goalbet.test', password: res.body.temporaryPassword }).expect(200);
-    expect(login.body.status).toBe('TOTP_SETUP');
+    expect(login.body.status).toBe('OK');
     const dup = await ctx.http().post('/admin/admins').set(sa.auth).send({ name: 'Again', email: 'new.fin@goalbet.test', role: 'OPERATOR' });
     expect(dup.body.error.code).toBe('EMAIL_TAKEN');
     const list = await ctx.http().get('/admin/admins').set(sa.auth).expect(200);
@@ -134,7 +134,7 @@ describe('F3.1 managing admins (Super admin)', () => {
 
     await ctx.http().post(`/admin/admins/${op.id}/reset-2fa`).set(sa.auth).send({ reason: 'Lost phone' }).expect(200);
     const login = await ctx.http().post('/admin/auth/login').send({ email: op.email, password: reset.body.temporaryPassword }).expect(200);
-    expect(login.body.status).toBe('TOTP_SETUP');
+    expect(login.body.status).toBe('OK');
 
     const actions = (await ctx.prisma.auditLog.findMany({ where: { entityId: op.id, actorId: sa.id } })).map((a) => a.action);
     expect(actions).toEqual(expect.arrayContaining(['ADMIN_SUSPENDED', 'ADMIN_ACTIVATED', 'ADMIN_PASSWORD_RESET', 'ADMIN_2FA_RESET']));

@@ -104,7 +104,7 @@ const num = (v: string | undefined) => (v === undefined || v === '' || Number.is
 /**
  * Real football data from API-Football (ODDS_PROVIDER=api-football), designed for the free plan:
  * fixtures for yesterday → tomorrow, live scores, half-time scores and final results are real;
- * prices come from GoalBet's Poisson model fed with each team's real scoring averages (pre-match)
+ * prices come from our own Poisson model fed with each team's real scoring averages (pre-match)
  * and the real score and minute (live). Every call goes through a shared Redis budget; responses
  * are cached in Redis so the API and worker never fetch the same thing twice.
  */

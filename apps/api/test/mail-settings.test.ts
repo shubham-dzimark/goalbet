@@ -87,7 +87,7 @@ describe('Admin → Email (SMTP settings)', () => {
   it('sends a test email with unsaved settings and reports the server error', async () => {
     const ok = await ctx.http().post('/admin/mail/test').set(superAdmin).send({ ...settings, password: PASSWORD, to: 'ops@goalbet.ro' }).expect(200);
     expect(ok.body).toEqual({ ok: true });
-    expect(transports.at(-1)!.sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: 'ops@goalbet.ro', subject: 'GoalBet test email' }));
+    expect(transports.at(-1)!.sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: 'ops@goalbet.ro', subject: 'Betuno test email' }));
     expect(await ctx.prisma.mailConfig.count()).toBe(0);
 
     verifyError = new Error('535 Authentication failed');

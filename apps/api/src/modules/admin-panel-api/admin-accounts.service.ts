@@ -12,6 +12,9 @@ import { DomainError } from '../../common/errors.js';
 import { PrismaService } from '../../common/prisma.service.js';
 import { checkAdminTotp } from './admin-auth.service.js';
 
+/** Whether the admin has turned 2FA on (it is optional). */
+const hasTotp = (a: AdminUser) => a.totpEnabled && !!a.totpSecret;
+
 const toRow = (a: AdminUser): AdminUserAccountRow => ({
   id: a.id,
   name: a.name,
@@ -97,13 +100,13 @@ export class AdminAccountsService {
     return this.account(actor.id, sessionId);
   }
 
-  async changePassword(actor: Actor & { id: string }, sessionId: string, input: { currentPassword: string; newPassword: string; totp: string }) {
+  async changePassword(actor: Actor & { id: string }, sessionId: string, input: { currentPassword: string; newPassword: string; totp?: string | undefined }) {
     const admin = await this.get(actor.id);
     if (!(await verifyPassword(admin.passwordHash, input.currentPassword))) {
       await this.audit.log({ category: 'ADMIN', action: 'ADMIN_PASSWORD_CHANGE_FAILED', actor, entityType: 'AdminUser', entityId: admin.id, meta: { reason: 'bad_password' } });
       throw new DomainError('INVALID_CREDENTIALS');
     }
-    await this.requireTotp(admin, input.totp);
+    if (hasTotp(admin)) await this.requireTotp(admin, input.totp ?? '');
     await this.prisma.$transaction(async (tx) => {
       await tx.adminUser.update({ where: { id: admin.id }, data: { passwordHash: await hashPassword(input.newPassword) } });
       await this.audit.log({ category: 'ADMIN', action: 'ADMIN_PASSWORD_CHANGED', actor, entityType: 'AdminUser', entityId: admin.id }, tx);
@@ -112,13 +115,18 @@ export class AdminAccountsService {
     return this.account(admin.id, sessionId);
   }
 
-  /** Step 1 of moving 2FA to a new phone: prove the current authenticator, get a new QR. */
-  async startTotpChange(actor: Actor & { id: string }, code: string): Promise<AdminTotpSetup> {
+  /**
+   * Step 1 of turning 2FA on, or moving it to a new phone: prove it's you (a code from the current
+   * authenticator if 2FA is on, else the password) and get a new QR.
+   */
+  async startTotpChange(actor: Actor & { id: string }, proof: { totp?: string | undefined; password?: string | undefined }): Promise<AdminTotpSetup> {
     const admin = await this.get(actor.id);
-    await this.requireTotp(admin, code);
+    const enabled = hasTotp(admin);
+    if (enabled) await this.requireTotp(admin, proof.totp ?? '');
+    else if (!proof.password || !(await verifyPassword(admin.passwordHash, proof.password))) throw new DomainError('INVALID_CREDENTIALS');
     const secret = generateSecret();
     const otpauthUrl = generateURI({ issuer: `${brandName} Admin`, label: admin.email, secret });
-    await this.audit.log({ category: 'ADMIN', action: 'ADMIN_TOTP_CHANGE_STARTED', actor, entityType: 'AdminUser', entityId: admin.id });
+    await this.audit.log({ category: 'ADMIN', action: enabled ? 'ADMIN_TOTP_CHANGE_STARTED' : 'ADMIN_TOTP_SETUP_STARTED', actor, entityType: 'AdminUser', entityId: admin.id });
     return {
       setupToken: this.tokens.signTotpSetup(admin.id, encryptSecret(secret, this.env.JWT_ADMIN_SECRET)),
       otpauthUrl,
@@ -127,7 +135,7 @@ export class AdminAccountsService {
     };
   }
 
-  /** Step 2: a code from the new authenticator switches the secret; other sessions end. */
+  /** Step 2: a code from the new authenticator turns 2FA on / switches the secret; other sessions end. */
   async confirmTotpChange(actor: Actor & { id: string }, sessionId: string, setupToken: string, code: string) {
     let payload;
     try {
@@ -138,12 +146,26 @@ export class AdminAccountsService {
     if (payload.sub !== actor.id) throw new DomainError('INVALID_TOKEN');
     const step = await checkAdminTotp(decryptSecret(payload.secret, this.env.JWT_ADMIN_SECRET), code, null);
     if (step === null) throw new DomainError('TOTP_INVALID');
+    const wasOn = hasTotp(await this.get(actor.id));
     await this.prisma.$transaction(async (tx) => {
       await tx.adminUser.update({ where: { id: actor.id }, data: { totpSecret: payload.secret, totpEnabled: true, totpLastStep: step } });
-      await this.audit.log({ category: 'ADMIN', action: 'ADMIN_TOTP_CHANGED', actor, entityType: 'AdminUser', entityId: actor.id }, tx);
+      await this.audit.log({ category: 'ADMIN', action: wasOn ? 'ADMIN_TOTP_CHANGED' : 'ADMIN_TOTP_ENABLED', actor, entityType: 'AdminUser', entityId: actor.id }, tx);
     });
     await this.endSessions(actor.id, sessionId);
     return this.account(actor.id, sessionId);
+  }
+
+  /** Turns the admin's own 2FA off (password + a current code); from then on the password alone signs in. */
+  async disableTotp(actor: Actor & { id: string }, sessionId: string, input: { password: string; totp: string }) {
+    const admin = await this.get(actor.id);
+    if (!hasTotp(admin)) return this.account(admin.id, sessionId);
+    if (!(await verifyPassword(admin.passwordHash, input.password))) throw new DomainError('INVALID_CREDENTIALS');
+    await this.requireTotp(admin, input.totp);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.adminUser.update({ where: { id: admin.id }, data: { totpSecret: null, totpEnabled: false, totpLastStep: null } });
+      await this.audit.log({ category: 'ADMIN', action: 'ADMIN_TOTP_DISABLED', actor, entityType: 'AdminUser', entityId: admin.id }, tx);
+    });
+    return this.account(admin.id, sessionId);
   }
 
   async endSession(actor: Actor & { id: string }, currentSessionId: string, target: string | 'others') {

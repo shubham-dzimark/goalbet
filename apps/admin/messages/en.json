@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "GoalBet Admin"
+    "title": "Betuno Admin"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -24,7 +24,8 @@
     "account": "My account",
     "admins": "Admin users",
     "dataProvider": "Data provider",
-    "email": "Email"
+    "email": "Email",
+    "odds": "Odds"
   },
   "roles": {
     "SUPER_ADMIN": "Super admin",
@@ -427,31 +428,8 @@
       "settled": "Settled",
       "settle": "Settle",
       "awaiting": "Awaiting settlement",
-      "resettle": "Re-settle"
-    },
-    "eventMarkets": {
-      "manual": "Manual",
-      "editPrice": "Edit price",
-      "setManual": "Set the price manually",
-      "priceLabel": "Odds (decimal, 1.01 – 1000)",
-      "priceHelp": "This price is kept until you hand it back to automatic pricing; players see the change immediately.",
-      "autoHelp": "Automatic pricing takes this selection back over at the next refresh.",
-      "priceUpdated": "Price updated",
-      "invalidPrice": "Enter odds between 1.01 and 1000.",
-      "none": "No markets for this match yet.",
-      "byOperator": "Suspended by operator",
-      "byFeed": "Suspended by feed",
-      "settled": "Settled",
-      "hidden": "Hidden",
-      "resume": "Resume",
-      "suspend": "Suspend",
-      "hide": "Hide",
-      "show": "Show",
-      "suspendHelp": "The market stays visible but locked. Feed updates will not reopen it.",
-      "resumeHelp": "The market reopens (unless the feed has it suspended).",
-      "hideHelp": "The market disappears from the site and takes no bets.",
-      "showHelp": "The market is shown on the site again.",
-      "updated": "Market updated"
+      "resettle": "Re-settle",
+      "editOdds": "Odds"
     },
     "limits": {
       "groups": {
@@ -672,8 +650,8 @@
       "title": "Two-factor authentication",
       "app": "Authenticator app",
       "on": "On",
-      "off": "Not set up",
-      "help": "Got a new phone? Move your codes to it here. You need a code from the current app first.",
+      "off": "Off",
+      "help": "Two-factor is on: signing in needs a code from your authenticator app. Got a new phone? Move your codes to it here.",
       "move": "Move to a new phone",
       "step1": "Step 1 of 2: enter a code from your current authenticator app.",
       "step2": "Step 2 of 2: scan this QR code with the new phone, then enter the code it shows.",
@@ -682,7 +660,17 @@
       "newCode": "Code from the new app",
       "continue": "Continue",
       "confirm": "Switch to the new phone",
-      "changed": "Two-factor moved to the new phone. Other devices were signed out."
+      "changed": "Two-factor moved to the new phone. Other devices were signed out.",
+      "offHelp": "Optional. Turn it on to require a code from an authenticator app (Google Authenticator, Microsoft Authenticator, Authy…) each time you sign in.",
+      "enable": "Turn on two-factor",
+      "enableStep1": "Step 1 of 2: confirm your password.",
+      "enableStep2": "Step 2 of 2: scan this QR code with your authenticator app, then enter the code it shows.",
+      "enableConfirm": "Turn on",
+      "enabled": "Two-factor is on. Other devices were signed out.",
+      "disable": "Turn off two-factor",
+      "disableHelp": "Enter your password and a code from your authenticator app. Afterwards your password alone signs you in.",
+      "disabled": "Two-factor is off.",
+      "password": "Password"
     },
     "sessions": {
       "title": "Signed in on",
@@ -702,7 +690,7 @@
     "never": "Never",
     "locked": "Locked",
     "totpOn": "On",
-    "totpPending": "QR at next login",
+    "totpPending": "Off",
     "forbiddenTitle": "Super admins only",
     "forbiddenHelp": "Ask a Super admin to create or change admin accounts.",
     "status": {
@@ -736,7 +724,7 @@
     },
     "create": {
       "title": "Add an admin",
-      "help": "They get a temporary password and set up two-factor with a QR code at their first login.",
+      "help": "They get a temporary password to sign in with. Two-factor is optional: they can turn it on under My account.",
       "submit": "Create admin"
     },
     "edit": {
@@ -752,21 +740,21 @@
       "passwordTitle": "Reset the password of {name}?",
       "passwordHelp": "A new temporary password is shown once; they are signed out everywhere.",
       "totpTitle": "Reset two-factor for {name}?",
-      "totpHelp": "Their authenticator is unlinked; they scan a new QR code at the next login. Use this when a phone is lost."
+      "totpHelp": "Their authenticator is unlinked and two-factor is turned off: they sign in with the password and can turn it on again under My account. Use this when a phone is lost."
     },
     "temp": {
       "title": "Temporary password",
       "copy": "Copy",
       "copied": "Copied",
       "once": "This password is shown only now. Copy it and send it to the admin through a secure channel.",
-      "next": "At their next login they set up two-factor with a QR code, then can change this password under My account.",
+      "next": "They sign in with this password, then can change it (and turn on two-factor if they want) under My account.",
       "done": "Done"
     },
     "toast": {
       "saved": "Admin updated",
       "suspended": "Admin suspended and signed out",
       "activated": "Admin activated",
-      "totpReset": "Two-factor reset: QR at next login"
+      "totpReset": "Two-factor turned off for this admin"
     }
   },
   "dataProvider": {
@@ -916,5 +904,68 @@
       "title": "Save email settings?",
       "help": "The new settings are used for the next email, without a restart."
     }
+  },
+  "odds": {
+    "kicker": "Pricing",
+    "title": "Odds",
+    "description": "Pick a match to see every market and its prices. Click any price to set it by hand or hand it back to automatic pricing.",
+    "pickTitle": "Choose a match",
+    "pickHelp": "Select a match on the left to see its markets and edit the odds.",
+    "suspendedShort": "Suspended",
+    "more": "Load more",
+    "back": "All matches",
+    "matchSuspended": "Match suspended",
+    "matchSettings": "Match settings →",
+    "notFound": "This match could not be found.",
+    "stats": {
+      "markets": "Markets",
+      "manualPrices": "Manual prices",
+      "suspendedMarkets": "Suspended markets",
+      "openBets": "Open bets"
+    },
+    "groupsLabel": "Market groups",
+    "groups": {
+      "all": "All",
+      "main": "Main",
+      "goals": "Goals",
+      "handicaps": "Handicaps",
+      "specials": "Corners & cards",
+      "players": "Players"
+    },
+    "filter": "Find a market…",
+    "manualOnly": "Manual prices only",
+    "legendAuto": "Automatic price",
+    "legendManual": "Set by hand (kept until handed back)",
+    "legendClick": "Click a price to change it.",
+    "noMarkets": "No markets for this match yet.",
+    "noMatch": "No markets match these filters.",
+    "byOperator": "Suspended by operator",
+    "byFeed": "Suspended by feed",
+    "settled": "Settled",
+    "hidden": "Hidden",
+    "manual": "Manual price",
+    "editPrice": "Edit price",
+    "resume": "Resume",
+    "suspend": "Suspend",
+    "hide": "Hide",
+    "show": "Show",
+    "suspendHelp": "The market stays visible but locked. Feed updates will not reopen it.",
+    "resumeHelp": "The market reopens (unless the feed has it suspended).",
+    "hideHelp": "The market disappears from the site and takes no bets.",
+    "showHelp": "The market is shown on the site again.",
+    "updated": "Market updated",
+    "priceHelp": "Your price is kept until you hand it back to automatic pricing. Players see the change immediately.",
+    "autoHelp": "Automatic pricing takes this selection back over at the next refresh.",
+    "mode": "Pricing mode",
+    "modeManual": "Set price",
+    "modeAuto": "Back to automatic",
+    "currentAuto": "Current price (automatic)",
+    "currentManual": "Current price (manual)",
+    "newPrice": "New price (1.01 – 1000)",
+    "implied": "Implied {pct}%",
+    "invalidPrice": "Enter odds between 1.01 and 1000.",
+    "savePrice": "Save price",
+    "handBack": "Hand back",
+    "priceUpdated": "Price updated"
   }
 }

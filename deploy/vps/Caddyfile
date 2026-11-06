@@ -1,29 +1,56 @@
 # Front door for the VPS stack (docker-compose.prod.yml).
-# /api/* goes straight to the API with the real client address in X-Forwarded-For (Caddy replaces
-# any client-supplied value), so per-IP rate limits, admin lockouts and audit IPs see real visitors;
-# everything else goes to the matching frontend.
-# With a domain: replace ":80" / ":8080" with the host names and remove `auto_https off`;
-# Caddy then fetches and renews HTTPS certificates itself.
+# Caddy serves HTTPS itself (Let's Encrypt certificates, renewed automatically) behind Cloudflare's
+# proxy (SSL mode "Full (strict)"). Requests from Cloudflare's ranges are trusted: the visitor's
+# address comes from CF-Connecting-IP, so the API sees real visitor IPs (rate limits, admin lockouts,
+# audit). Anyone else gets their own address, and any X-Forwarded-For they send is replaced.
 {
-	auto_https off
 	admin off
+	servers {
+		# https://www.cloudflare.com/ips (update if Cloudflare adds ranges)
+		trusted_proxies static 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22 2400:cb00::/32 2606:4700::/32 2803:f800::/32 2405:b500::/32 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32
+		client_ip_headers CF-Connecting-IP
+	}
 }
 
-:80 {
-	encode zstd gzip
+(api) {
 	handle_path /api/* {
-		reverse_proxy api:4000
+		reverse_proxy api:4000 {
+			header_up X-Forwarded-For {client_ip}
+		}
 	}
+}
+
+# Player site
+betuno.eu {
+	encode zstd gzip
+	import api
 	handle {
 		reverse_proxy web:3000
 	}
 }
 
+www.betuno.eu {
+	redir https://betuno.eu{uri} 308
+}
+
+# Admin panel (DNS record admin.betuno.eu → this server, proxied by Cloudflare)
+admin.betuno.eu {
+	encode zstd gzip
+	import api
+	handle {
+		reverse_proxy admin:3001
+	}
+}
+
+# The bare IP is sent to the domain
+http://143.246.215.161 {
+	redir https://betuno.eu{uri} 308
+}
+
+# Fallback admin address on the server IP (http://<ip>:8080), e.g. if Cloudflare is down
 :8080 {
 	encode zstd gzip
-	handle_path /api/* {
-		reverse_proxy api:4000
-	}
+	import api
 	handle {
 		reverse_proxy admin:3001
 	}

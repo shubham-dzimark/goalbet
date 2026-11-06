@@ -5,7 +5,7 @@ import type { Server, Socket } from 'socket.io';
 import { type EventMessage, type PaymentMessage, type TicketMessage, type WalletMessage, rooms } from '@goalbet/shared';
 import { TokensService } from '../../common/auth/tokens.service.js';
 import { Channels, RedisService } from '../../common/redis.service.js';
-import { loadEnv } from '../../config/env.js';
+import { allowedOrigins, loadEnv } from '../../config/env.js';
 
 const env = loadEnv();
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -26,7 +26,7 @@ interface ClientData {
 // the HTTP rate limiter (global guard) can't read socket messages; these only join/leave rooms
 @SkipThrottle()
 // no trailing slash: the web app reaches it through its /api proxy, and Next.js strips trailing slashes
-@WebSocketGateway({ addTrailingSlash: false, cors: { origin: [env.WEB_ORIGIN, env.ADMIN_ORIGIN], credentials: true } })
+@WebSocketGateway({ addTrailingSlash: false, cors: { origin: allowedOrigins(env), credentials: true } })
 export class RealtimeGateway implements OnGatewayConnection, OnModuleInit {
   private readonly logger = new Logger('Realtime');
   @WebSocketServer() private readonly server?: Server;

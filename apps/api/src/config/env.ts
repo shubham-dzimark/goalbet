@@ -19,6 +19,11 @@ const envSchema = z.object({
   COOKIE_SECURE: bool.default(false),
   WEB_ORIGIN: z.string().default('http://localhost:3000'),
   ADMIN_ORIGIN: z.string().default('http://localhost:3001'),
+  /** More browser origins allowed to call the API (comma-separated), e.g. a fallback admin address. */
+  EXTRA_ORIGINS: z
+    .string()
+    .default('')
+    .transform((s) => s.split(',').map((x) => x.trim()).filter(Boolean)),
   /** Behind a proxy/load balancer, trust X-Forwarded-* for client IPs. */
   TRUST_PROXY: bool.default(true),
   ODDS_PROVIDER: z.enum(['mock', 'api-football']).default('mock'),
@@ -40,7 +45,7 @@ const envSchema = z.object({
   /** Bearer secret for GET /cron/refresh (Vercel Cron sends it). */
   CRON_SECRET: z.string().min(16).optional(),
   /** Where players send bank-transfer deposits (shown on the wallet page). Placeholders until real details exist. */
-  PAYMENT_BANK_BENEFICIARY: z.string().default('GoalBet Demo SRL'),
+  PAYMENT_BANK_BENEFICIARY: z.string().default('Betuno Demo SRL'),
   PAYMENT_BANK_IBAN: z.string().default('RO49AAAA1B31007593840000'),
   PAYMENT_BANK_NAME: z.string().default('Demo Bank'),
   /** Dev/test-only endpoints to drive the mock provider (never in production). */
@@ -50,7 +55,7 @@ const envSchema = z.object({
   SENTRY_DSN: z.string().optional(),
   /** Outgoing email (password resets), e.g. smtps://user:pass@smtp.example.com:465. Unset = log only. */
   SMTP_URL: z.string().optional(),
-  MAIL_FROM: z.string().default('GoalBet <no-reply@goalbet.local>'),
+  MAIL_FROM: z.string().default('Betuno <no-reply@betuno.eu>'),
   /** Local production-mode demo only (docker-compose over http): unsafe settings warn instead of failing. */
   ALLOW_INSECURE_LOCAL: bool.default(false),
 });
@@ -91,6 +96,11 @@ export function checkProduction(env: Env) {
   if (!env.SMTP_URL) warnings.push('SMTP_URL is not set: set up outgoing email in Admin → Email, or emails are only logged');
   if (!env.SENTRY_DSN) warnings.push('SENTRY_DSN is not set: errors are only in the logs');
   for (const w of warnings) console.warn(`[config] ${w}`);
+}
+
+/** Browser origins allowed for CORS and the realtime socket. */
+export function allowedOrigins(env: Env) {
+  return [env.WEB_ORIGIN, env.ADMIN_ORIGIN, ...env.EXTRA_ORIGINS];
 }
 
 export const ENV = Symbol('ENV');

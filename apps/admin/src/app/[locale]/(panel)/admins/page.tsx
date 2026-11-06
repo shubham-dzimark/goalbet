@@ -12,6 +12,7 @@ import { PageHeader } from '@/components/ui/page';
 import { useCan, useErrorText } from '@/lib/data';
 import { useFmt } from '@/lib/format';
 import { adminApi, useSession } from '@/lib/session';
+import { copyText } from '@/lib/clipboard';
 
 const ROLES = ['SUPER_ADMIN', 'OPERATOR', 'FINANCE'] as const;
 type Role = (typeof ROLES)[number];
@@ -87,7 +88,7 @@ export default function AdminsPage() {
         a.totpEnabled ? (
           <span className="flex items-center gap-1 text-xs font-semibold text-success"><ShieldCheck className="size-4" aria-hidden="true" />{t('totpOn')}</span>
         ) : (
-          <span className="flex items-center gap-1 text-xs font-semibold text-warning"><ShieldOff className="size-4" aria-hidden="true" />{t('totpPending')}</span>
+          <span className="flex items-center gap-1 text-xs font-semibold text-ink-muted"><ShieldOff className="size-4" aria-hidden="true" />{t('totpPending')}</span>
         ),
       hideBelow: 'md',
     },
@@ -343,7 +344,7 @@ function TempPasswordDialog({ value, onClose }: { value: AdminTempPassword | nul
                 size="sm"
                 variant="secondary"
                 onClick={() => {
-                  void navigator.clipboard.writeText(value.temporaryPassword);
+                  void copyText(value.temporaryPassword);
                   setCopied(true);
                 }}
               >
