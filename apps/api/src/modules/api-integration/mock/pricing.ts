@@ -73,13 +73,41 @@ const baseOutcome = (s: PricingState): MatchOutcome => ({
   players: {},
 });
 
+/**
+ * Probability of each (home, away) number of further goals. Plain independent Poisson prices 0-0
+ * and high-scoring games too long compared with real books, so two standard corrections apply:
+ * uncertainty in the expected goals (a mix of lower / central / higher scoring, which fattens both
+ * tails) and Dixon-Coles' low-score adjustment (more 0-0 and 1-1, fewer 1-0 and 0-1).
+ */
+const SPREAD: [number, number][] = [
+  [0.7, 0.25],
+  [1, 0.5],
+  [1.3, 0.25],
+];
+const RHO = -0.08;
+export function scoreGrid(lambdaHome: number, lambdaAway: number, max = MAX_GOALS): number[][] {
+  const grid = Array.from({ length: max + 1 }, () => new Array<number>(max + 1).fill(0));
+  for (const [k, w] of SPREAD) {
+    const lh = lambdaHome * k;
+    const la = lambdaAway * k;
+    const ph = poisson(lh, max);
+    const pa = poisson(la, max);
+    for (let i = 0; i <= max; i++)
+      for (let j = 0; j <= max; j++) {
+        const tau = i === 0 && j === 0 ? 1 - lh * la * RHO : i === 0 && j === 1 ? 1 + lh * RHO : i === 1 && j === 0 ? 1 + la * RHO : i === 1 && j === 1 ? 1 - RHO : 1;
+        grid[i]![j]! += w * Math.max(0, tau) * ph[i]! * pa[j]!;
+      }
+  }
+  const sum = grid.flat().reduce((a, b) => a + b, 0);
+  return grid.map((row) => row.map((p) => p / sum));
+}
+
 function goalDist(s: PricingState, period: MarketPeriod): Dist[] {
-  const ph = poisson(period === 'H1' ? s.lambdaHomeH1 : s.lambdaHome, MAX_GOALS);
-  const pa = poisson(period === 'H1' ? s.lambdaAwayH1 : s.lambdaAway, MAX_GOALS);
+  const grid = scoreGrid(period === 'H1' ? s.lambdaHomeH1 : s.lambdaHome, period === 'H1' ? s.lambdaAwayH1 : s.lambdaAway);
   const out: Dist[] = [];
   for (let i = 0; i <= MAX_GOALS; i++) {
     for (let j = 0; j <= MAX_GOALS; j++) {
-      const p = (ph[i] ?? 0) * (pa[j] ?? 0);
+      const p = grid[i]![j]!;
       if (p < 1e-9) continue;
       const o = baseOutcome(s);
       if (period === 'H1') {
@@ -133,10 +161,14 @@ function fairOdds(spec: MarketSpec, outcome: string, dist: Dist[]): number | nul
   return 1 + lose / win;
 }
 
-/** Bookmaker margin, then round to a realistic price ladder. */
-export function toOdds(fair: number | null, margin: number, factorBps = 10_000): OddsMilli | null {
+/**
+ * Bookmaker margin, then round to a realistic price ladder. With `shade`, prices above 5.00 are
+ * pulled in the way real books price outsiders (5 · (fair/5)^0.8 before the margin).
+ */
+export function toOdds(fair: number | null, margin: number, factorBps = 10_000, shade = false): OddsMilli | null {
   if (fair === null) return null;
-  const priced = (fair / (1 + margin)) * (factorBps / 10_000);
+  const shaded = shade && fair > 5 ? 5 * (fair / 5) ** 0.8 : fair;
+  const priced = (shaded / (1 + margin)) * (factorBps / 10_000);
   if (priced < 1.01) return 1010;
   const capped = Math.min(priced, 250);
   const step = capped < 10 ? 0.01 : capped < 20 ? 0.05 : capped < 50 ? 0.5 : 1;
@@ -167,7 +199,7 @@ function market(
     outcome: x.outcome,
     label: x.label ?? null,
     team: x.team ?? null,
-    oddsMilli: toOdds(fairOdds(spec, x.outcome, dist), marginOf(spec.type), s.oddsFactorBps),
+    oddsMilli: toOdds(fairOdds(spec, x.outcome, dist), marginOf(spec.type), s.oddsFactorBps, spec.type !== 'CORRECT_SCORE'),
   }));
   const open = selections.some((x) => x.oddsMilli !== null);
   return {

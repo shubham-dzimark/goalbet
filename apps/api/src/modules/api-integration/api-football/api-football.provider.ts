@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { type Redis } from 'ioredis';
-import { type EventStatus, type MarketType, type MatchPeriod } from '@goalbet/shared';
+import { type EventStatus, type MarketType, type MatchPeriod, type OddsMilli } from '@goalbet/shared';
 import {
   type OddsProvider,
   type ProviderCompetition,
@@ -11,6 +11,7 @@ import {
 } from '../odds-provider.js';
 import { type PricingState, priceMarkets } from '../mock/pricing.js';
 import { type ApiFootballClient, BudgetExceededError } from './api-football.client.js';
+import { type ApiOddsResponse, type BookOdds, type BookPrices, parseBookOdds } from './bookmaker-odds.js';
 
 /** API-Football league ids for the competitions in the brief (override with API_FOOTBALL_LEAGUES). */
 export const API_FOOTBALL_LEAGUES: Record<number, { name: string; country: string; countryCode: string; isTop: boolean }> = {
@@ -97,6 +98,8 @@ const FIXTURE_DAYS = 'af:fixture-days';
 const DATE_WINDOW = 'af:date-window';
 const RESERVE_CALLS = 12;
 const PREDICTION_HORIZON_MS = 30 * HOUR;
+/** bookmaker prices are re-read once a day: the same call cost as the team-stats call they replace */
+const ODDS_REFRESH_MS = 24 * HOUR;
 
 const isoDay = (t: number) => new Date(t).toISOString().slice(0, 10);
 const num = (v: string | undefined) => (v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
@@ -104,8 +107,9 @@ const num = (v: string | undefined) => (v === undefined || v === '' || Number.is
 /**
  * Real football data from API-Football (ODDS_PROVIDER=api-football), designed for the free plan:
  * fixtures for yesterday → tomorrow, live scores, half-time scores and final results are real;
- * prices come from our own Poisson model fed with each team's real scoring averages (pre-match)
- * and the real score and minute (live). Every call goes through a shared Redis budget; responses
+ * pre-match prices are a real bookmaker's (Superbet, else Betano, Bet365 …, see bookmaker-odds.ts);
+ * markets the book lacks, and live play, are priced by our Poisson model fitted to that book's
+ * prices (or, with no book, to each team's real scoring averages) and the real score and minute. Every call goes through a shared Redis budget; responses
  * are cached in Redis so the API and worker never fetch the same thing twice.
  */
 export class ApiFootballProvider implements OddsProvider {
@@ -312,8 +316,22 @@ export class ApiFootballProvider implements OddsProvider {
     };
   }
 
-  /** Expected goals per team from real home/away scoring and conceding averages (cached 24 h). */
-  private async lambdas(fixtureId: number, kickoff: number): Promise<{ home: number; away: number }> {
+  /**
+   * A real bookmaker's prices for the match (one call, cached and refreshed once a day).
+   * Null when no bookmaker covers it.
+   */
+  private async bookOdds(fixtureId: number, kickoff: number): Promise<BookOdds | null> {
+    const key = `af:odds:${fixtureId}`;
+    const raw = await this.redis.get(key);
+    const hit = raw ? (JSON.parse(raw) as Cached<BookOdds | null>) : null;
+    // calls are spent only on matches close to kick-off, and never once the match has started
+    if (kickoff - Date.now() > PREDICTION_HORIZON_MS || Date.now() >= kickoff) return hit?.data ?? null;
+    return this.cached(key, ODDS_REFRESH_MS, async () => parseBookOdds((await this.client.get<ApiOddsResponse>('/odds', { fixture: fixtureId }))[0]));
+  }
+
+  /** Expected goals: fitted to the bookmaker's prices, else from real scoring averages (cached 24 h). */
+  private async lambdas(fixtureId: number, kickoff: number, book: BookOdds | null): Promise<{ home: number; away: number }> {
+    if (book?.lambdas) return book.lambdas;
     // spend prediction calls only on matches close to kick-off
     if (kickoff - Date.now() > PREDICTION_HORIZON_MS) return LEAGUE_AVG;
     const pred = await this.cached(`af:pred:${fixtureId}`, 24 * HOUR, async () => {
@@ -341,7 +359,9 @@ export class ApiFootballProvider implements OddsProvider {
     const st = STATUS[f.fixture.status.short]?.status ?? 'SCHEDULED';
     if (st === 'FINISHED' || st === 'CANCELLED') return [];
 
-    const lam = await this.lambdas(id, new Date(f.fixture.date).getTime());
+    const kickoff = new Date(f.fixture.date).getTime();
+    const book = await this.bookOdds(id, kickoff);
+    const lam = await this.lambdas(id, kickoff, book);
     let state: ProviderLiveState | null = null;
     if (st === 'LIVE' || Date.now() >= new Date(f.fixture.date).getTime()) {
       const raw = await this.redis.get('af:live');
@@ -373,6 +393,17 @@ export class ApiFootballProvider implements OddsProvider {
       oddsFactorBps: 10_000,
       suspended: state?.suspended ?? false,
     };
-    return priceMarkets(p).filter((m) => OFFERED.has(m.type));
+    const markets = priceMarkets(p).filter((m) => OFFERED.has(m.type));
+    // before kick-off the bookmaker's own prices replace the model's wherever the book has them
+    return !state && st === 'SCHEDULED' && book ? withBookPrices(markets, book.prices) : markets;
   }
+}
+
+/** Replace model prices with the bookmaker's for every selection the book prices. */
+export function withBookPrices(markets: ProviderMarket[], prices: BookPrices): ProviderMarket[] {
+  return markets.map((m) => {
+    const book = prices[m.key];
+    if (!book) return m;
+    return { ...m, selections: m.selections.map((s) => (book[s.outcome] ? { ...s, oddsMilli: book[s.outcome]! as OddsMilli } : s)) };
+  });
 }
