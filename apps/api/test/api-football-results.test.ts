@@ -98,6 +98,8 @@ describe('API-Football results on the free plan', () => {
     const respond = (errors: object) =>
       vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response(JSON.stringify({ errors, response: [] }), { status: 200, headers: { 'x-ratelimit-requests-remaining': '92' } }));
     const day = new Date().toISOString().slice(0, 10);
+    // the plan is already known (no /status call to answer)
+    await redis.set('af:plan', JSON.stringify({ plan: 'Free', limitDay: 100, perMinute: 10, paid: false }));
     respond({ plan: 'Free plans do not have access to this date' });
     await expect(client.get('/fixtures', { date: '2026-10-23' })).rejects.toThrow(/plan/);
     expect(Number(await redis.get(`af:budget:${day}`))).toBe(0);

@@ -82,6 +82,7 @@ function Content({ data }: { data: AdminDataProviderStatus }) {
   const [leagues, setLeagues] = useState(data.leagues.filter((l) => l.selected).map((l) => l.id));
   const [dailyBudget, setDailyBudget] = useState(String(data.dailyBudget));
   const [perMinute, setPerMinute] = useState(String(data.perMinute));
+  const [planShare, setPlanShare] = useState(String(data.planSharePct));
   const [test, setTest] = useState<AdminDataProviderTest | null>(null);
   const [testing, setTesting] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -95,7 +96,8 @@ function Content({ data }: { data: AdminDataProviderStatus }) {
     setLeagues(data.leagues.filter((l) => l.selected).map((l) => l.id));
     setDailyBudget(String(data.dailyBudget));
     setPerMinute(String(data.perMinute));
-  }, [data.updatedAt, data.provider, data.apiKey.set, data.dailyBudget, data.perMinute, data.leagues]);
+    setPlanShare(String(data.planSharePct));
+  }, [data.updatedAt, data.provider, data.apiKey.set, data.dailyBudget, data.perMinute, data.planSharePct, data.leagues]);
 
   const usage = data.usage;
   const feedStale = data.feed.ageSeconds === null || data.feed.ageSeconds > data.feed.stallSeconds;
@@ -119,6 +121,8 @@ function Content({ data }: { data: AdminDataProviderStatus }) {
     const d = Number(dailyBudget);
     const m = Number(perMinute);
     if (!Number.isInteger(d) || d < 10 || !Number.isInteger(m) || m < 1) return t('errors.budget');
+    const s = Number(planShare);
+    if (!Number.isInteger(s) || s < 10 || s > 100) return t('errors.planShare');
     return null;
   };
 
@@ -129,6 +133,7 @@ function Content({ data }: { data: AdminDataProviderStatus }) {
       leagues,
       dailyBudget: Number(dailyBudget),
       perMinute: Number(perMinute),
+      planSharePct: Number(planShare),
       reason,
     };
     qc.setQueryData(['data-provider'], await adminApi<AdminDataProviderStatus>('/admin/data-provider', { method: 'PUT', body }));
@@ -158,7 +163,13 @@ function Content({ data }: { data: AdminDataProviderStatus }) {
         <StatCard
           label={t('stats.usage')}
           value={usage ? `${usage.today} / ${usage.budget}` : '—'}
-          hint={usage ? (usage.providerRemaining !== null ? t('stats.providerLeft', { n: usage.providerRemaining }) : t('stats.noCalls')) : t('stats.mockNoCalls')}
+          hint={
+            usage
+              ? [data.plan ? t('stats.plan', { plan: data.plan.name }) : null, usage.providerRemaining !== null ? t('stats.providerLeft', { n: usage.providerRemaining }) : t('stats.noCalls')]
+                  .filter(Boolean)
+                  .join(' · ')
+              : t('stats.mockNoCalls')
+          }
         />
       </div>
 
@@ -251,6 +262,19 @@ function Content({ data }: { data: AdminDataProviderStatus }) {
                 </div>
               ) : null}
             </fieldset>
+
+            <label className="block text-sm">
+              <span className="mb-1 block font-semibold">{t('form.planShare')}</span>
+              <div className="flex items-center gap-2">
+                <Input className="w-24" inputMode="numeric" value={planShare} onChange={(e) => setPlanShare(e.target.value.replace(/\D/g, ''))} data-testid="dp-plan-share" />
+                <span aria-hidden="true">%</span>
+              </div>
+              <span className="mt-1 block text-xs text-ink-faint" data-testid="dp-plan">
+                {data.plan
+                  ? t('form.planShareDetected', { plan: data.plan.name, limit: data.plan.limitDay, daily: data.plan.dailyBudget, minute: data.plan.perMinuteBudget })
+                  : t('form.planShareHelp')}
+              </span>
+            </label>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block text-sm">

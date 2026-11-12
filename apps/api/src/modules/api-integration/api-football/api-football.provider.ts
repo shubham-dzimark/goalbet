@@ -89,24 +89,70 @@ const MIN = 60_000;
 const HOUR = 60 * MIN;
 const LEAGUE_AVG = { home: 1.45, away: 1.15 };
 const LIVE_WINDOW_MS = 135 * MIN;
-const MIN_LIVE_INTERVAL_MS = 2 * MIN;
-/** how often a finished-but-unresolved match's day is re-read for its result */
-const RESULT_RECHECK_MS = 20 * MIN;
 /** Redis hash fixture id → UTC day it was listed on */
 const FIXTURE_DAYS = 'af:fixture-days';
 /** Redis: the dates the plan allows, learned from a refusal ("try from A to B"), JSON { from, to } */
 const DATE_WINDOW = 'af:date-window';
-const RESERVE_CALLS = 12;
-const PREDICTION_HORIZON_MS = 30 * HOUR;
-/** bookmaker prices are re-read once a day: the same call cost as the team-stats call they replace */
-const ODDS_REFRESH_MS = 24 * HOUR;
+
+/** How often each thing is fetched. Chosen from the detected plan, so an upgrade needs no change. */
+export interface Profile {
+  /** days listed around today (one call per day) */
+  daysBack: number;
+  daysAhead: number;
+  /** fixture list age before it is re-read: today / earlier days / later days */
+  todayMaxAge: number;
+  pastMaxAge: number;
+  futureMaxAge: number;
+  /** live scores are never polled faster than this */
+  minLiveInterval: number;
+  /** calls kept back from live polling for fixtures, odds and results */
+  reserve: (dailyBudget: number) => number;
+  /** how often a finished-but-unresolved match's day is re-read for its result */
+  resultRecheck: number;
+  /** bookmaker odds / team stats are fetched only this close to kick-off */
+  oddsHorizon: number;
+  /** odds age before a re-read: by time left to kick-off */
+  oddsMaxAge: (msToKickoff: number) => number;
+}
+
+/** Free plan (100 calls/day, a few days around today). */
+export const FREE_PROFILE: Profile = {
+  daysBack: 1,
+  daysAhead: 1,
+  todayMaxAge: 3 * HOUR,
+  pastMaxAge: 24 * HOUR,
+  futureMaxAge: 6 * HOUR,
+  minLiveInterval: 2 * MIN,
+  reserve: () => 12,
+  resultRecheck: 20 * MIN,
+  oddsHorizon: 30 * HOUR,
+  // once a day: the same call cost as the team-stats call it replaces
+  oddsMaxAge: () => 24 * HOUR,
+};
+
+/** Budgets this large (e.g. Pro's 7 500/day) get PAID_PROFILE; smaller shares stay on the free pacing. */
+export const PAID_PROFILE_MIN_DAILY = 2000;
+
+/** Paid plans (Pro 7 500/day and up): the whole week, live scores every 15 s, odds kept fresh. */
+export const PAID_PROFILE: Profile = {
+  daysBack: 1,
+  daysAhead: 7,
+  todayMaxAge: 15 * MIN,
+  pastMaxAge: 6 * HOUR,
+  futureMaxAge: 2 * HOUR,
+  minLiveInterval: 15_000,
+  reserve: (daily) => Math.max(200, Math.round(daily * 0.25)),
+  resultRecheck: 5 * MIN,
+  oddsHorizon: 8 * 24 * HOUR,
+  oddsMaxAge: (ms) => (ms < 6 * HOUR ? 30 * MIN : ms < 48 * HOUR ? HOUR : 6 * HOUR),
+};
 
 const isoDay = (t: number) => new Date(t).toISOString().slice(0, 10);
 const num = (v: string | undefined) => (v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
 
 /**
- * Real football data from API-Football (ODDS_PROVIDER=api-football), designed for the free plan:
- * fixtures for yesterday → tomorrow, live scores, half-time scores and final results are real;
+ * Real football data from API-Football (ODDS_PROVIDER=api-football). It adapts to the plan the
+ * key is on (see Profile): the free plan lists yesterday → tomorrow, a paid one the whole week. Live scores, half-time scores and final results are real;
  * pre-match prices are a real bookmaker's (Superbet, else Betano, Bet365 …, see bookmaker-odds.ts);
  * markets the book lacks, and live play, are priced by our Poisson model fitted to that book's
  * prices (or, with no book, to each team's real scoring averages) and the real score and minute. Every call goes through a shared Redis budget; responses
@@ -147,6 +193,14 @@ export class ApiFootballProvider implements OddsProvider {
     }
   }
 
+  /** The refresh profile for the current plan; the free one until a paid plan is detected. */
+  private async profile(): Promise<{ p: Profile; daily: number }> {
+    // fake clients in tests have no plan detection
+    const b = typeof this.client.budgets === 'function' ? await this.client.budgets() : null;
+    const daily = b?.daily ?? 90;
+    return { p: b?.plan?.paid && daily >= PAID_PROFILE_MIN_DAILY ? PAID_PROFILE : FREE_PROFILE, daily };
+  }
+
   private ours(list: ApiFixture[]) {
     return list.filter((f) => this.leagues.includes(f.league.id));
   }
@@ -157,7 +211,8 @@ export class ApiFootballProvider implements OddsProvider {
    */
   private async day(date: string, maxAgeMs?: number): Promise<ApiFixture[]> {
     const today = isoDay(Date.now());
-    const maxAge = maxAgeMs ?? (date === today ? 3 * HOUR : date < today ? 24 * HOUR : 6 * HOUR);
+    const { p } = await this.profile();
+    const maxAge = maxAgeMs ?? (date === today ? p.todayMaxAge : date < today ? p.pastMaxAge : p.futureMaxAge);
     const data = await this.cached(`af:fx:${date}`, maxAge, async () => {
       // a day the plan refuses is never asked for again (it would only waste the call budget)
       if (!(await this.dateAllowed(date))) throw new DateOutsidePlanError(date);
@@ -188,7 +243,9 @@ export class ApiFootballProvider implements OddsProvider {
 
   private async knownFixtures(): Promise<ApiFixture[]> {
     const now = Date.now();
-    const days = [isoDay(now - 86_400_000), isoDay(now), isoDay(now + 86_400_000)];
+    const { p } = await this.profile();
+    const days: string[] = [];
+    for (let d = -p.daysBack; d <= p.daysAhead; d++) days.push(isoDay(now + d * 86_400_000));
     return (await Promise.all(days.map((d) => this.day(d)))).flat();
   }
 
@@ -238,8 +295,9 @@ export class ApiFootballProvider implements OddsProvider {
     if (window.length === 0) return [];
 
     const lastEnd = Math.max(...window.map((f) => new Date(f.fixture.date).getTime() + LIVE_WINDOW_MS));
-    const budget = Math.max(1, (await this.client.remaining()) - RESERVE_CALLS);
-    const interval = Math.max(MIN_LIVE_INTERVAL_MS, (lastEnd - now) / budget);
+    const { p, daily } = await this.profile();
+    const budget = Math.max(1, (await this.client.remaining()) - p.reserve(daily));
+    const interval = Math.max(p.minLiveInterval, (lastEnd - now) / budget);
     const live = await this.cached('af:live', interval, async () =>
       this.client.get<ApiFixture>('/fixtures', { live: this.leagues.join('-'), timezone: 'UTC' }),
     );
@@ -295,7 +353,8 @@ export class ApiFootballProvider implements OddsProvider {
       // matches listed before days were remembered: the kick-off day is the listing day (UTC)
       const date = (await this.redis.hget(FIXTURE_DAYS, String(id))) ?? (kickoff ? isoDay(kickoff.getTime()) : null);
       // outside the plan's dates the result can't be fetched: an operator settles it by hand
-      if (date && (await this.dateAllowed(date))) f = (await this.day(date, RESULT_RECHECK_MS)).find((x) => x.fixture.id === id) ?? f;
+      const { p } = await this.profile();
+      if (date && (await this.dateAllowed(date))) f = (await this.day(date, p.resultRecheck)).find((x) => x.fixture.id === id) ?? f;
       if (final(f)) await this.redis.set(`af:res:${id}`, JSON.stringify(f), 'EX', 7 * 86_400);
     }
     if (!f || !final(f)) return null;
@@ -317,7 +376,8 @@ export class ApiFootballProvider implements OddsProvider {
   }
 
   /**
-   * A real bookmaker's prices for the match (one call, cached and refreshed once a day).
+   * A real bookmaker's prices for the match (one call, cached; refreshed daily on the free plan,
+   * hourly or faster near kick-off on a paid one).
    * Null when no bookmaker covers it.
    */
   private async bookOdds(fixtureId: number, kickoff: number): Promise<BookOdds | null> {
@@ -325,15 +385,16 @@ export class ApiFootballProvider implements OddsProvider {
     const raw = await this.redis.get(key);
     const hit = raw ? (JSON.parse(raw) as Cached<BookOdds | null>) : null;
     // calls are spent only on matches close to kick-off, and never once the match has started
-    if (kickoff - Date.now() > PREDICTION_HORIZON_MS || Date.now() >= kickoff) return hit?.data ?? null;
-    return this.cached(key, ODDS_REFRESH_MS, async () => parseBookOdds((await this.client.get<ApiOddsResponse>('/odds', { fixture: fixtureId }))[0]));
+    const { p } = await this.profile();
+    if (kickoff - Date.now() > p.oddsHorizon || Date.now() >= kickoff) return hit?.data ?? null;
+    return this.cached(key, p.oddsMaxAge(kickoff - Date.now()), async () => parseBookOdds((await this.client.get<ApiOddsResponse>('/odds', { fixture: fixtureId }))[0]));
   }
 
   /** Expected goals: fitted to the bookmaker's prices, else from real scoring averages (cached 24 h). */
   private async lambdas(fixtureId: number, kickoff: number, book: BookOdds | null): Promise<{ home: number; away: number }> {
     if (book?.lambdas) return book.lambdas;
     // spend prediction calls only on matches close to kick-off
-    if (kickoff - Date.now() > PREDICTION_HORIZON_MS) return LEAGUE_AVG;
+    if (kickoff - Date.now() > (await this.profile()).p.oddsHorizon) return LEAGUE_AVG;
     const pred = await this.cached(`af:pred:${fixtureId}`, 24 * HOUR, async () => {
       const [p] = await this.client.get<Prediction>('/predictions', { fixture: fixtureId });
       if (!p) return null;

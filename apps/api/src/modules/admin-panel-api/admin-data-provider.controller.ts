@@ -8,6 +8,7 @@ import { RedisService } from '../../common/redis.service.js';
 import { ReqMeta, type RequestMeta } from '../../common/request-meta.js';
 import { SettingsService } from '../../common/settings.service.js';
 import { ZBody } from '../../common/zod.js';
+import { planBudgets, storedPlan } from '../api-integration/api-football/api-football.client.js';
 import { API_FOOTBALL_LEAGUES } from '../api-integration/api-football/api-football.provider.js';
 import { ProviderConfigService } from '../api-integration/provider-config.service.js';
 import { IngestService } from '../odds-management/ingest.service.js';
@@ -36,12 +37,16 @@ export class AdminDataProviderController {
   async status(): Promise<AdminDataProviderStatus> {
     const cfg = await this.config.effective();
     const day = new Date().toISOString().slice(0, 10);
-    const [today, remaining, last, stallSeconds] = await Promise.all([
+    const [today, remaining, last, stallSeconds, detected, planSharePct] = await Promise.all([
       this.redis.client.get(`af:budget:${day}`),
       this.redis.client.get('af:remaining'),
       this.ingest.lastLiveSync(),
       this.settings.get('feed.stallSeconds'),
+      storedPlan(this.redis.client),
+      this.settings.get('feed.planSharePct'),
     ]);
+    const plan = cfg.provider === 'api-football' ? detected : null;
+    const budgets = planBudgets(plan, cfg, planSharePct);
     return {
       provider: cfg.provider,
       source: cfg.source,
@@ -50,14 +55,19 @@ export class AdminDataProviderController {
       dailyBudget: cfg.dailyBudget,
       perMinute: cfg.perMinute,
       updatedAt: cfg.updatedAt,
-      usage: cfg.provider === 'api-football' ? { today: Number(today ?? 0), budget: cfg.dailyBudget, providerRemaining: remaining === null ? null : Number(remaining) } : null,
+      planSharePct,
+      plan: plan ? { name: plan.plan, limitDay: plan.limitDay, perMinute: plan.perMinute, paid: plan.paid, dailyBudget: budgets.daily, perMinuteBudget: budgets.perMinute } : null,
+      usage: cfg.provider === 'api-football' ? { today: Number(today ?? 0), budget: budgets.daily, providerRemaining: remaining === null ? null : Number(remaining) } : null,
       feed: { lastLiveDataAt: last ? new Date(last).toISOString() : null, ageSeconds: last ? Math.round((Date.now() - last) / 1000) : null, stallSeconds },
     };
   }
 
   @Put()
   async update(@CurrentAdmin() admin: AuthedAdmin, @ZBody(adminDataProviderUpdateSchema) body: z.output<typeof adminDataProviderUpdateSchema>, @ReqMeta() meta: RequestMeta) {
-    await this.config.save({ ...actorOf(admin, meta), id: admin.id }, body);
+    const actor = { ...actorOf(admin, meta), id: admin.id };
+    const { planSharePct, ...config } = body;
+    await this.config.save(actor, config);
+    if (planSharePct !== undefined && planSharePct !== (await this.settings.get('feed.planSharePct'))) await this.settings.set('feed.planSharePct', planSharePct, actor);
     return this.status();
   }
 

@@ -785,7 +785,8 @@
       "usage": "Apeluri API azi",
       "providerLeft": "{n} rămase azi în abonament",
       "noCalls": "Niciun apel azi",
-      "mockNoCalls": "Datele demo nu folosesc apeluri API"
+      "mockNoCalls": "Datele demo nu folosesc apeluri API",
+      "plan": "Abonament {plan}"
     },
     "form": {
       "title": "Setări",
@@ -800,17 +801,21 @@
       "show": "Arată cheia",
       "hide": "Ascunde cheia",
       "test": "Testează cheia",
-      "dailyBudget": "Apeluri pe zi",
-      "dailyBudgetHelp": "Păstrează câteva sub limita abonamentului (gratuit: 100).",
-      "perMinute": "Apeluri pe minut",
-      "perMinuteHelp": "Abonament gratuit: 10.",
-      "save": "Salvează setările"
+      "dailyBudget": "Apeluri pe zi (rezervă)",
+      "dailyBudgetHelp": "Folosit doar cât abonamentul API nu poate fi citit (gratuit: 100).",
+      "perMinute": "Apeluri pe minut (rezervă)",
+      "perMinuteHelp": "Folosit doar cât abonamentul API nu poate fi citit (gratuit: 10).",
+      "save": "Salvează setările",
+      "planShare": "Utilizarea abonamentului API",
+      "planShareHelp": "Procentul din limitele de apeluri ale abonamentului pe care îl poate folosi site-ul. Urmează automat upgrade-urile odată ce abonamentul e detectat.",
+      "planShareDetected": "Abonament detectat: {plan} ({limit} apeluri/zi). Site-ul folosește până la {daily} apeluri/zi și {minute}/minut și actualizează datele cât de des permite asta."
     },
     "errors": {
       "key": "Lipește o cheie API validă (minimum 10 caractere).",
       "removeWhileActive": "Treci pe Date demo înainte de a șterge cheia, sau înlocuiește-o.",
       "leagues": "Alege cel puțin o ligă.",
-      "budget": "Apelurile pe zi trebuie să fie cel puțin 10, iar pe minut cel puțin 1."
+      "budget": "Apelurile pe zi trebuie să fie cel puțin 10, iar pe minut cel puțin 1.",
+      "planShare": "Procentul trebuie să fie între 10% și 100%."
     },
     "test": {
       "ok": "Cheia funcționează · abonament {plan} · {used} din {limit} apeluri folosite azi",

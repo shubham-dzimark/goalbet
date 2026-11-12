@@ -45,7 +45,7 @@ export class ProviderRouter implements OddsProvider {
     if (cfg.provider === 'api-football') {
       if (!cfg.apiKey) throw new Error('API-Football is selected but no API key is set (Admin → Data provider)');
       const client = new ApiFootballClient(
-        { apiKey: cfg.apiKey, baseUrl: this.baseUrl, dailyBudget: cfg.dailyBudget, perMinute: cfg.perMinute },
+        { apiKey: cfg.apiKey, baseUrl: this.baseUrl, dailyBudget: cfg.dailyBudget, perMinute: cfg.perMinute, planShare: () => this.config.planShare() },
         this.redis.client,
       );
       return new ApiFootballProvider(client, this.redis.client, cfg.leagues);

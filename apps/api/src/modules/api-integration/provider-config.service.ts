@@ -4,6 +4,7 @@ import { decryptSecret, encryptSecret } from '../../common/auth/crypto.js';
 import { DomainError } from '../../common/errors.js';
 import { PrismaService } from '../../common/prisma.service.js';
 import { Channels, RedisService } from '../../common/redis.service.js';
+import { SettingsService } from '../../common/settings.service.js';
 import { ENV, type Env } from '../../config/env.js';
 import { API_FOOTBALL_LEAGUES } from './api-football/api-football.provider.js';
 
@@ -51,11 +52,17 @@ export class ProviderConfigService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly audit: AuditService,
+    private readonly settings: SettingsService,
     @Inject(ENV) private readonly env: Env,
   ) {}
 
   async onModuleInit() {
     await this.redis.subscribe(Channels.PROVIDER_CHANGED, () => this.invalidate());
+  }
+
+  /** Share (%) of the detected API-Football plan the site may use (admin setting). */
+  planShare(): Promise<number> {
+    return this.settings.get('feed.planSharePct');
   }
 
   /** Drops the cached config; the next call reads the database. */

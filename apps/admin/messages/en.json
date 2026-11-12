@@ -785,7 +785,8 @@
       "usage": "API calls today",
       "providerLeft": "{n} left on the plan today",
       "noCalls": "No calls yet today",
-      "mockNoCalls": "Demo data uses no API calls"
+      "mockNoCalls": "Demo data uses no API calls",
+      "plan": "{plan} plan"
     },
     "form": {
       "title": "Settings",
@@ -800,17 +801,21 @@
       "show": "Show key",
       "hide": "Hide key",
       "test": "Test key",
-      "dailyBudget": "Calls per day",
-      "dailyBudgetHelp": "Keep a few below the plan limit (free plan: 100).",
-      "perMinute": "Calls per minute",
-      "perMinuteHelp": "Free plan: 10.",
-      "save": "Save settings"
+      "dailyBudget": "Fallback calls per day",
+      "dailyBudgetHelp": "Used only while the API plan can’t be read (free plan: 100).",
+      "perMinute": "Fallback calls per minute",
+      "perMinuteHelp": "Used only while the API plan can’t be read (free plan: 10).",
+      "save": "Save settings",
+      "planShare": "Use of the API plan",
+      "planShareHelp": "Share of the plan’s call limits the site may use. Follows upgrades automatically once the plan is detected.",
+      "planShareDetected": "Plan detected: {plan} ({limit} calls/day). The site uses up to {daily} calls/day and {minute}/minute, and refreshes data as often as that allows."
     },
     "errors": {
       "key": "Paste a valid API key (at least 10 characters).",
       "removeWhileActive": "Switch to Demo data before removing the key, or replace it.",
       "leagues": "Choose at least one league.",
-      "budget": "Calls per day must be at least 10 and calls per minute at least 1."
+      "budget": "Calls per day must be at least 10 and calls per minute at least 1.",
+      "planShare": "Plan share must be between 10% and 100%."
     },
     "test": {
       "ok": "Key works · plan {plan} · {used} of {limit} calls used today",

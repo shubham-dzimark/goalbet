@@ -38,6 +38,9 @@ describe('F4.1 data provider managed in the admin panel', () => {
     const res = await save(sa.auth, { provider: 'api-football', apiKey: FAKE_KEY }).expect(200);
     expect(res.body).toMatchObject({ provider: 'api-football', source: 'admin', apiKey: { set: true, hint: 'abcd' }, usage: { budget: 90 } });
     expect(JSON.stringify(res.body)).not.toContain(FAKE_KEY);
+    expect(res.body).toMatchObject({ planSharePct: 95, plan: null });
+    expect((await save(sa.auth, { provider: 'api-football', planSharePct: 60 }).expect(200)).body.planSharePct).toBe(60);
+    expect((await save(sa.auth, { provider: 'api-football', planSharePct: 5 })).body.error.code).toBe('VALIDATION_FAILED');
 
     const row = await ctx.prisma.dataProviderConfig.findUniqueOrThrow({ where: { id: 'default' } });
     expect(row.apiKeyEnc).toBeTruthy();

@@ -17,6 +17,8 @@ export const SETTING_DEFAULTS = {
   'payments.bankTransferEnabled': true,
   'payments.cashAtShopEnabled': true,
   'feed.stallSeconds': 30,
+  /** share (%) of the API-Football plan's call limits the site may use; follows plan upgrades */
+  'feed.planSharePct': 95,
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;

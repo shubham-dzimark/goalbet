@@ -318,6 +318,10 @@ export interface AdminDataProviderStatus {
   dailyBudget: number;
   perMinute: number;
   updatedAt: string | null;
+  /** the API-Football plan detected from the key; the call budgets follow it (null: not read yet) */
+  plan: { name: string; limitDay: number; perMinute: number; paid: boolean; dailyBudget: number; perMinuteBudget: number } | null;
+  /** share (%) of the plan's limits the site uses */
+  planSharePct: number;
   /** API-Football calls today (our own budget counter) and what the provider reports left */
   usage: { today: number; budget: number; providerRemaining: number | null } | null;
   feed: { lastLiveDataAt: string | null; ageSeconds: number | null; stallSeconds: number };

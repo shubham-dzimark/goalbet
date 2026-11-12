@@ -198,6 +198,8 @@ export const adminDataProviderUpdateSchema = z.object({
   leagues: z.array(z.number().int().positive()).min(1, { message: 'validation.required' }).max(30),
   dailyBudget: z.number().int().min(10).max(1_000_000),
   perMinute: z.number().int().min(1).max(1_000),
+  /** share (%) of the detected plan's limits to use; omit to keep */
+  planSharePct: z.number().int().min(10).max(100).optional(),
   reason,
 });
 

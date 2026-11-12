@@ -312,6 +312,7 @@ export class AdminSportsbookService {
     // keep the limits consistent with each other
     if (key === 'betting.minStakeBani' && (value as number) > values['betting.maxStakeBani']) throw new DomainError('VALIDATION_FAILED', { key });
     if (key === 'betting.maxStakeBani' && (value as number) < values['betting.minStakeBani']) throw new DomainError('VALIDATION_FAILED', { key });
+    if (key === 'feed.planSharePct' && ((value as number) < 10 || (value as number) > 100)) throw new DomainError('VALIDATION_FAILED', { key });
     if (key === 'betting.maxAccaLegs' && ((value as number) < 2 || (value as number) > 30)) throw new DomainError('VALIDATION_FAILED', { key });
     await this.settings.set(key, value as never, actor);
     return this.getSettings();
